@@ -21,10 +21,9 @@ from langgraph.prebuilt.tool_node import (
 )
 from langgraph.types import Command
 
+from stuntdouble.config import get_scenario_metadata
 from stuntdouble.exceptions import InputNotMatchedError, MissingMockError
 from stuntdouble.mock_registry import MockToolsRegistry
-
-from stuntdouble.config import get_scenario_metadata
 
 if TYPE_CHECKING:
     from stuntdouble.recorder import CallRecorder
@@ -159,11 +158,7 @@ def create_mockable_tool_wrapper(
         tool_args = tool_call.get("args", {})
         tool_call_id = tool_call["id"]
         scenario_metadata = get_scenario_metadata(request)
-        scenario_id = (
-            scenario_metadata.get("scenario_id", "unknown")
-            if scenario_metadata
-            else None
-        )
+        scenario_id = scenario_metadata.get("scenario_id", "unknown") if scenario_metadata else None
 
         # Helper to record calls - wrapped in try-except to never mask original errors
         def _record_call(
@@ -174,11 +169,7 @@ def create_mockable_tool_wrapper(
         ) -> None:
             if recorder is not None:
                 try:
-                    duration_ms = (
-                        (time.time() - start_time) * 1000
-                        if start_time is not None
-                        else 0.0
-                    )
+                    duration_ms = (time.time() - start_time) * 1000 if start_time is not None else 0.0
                     recorder.record(
                         tool_name=tool_name,
                         args=tool_args,
@@ -191,9 +182,7 @@ def create_mockable_tool_wrapper(
                 except Exception as recording_error:
                     # Log but don't raise - recording should never interfere
                     # with actual tool execution or error propagation
-                    logger.warning(
-                        f"Failed to record call for '{tool_name}': {recording_error}"
-                    )
+                    logger.warning(f"Failed to record call for '{tool_name}': {recording_error}")
 
         # No scenario_metadata → use real tool
         if not scenario_metadata:
@@ -209,9 +198,7 @@ def create_mockable_tool_wrapper(
 
         # Extract config for passing to mock factories (enables context-aware mocks)
         # Cast RunnableConfig (TypedDict) to plain dict for registry API compatibility
-        config: dict[str, Any] | None = (
-            cast(dict[str, Any], request.runtime.config) if request.runtime else None
-        )
+        config: dict[str, Any] | None = cast(dict[str, Any], request.runtime.config) if request.runtime else None
 
         # Try to resolve mock from registry
         mock_callable = registry.resolve(tool_name, scenario_metadata, config)
@@ -225,15 +212,11 @@ def create_mockable_tool_wrapper(
                 tool = tools_by_name[tool_name]
                 mock_fn = registry.get_mock_fn(tool_name)
                 if mock_fn:
-                    is_valid, error_msg = validate_mock_signature(
-                        tool, mock_fn, scenario_metadata, config
-                    )
+                    is_valid, error_msg = validate_mock_signature(tool, mock_fn, scenario_metadata, config)
                     if not is_valid:
                         from stuntdouble.exceptions import SignatureMismatchError
 
-                        logger.error(
-                            f"Mock signature mismatch for '{tool_name}': {error_msg}"
-                        )
+                        logger.error(f"Mock signature mismatch for '{tool_name}': {error_msg}")
                         raise SignatureMismatchError(
                             tool_name=tool_name,
                             expected=f"tool '{tool_name}' parameters",
@@ -263,10 +246,7 @@ def create_mockable_tool_wrapper(
 
             except InputNotMatchedError as e:
                 no_match_reason = str(e)
-                logger.info(
-                    f"Mock conditions not met for '{tool_name}' "
-                    f"(scenario: {scenario_id}): {e}"
-                )
+                logger.info(f"Mock conditions not met for '{tool_name}' (scenario: {scenario_id}): {e}")
                 _record_call(error=e, was_mocked=True, start_time=start_time)
                 # Fall through to "no mock" handling below
 
@@ -274,9 +254,7 @@ def create_mockable_tool_wrapper(
                 if strict_mock_errors:
                     _record_call(error=e, was_mocked=True, start_time=start_time)
                     raise
-                logger.exception(
-                    f"Error in mock for tool '{tool_name}' (scenario: {scenario_id}): {e}"
-                )
+                logger.exception(f"Error in mock for tool '{tool_name}' (scenario: {scenario_id}): {e}")
                 _record_call(error=e, was_mocked=True, start_time=start_time)
                 return ToolMessage(
                     content=f"Mock error: {str(e)}",
@@ -288,10 +266,7 @@ def create_mockable_tool_wrapper(
         # No mock registered for this tool, or mock conditions not met
         if require_mock_when_scenario:
             if no_match_reason:
-                logger.error(
-                    f"Mock for tool '{tool_name}' registered but conditions not met "
-                    f"(scenario: {scenario_id})"
-                )
+                logger.error(f"Mock for tool '{tool_name}' registered but conditions not met (scenario: {scenario_id})")
                 raise MissingMockError(
                     tool_name,
                     message=(
@@ -301,8 +276,7 @@ def create_mockable_tool_wrapper(
                     ),
                 )
             logger.error(
-                f"No mock registered for tool '{tool_name}' but scenario_metadata present "
-                f"(scenario: {scenario_id})"
+                f"No mock registered for tool '{tool_name}' but scenario_metadata present (scenario: {scenario_id})"
             )
             raise MissingMockError(tool_name)
         else:

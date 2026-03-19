@@ -70,9 +70,7 @@ class ValueResolver:
         {'id': 'a1b2c3d4-...', 'created': '2025-12-18T10:30:00'}
     """
 
-    def resolve_dynamic_values(
-        self, value: Any, context: ResolverContext | None = None
-    ) -> Any:
+    def resolve_dynamic_values(self, value: Any, context: ResolverContext | None = None) -> Any:
         """
         Recursively resolve all placeholders in a value.
 
@@ -89,9 +87,7 @@ class ValueResolver:
         if isinstance(value, str):
             return self._resolve_string(value, context)
         elif isinstance(value, dict):
-            return {
-                k: self.resolve_dynamic_values(v, context) for k, v in value.items()
-            }
+            return {k: self.resolve_dynamic_values(v, context) for k, v in value.items()}
         elif isinstance(value, list):
             return [self.resolve_dynamic_values(item, context) for item in value]
         else:
@@ -263,17 +259,11 @@ class ValueResolver:
                 return base.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             case "end_of_month":
                 _, last_day = calendar.monthrange(base.year, base.month)
-                return base.replace(
-                    day=last_day, hour=23, minute=59, second=59, microsecond=999999
-                )
+                return base.replace(day=last_day, hour=23, minute=59, second=59, microsecond=999999)
             case "start_of_year":
-                return base.replace(
-                    month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-                )
+                return base.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
             case "end_of_year":
-                return base.replace(
-                    month=12, day=31, hour=23, minute=59, second=59, microsecond=999999
-                )
+                return base.replace(month=12, day=31, hour=23, minute=59, second=59, microsecond=999999)
             case _:
                 return base
 
@@ -436,9 +426,7 @@ class ValueResolver:
         value = value.strip()
 
         # Remove quotes for strings
-        if (value.startswith("'") and value.endswith("'")) or (
-            value.startswith('"') and value.endswith('"')
-        ):
+        if (value.startswith("'") and value.endswith("'")) or (value.startswith('"') and value.endswith('"')):
             return value[1:-1]
 
         # Boolean

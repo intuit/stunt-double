@@ -8,7 +8,7 @@ Provides predefined configurations for different quality/speed tradeoffs:
 """
 
 import logging
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from ..strategies import BaseStrategy, DynamicStrategy, StaticStrategy
@@ -16,7 +16,7 @@ from ..strategies import BaseStrategy, DynamicStrategy, StaticStrategy
 logger = logging.getLogger(__name__)
 
 
-class QualityPreset(str, Enum):
+class QualityPreset(StrEnum):
     """
     Quality preset levels for mock generation.
 
@@ -59,9 +59,7 @@ class PresetConfig:
         self.strategy_class = strategy_class
         self.requires_llm = requires_llm
 
-    def create_strategy(
-        self, llm_client: Any | None = None, cache: Any | None = None
-    ) -> BaseStrategy:
+    def create_strategy(self, llm_client: Any | None = None, cache: Any | None = None) -> BaseStrategy:
         """
         Create a strategy instance for this preset.
 

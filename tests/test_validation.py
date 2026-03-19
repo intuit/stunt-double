@@ -26,9 +26,7 @@ def _create_pydantic_v1_mock_schema(fields: dict[str, bool]):
 
     mock_schema = MagicMock()
     # Remove v2 attribute to simulate v1 - use spec to avoid attribute
-    mock_schema.configure_mock(
-        **{"model_fields": MagicMock(side_effect=AttributeError)}
-    )
+    mock_schema.configure_mock(**{"model_fields": MagicMock(side_effect=AttributeError)})
     # Actually delete it to trigger hasattr checks
     if hasattr(mock_schema, "model_fields"):
         del mock_schema.model_fields
@@ -350,8 +348,8 @@ class TestRegistryWithValidation:
 
     def test_register_with_invalid_tool_raises(self):
         """Test that registration with invalid mock raises SignatureMismatchError."""
-        from stuntdouble.exceptions import SignatureMismatchError
         from stuntdouble import MockToolsRegistry
+        from stuntdouble.exceptions import SignatureMismatchError
 
         registry = MockToolsRegistry()
         tool = GetWeatherTool()
@@ -1037,9 +1035,7 @@ class TestGetCallableParameterInfoExceptionHandling:
         # Create a mock that will raise ValueError when signature is inspected
         mock_callable = MagicMock()
         # Mock __signature__ to raise ValueError
-        type(mock_callable).__signature__ = property(
-            lambda self: (_ for _ in ()).throw(ValueError("No signature"))
-        )
+        type(mock_callable).__signature__ = property(lambda self: (_ for _ in ()).throw(ValueError("No signature")))
 
         params = _get_callable_parameter_info(mock_callable)
 

@@ -337,9 +337,7 @@ class TestCacheThreadSafety:
             time.sleep(0.001)  # Small delay
 
         # Multiple threads writing to same key
-        threads = [
-            threading.Thread(target=write_same_key, args=(i,)) for i in range(10)
-        ]
+        threads = [threading.Thread(target=write_same_key, args=(i,)) for i in range(10)]
 
         for thread in threads:
             thread.start()

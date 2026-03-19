@@ -161,10 +161,7 @@ class MockToolsRegistry:
         with self._lock:
             self._registrations[tool_name] = registration
 
-        logger.debug(
-            f"Registered mock for '{tool_name}' "
-            f"(conditional={'yes' if when else 'no'})"
-        )
+        logger.debug(f"Registered mock for '{tool_name}' (conditional={'yes' if when else 'no'})")
 
     def unregister(self, tool_name: str) -> bool:
         """
@@ -232,14 +229,10 @@ class MockToolsRegistry:
             try:
                 should_mock = when_fn(scenario_metadata)
                 if not should_mock:
-                    logger.debug(
-                        f"Mock for '{tool_name}' skipped: when predicate returned False"
-                    )
+                    logger.debug(f"Mock for '{tool_name}' skipped: when predicate returned False")
                     return None
             except Exception as e:
-                logger.warning(
-                    f"Mock for '{tool_name}': when predicate raised {e}, skipping mock"
-                )
+                logger.warning(f"Mock for '{tool_name}': when predicate raised {e}, skipping mock")
                 return None
 
         # Call mock_fn to create the mock callable
@@ -343,9 +336,7 @@ class MockToolsRegistry:
         """
         from stuntdouble.scenario_mocking import DataDrivenMockFactory
 
-        factory = DataDrivenMockFactory(
-            tool_name, fallback=fallback, echo_input=echo_input
-        )
+        factory = DataDrivenMockFactory(tool_name, fallback=fallback, echo_input=echo_input)
         self.register(tool_name, mock_fn=factory, when=factory.when_predicate)
 
     def mock(self, tool_name: str) -> MockBuilder:

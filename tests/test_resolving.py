@@ -146,9 +146,7 @@ class TestValueResolverConfigRefs:
         """{{config.field | default(value)}} uses default when missing."""
         resolver = ValueResolver()
         ctx = ResolverContext(config_data={})
-        result = resolver.resolve_dynamic_values(
-            "{{config.env | default('prod')}}", ctx
-        )
+        result = resolver.resolve_dynamic_values("{{config.env | default('prod')}}", ctx)
         assert result == "prod"
 
     def test_config_ref_preserves_type(self):
@@ -165,9 +163,7 @@ class TestValueResolverConfigRefs:
             input_data={"query": "bills"},
             config_data={"realm_id": "R-1"},
         )
-        result = resolver.resolve_dynamic_values(
-            {"q": "{{input.query}}", "r": "{{config.realm_id}}"}, ctx
-        )
+        result = resolver.resolve_dynamic_values({"q": "{{input.query}}", "r": "{{config.realm_id}}"}, ctx)
         assert result == {"q": "bills", "r": "R-1"}
 
     def test_config_ref_in_string_interpolation(self):
@@ -204,9 +200,7 @@ class TestValueResolverInputRefs:
         resolver = ValueResolver()
         ctx = ResolverContext(input_data={})
 
-        result = resolver.resolve_dynamic_values(
-            "{{input.status | default('active')}}", ctx
-        )
+        result = resolver.resolve_dynamic_values("{{input.status | default('active')}}", ctx)
 
         assert result == "active"
 
@@ -227,9 +221,7 @@ class TestValueResolverInputRefs:
         resolver = ValueResolver()
         ctx = ResolverContext(input_data={"count": 42, "active": True})
 
-        result = resolver.resolve_dynamic_values(
-            {"count": "{{input.count}}", "active": "{{input.active}}"}, ctx
-        )
+        result = resolver.resolve_dynamic_values({"count": "{{input.count}}", "active": "{{input.active}}"}, ctx)
 
         assert result["count"] == 42
         assert result["active"] is True
@@ -246,9 +238,7 @@ class TestValueResolverGenerators:
         result = resolver.resolve_dynamic_values("{{uuid}}", ctx)
 
         # UUID format: 8-4-4-4-12 hex chars
-        assert re.match(
-            r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", result
-        )
+        assert re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", result)
 
     def test_uuid_unique(self):
         """Each {{uuid}} generates unique value."""
@@ -286,9 +276,7 @@ class TestValueResolverGenerators:
         ctx = ResolverContext()
 
         for _ in range(10):
-            result = resolver.resolve_dynamic_values(
-                "{{choice('active', 'pending', 'completed')}}", ctx
-            )
+            result = resolver.resolve_dynamic_values("{{choice('active', 'pending', 'completed')}}", ctx)
             assert result in ["active", "pending", "completed"]
 
     def test_sequence(self):
@@ -368,9 +356,7 @@ class TestValueResolverNested:
         resolver = ValueResolver()
         ctx = ResolverContext()
 
-        result = resolver.resolve_dynamic_values(
-            {"count": 42, "active": True, "price": 19.99, "name": None}, ctx
-        )
+        result = resolver.resolve_dynamic_values({"count": 42, "active": True, "price": 19.99, "name": None}, ctx)
 
         assert result["count"] == 42
         assert result["active"] is True
@@ -386,9 +372,7 @@ class TestValueResolverStringInterpolation:
         resolver = ValueResolver()
         ctx = ResolverContext(input_data={"first": "John", "last": "Doe"})
 
-        result = resolver.resolve_dynamic_values(
-            "Hello {{input.first}} {{input.last}}!", ctx
-        )
+        result = resolver.resolve_dynamic_values("Hello {{input.first}} {{input.last}}!", ctx)
 
         assert result == "Hello John Doe!"
 
@@ -397,9 +381,7 @@ class TestValueResolverStringInterpolation:
         resolver = ValueResolver()
         ctx = ResolverContext(input_data={"id": "123"})
 
-        result = resolver.resolve_dynamic_values(
-            "Customer ID: {{input.id}} (active)", ctx
-        )
+        result = resolver.resolve_dynamic_values("Customer ID: {{input.id}} (active)", ctx)
 
         assert result == "Customer ID: 123 (active)"
 
@@ -439,9 +421,7 @@ class TestResolveOutputConvenience:
 
     def test_resolve_output_basic(self):
         """resolve_output works with basic input."""
-        result = resolve_output(
-            {"id": "{{input.customer_id}}"}, input_data={"customer_id": "CUST-123"}
-        )
+        result = resolve_output({"id": "{{input.customer_id}}"}, input_data={"customer_id": "CUST-123"})
 
         assert result == {"id": "CUST-123"}
 
@@ -449,12 +429,8 @@ class TestResolveOutputConvenience:
         """resolve_output uses shared sequence counters."""
         counters: dict[str, int] = {}
 
-        result1 = resolve_output(
-            {"id": "{{sequence('TEST')}}"}, sequence_counters=counters
-        )
-        result2 = resolve_output(
-            {"id": "{{sequence('TEST')}}"}, sequence_counters=counters
-        )
+        result1 = resolve_output({"id": "{{sequence('TEST')}}"}, sequence_counters=counters)
+        result2 = resolve_output({"id": "{{sequence('TEST')}}"}, sequence_counters=counters)
 
         assert result1["id"] == "TEST-001"
         assert result2["id"] == "TEST-002"

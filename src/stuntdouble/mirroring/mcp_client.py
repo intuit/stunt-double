@@ -82,10 +82,7 @@ class MCPServerConfig:
         if self.headers is not None:
             if not isinstance(self.headers, dict):
                 raise TypeError("headers must be a dictionary")
-            if not all(
-                isinstance(k, str) and isinstance(v, str)
-                for k, v in self.headers.items()
-            ):
+            if not all(isinstance(k, str) and isinstance(v, str) for k, v in self.headers.items()):
                 raise TypeError("headers must have string keys and string values")
 
             if self.transport == "stdio":
@@ -183,9 +180,7 @@ class MCPClient:
         self._connected = False
         self._tools_cache: list[MCPTool] | None = None
 
-        logger.info(
-            f"MCPClient initialized for server: {config.name} (transport: {config.transport})"
-        )
+        logger.info(f"MCPClient initialized for server: {config.name} (transport: {config.transport})")
 
     def connect(self) -> None:
         """
@@ -246,17 +241,12 @@ class MCPClient:
         try:
             import aiohttp  # noqa: F401
         except ImportError:
-            raise ImportError(
-                "aiohttp is required for HTTP transport. "
-                "Install with: pip install aiohttp"
-            )
+            raise ImportError("aiohttp is required for HTTP transport. Install with: pip install aiohttp")
 
         # Note: We don't create the session here because it requires an event loop
         # For SSE transport, we'll establish the connection and get the message endpoint
         # when the first request is made
-        logger.debug(
-            f"HTTP transport configured for {self.config.name} at {self.config.http_url}"
-        )
+        logger.debug(f"HTTP transport configured for {self.config.name} at {self.config.http_url}")
 
         # Establish SSE connection and get message endpoint
         import asyncio
@@ -422,9 +412,7 @@ class MCPClient:
             return result
 
         except Exception as e:
-            logger.error(
-                f"Failed to call tool '{tool_name}' on {self.config.name}: {e}"
-            )
+            logger.error(f"Failed to call tool '{tool_name}' on {self.config.name}: {e}")
             raise
 
     def get_tool_info(self, tool_name: str) -> MCPTool | None:
@@ -521,17 +509,12 @@ class MCPClient:
 
                     # Validate it's a JSON-RPC response (has 'jsonrpc' and 'id' or 'method')
                     if isinstance(response, dict) and (
-                        "jsonrpc" in response
-                        or "result" in response
-                        or "error" in response
-                        or "method" in response
+                        "jsonrpc" in response or "result" in response or "error" in response or "method" in response
                     ):
                         return response
                     else:
                         # Valid JSON but not JSON-RPC, skip it (probably a log line)
-                        logger.debug(
-                            f"Skipping non-JSON-RPC line: {response_str[:100]}"
-                        )
+                        logger.debug(f"Skipping non-JSON-RPC line: {response_str[:100]}")
                         continue
 
                 except json.JSONDecodeError:
@@ -571,9 +554,7 @@ class MCPClient:
             # This shouldn't happen in normal usage, but handle it gracefully
             import concurrent.futures
 
-            future: concurrent.futures.Future[dict[str, Any]] = (
-                concurrent.futures.Future()
-            )
+            future: concurrent.futures.Future[dict[str, Any]] = concurrent.futures.Future()
 
             def set_result(task):
                 try:
@@ -582,9 +563,7 @@ class MCPClient:
                     future.set_exception(e)
 
             # Schedule the coroutine in the running loop
-            task = asyncio.run_coroutine_threadsafe(
-                self._send_request_http_async(request), loop
-            )
+            task = asyncio.run_coroutine_threadsafe(self._send_request_http_async(request), loop)
             task.add_done_callback(set_result)
             return future.result(timeout=60)
         else:
@@ -597,9 +576,7 @@ class MCPClient:
         # Check if session exists and is still valid
         if self._http_session is None or self._http_session.closed:
             if self._http_session is not None and self._http_session.closed:
-                logger.warning(
-                    f"HTTP session for {self.config.name} was closed, creating new one"
-                )
+                logger.warning(f"HTTP session for {self.config.name} was closed, creating new one")
             self._http_session = aiohttp.ClientSession()
             logger.debug(f"Created HTTP session for {self.config.name}")
         return self._http_session
@@ -626,17 +603,13 @@ class MCPClient:
             if not self._http_message_endpoint:
                 # FastMCP standard endpoint for sending JSON-RPC messages
                 self._http_message_endpoint = f"{self.config.http_url}/messages"
-                logger.info(
-                    f"Using default FastMCP message endpoint: {self._http_message_endpoint}"
-                )
+                logger.info(f"Using default FastMCP message endpoint: {self._http_message_endpoint}")
 
         except Exception as e:
             logger.error(f"SSE connection failed: {e}")
             raise
 
-    def _build_request_headers(
-        self, include_content_type: bool = False
-    ) -> dict[str, str]:
+    def _build_request_headers(self, include_content_type: bool = False) -> dict[str, str]:
         """Build request headers from config, keeping values out of caller locals."""
         headers: dict[str, str] = {}
         if self.config.headers:
@@ -648,14 +621,10 @@ class MCPClient:
     async def _sse_listener(self, session, sse_url):
         """Background task to listen for SSE events."""
         try:
-            async with session.get(
-                sse_url, headers=self._build_request_headers()
-            ) as resp:
+            async with session.get(sse_url, headers=self._build_request_headers()) as resp:
                 if resp.status != 200:
                     error_text = await resp.text()
-                    logger.error(
-                        f"SSE connection failed with status {resp.status}: {error_text}"
-                    )
+                    logger.error(f"SSE connection failed with status {resp.status}: {error_text}")
                     return
 
                 current_event = None
@@ -667,9 +636,7 @@ class MCPClient:
                     if not line:
                         # Empty line marks end of event
                         if current_event and current_data:
-                            await self._handle_sse_event(
-                                current_event, "\n".join(current_data)
-                            )
+                            await self._handle_sse_event(current_event, "\n".join(current_data))
                             current_event = None
                             current_data = []
                         continue
@@ -700,9 +667,7 @@ class MCPClient:
                 logger.error(f"Failed to parse SSE message: {e}")
         else:
             # Handle other event types (e.g., FastMCP might use different event names)
-            logger.debug(
-                f"Received SSE event type '{event_type}' with data: {data[:100]}"
-            )
+            logger.debug(f"Received SSE event type '{event_type}' with data: {data[:100]}")
 
     async def _send_request_http_async(self, request: dict[str, Any]) -> dict[str, Any]:
         """Send JSON-RPC request via HTTP/SSE (async)."""
@@ -736,15 +701,11 @@ class MCPClient:
             ) as resp:
                 if resp.status != 202:  # SSE transport returns 202 Accepted
                     error_text = await resp.text()
-                    raise RuntimeError(
-                        f"HTTP request failed with status {resp.status}: {error_text}"
-                    )
+                    raise RuntimeError(f"HTTP request failed with status {resp.status}: {error_text}")
 
             # Wait for response from SSE stream
             try:
-                response = await asyncio.wait_for(
-                    self._sse_response_queue.get(), timeout=30.0
-                )
+                response = await asyncio.wait_for(self._sse_response_queue.get(), timeout=30.0)
                 return response
             except TimeoutError:
                 raise RuntimeError("Timeout waiting for SSE response")
@@ -761,8 +722,7 @@ class MCPClient:
                     pass
             self._http_session = None
             raise RuntimeError(
-                f"HTTP connection failed. This may happen if the server disconnected. "
-                f"Original error: {e}"
+                f"HTTP connection failed. This may happen if the server disconnected. Original error: {e}"
             ) from e
         except Exception as e:
             logger.error(f"HTTP request failed: {e}")
@@ -870,9 +830,7 @@ class MCPClientRegistry:
 
         return all_tools
 
-    def call_tool(
-        self, server_name: str, tool_name: str, arguments: dict[str, Any]
-    ) -> Any:
+    def call_tool(self, server_name: str, tool_name: str, arguments: dict[str, Any]) -> Any:
         """
         Call a tool on a specific server.
 

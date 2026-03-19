@@ -61,10 +61,7 @@ class CallRecord:
     def __repr__(self) -> str:
         status = "mocked" if self.was_mocked else "real"
         error_str = f", error={self.error}" if self.error else ""
-        return (
-            f"CallRecord(tool='{self.tool_name}', status={status}, "
-            f"args={list(self.args.keys())}{error_str})"
-        )
+        return f"CallRecord(tool='{self.tool_name}', status={status}, args={list(self.args.keys())}{error_str})"
 
 
 class CallRecorder:
@@ -315,8 +312,7 @@ class CallRecorder:
         if not self.was_called(tool_name):
             all_tools = list(set(c.tool_name for c in self.calls))
             raise MockAssertionError(
-                f"Expected '{tool_name}' to be called, but it was not.\n"
-                f"Tools that were called: {all_tools}"
+                f"Expected '{tool_name}' to be called, but it was not.\nTools that were called: {all_tools}"
             )
 
     def assert_not_called(self, tool_name: str) -> None:
@@ -349,10 +345,7 @@ class CallRecorder:
         """
         count = self.call_count(tool_name)
         if count != 1:
-            raise MockAssertionError(
-                f"Expected '{tool_name}' to be called once, "
-                f"but it was called {count} time(s)."
-            )
+            raise MockAssertionError(f"Expected '{tool_name}' to be called once, but it was called {count} time(s).")
 
     def assert_called_times(self, tool_name: str, expected_count: int) -> None:
         """
@@ -368,8 +361,7 @@ class CallRecorder:
         count = self.call_count(tool_name)
         if count != expected_count:
             raise MockAssertionError(
-                f"Expected '{tool_name}' to be called {expected_count} time(s), "
-                f"but it was called {count} time(s)."
+                f"Expected '{tool_name}' to be called {expected_count} time(s), but it was called {count} time(s)."
             )
 
     def assert_called_with(self, tool_name: str, **expected_args: Any) -> None:
@@ -397,8 +389,7 @@ class CallRecorder:
 
         if not calls:
             raise MockAssertionError(
-                f"Expected '{tool_name}' to be called with {expected_args}, "
-                f"but it was never called."
+                f"Expected '{tool_name}' to be called with {expected_args}, but it was never called."
             )
 
         # Check if any call matches
@@ -428,14 +419,11 @@ class CallRecorder:
         last_call = self.get_last_call(tool_name)
 
         if last_call is None:
-            raise MockAssertionError(
-                f"Expected '{tool_name}' to be called, but it was never called."
-            )
+            raise MockAssertionError(f"Expected '{tool_name}' to be called, but it was never called.")
 
         if not self._args_match(last_call.args, expected_args):
             raise MockAssertionError(
-                f"Expected last call to '{tool_name}' to have args {expected_args}, "
-                f"but got {last_call.args}."
+                f"Expected last call to '{tool_name}' to have args {expected_args}, but got {last_call.args}."
             )
 
     def assert_any_call(self, tool_name: str, **expected_args: Any) -> None:
@@ -469,25 +457,17 @@ class CallRecorder:
         # Find the subsequence
         expected_idx = 0
         for actual_name in actual_order:
-            if (
-                expected_idx < len(tool_names)
-                and actual_name == tool_names[expected_idx]
-            ):
+            if expected_idx < len(tool_names) and actual_name == tool_names[expected_idx]:
                 expected_idx += 1
 
         if expected_idx != len(tool_names):
-            raise MockAssertionError(
-                f"Expected call order {list(tool_names)}, "
-                f"but actual order was {actual_order}."
-            )
+            raise MockAssertionError(f"Expected call order {list(tool_names)}, but actual order was {actual_order}.")
 
     # =========================================================================
     # UTILITY METHODS
     # =========================================================================
 
-    def _args_match(
-        self, actual_args: dict[str, Any], expected_args: dict[str, Any]
-    ) -> bool:
+    def _args_match(self, actual_args: dict[str, Any], expected_args: dict[str, Any]) -> bool:
         """
         Check if actual arguments match expected arguments.
 

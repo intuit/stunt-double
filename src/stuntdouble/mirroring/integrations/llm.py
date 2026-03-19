@@ -36,9 +36,7 @@ class LLMProvider:
 
         logger.info(f"LLMProvider initialized with client: {type(llm_client).__name__}")
 
-    def generate_with_llm(
-        self, tool_def: ToolDefinition, input_params: dict[str, Any]
-    ) -> dict[str, Any]:
+    def generate_with_llm(self, tool_def: ToolDefinition, input_params: dict[str, Any]) -> dict[str, Any]:
         """
         Generate mock response using LLM.
 
@@ -87,14 +85,10 @@ class LLMProvider:
             self._validate_llm_response(mock_response, tool_def)
             return mock_response
         except json.JSONDecodeError as e:
-            logger.error(
-                f"LLM returned invalid JSON: {e}\nResponse: {llm_response[:200]}"
-            )
+            logger.error(f"LLM returned invalid JSON: {e}\nResponse: {llm_response[:200]}")
             raise
 
-    def _build_llm_prompt(
-        self, tool_def: ToolDefinition, input_params: dict[str, Any]
-    ) -> str:
+    def _build_llm_prompt(self, tool_def: ToolDefinition, input_params: dict[str, Any]) -> str:
         """
         Build prompt for LLM mock generation.
 
@@ -116,9 +110,7 @@ class LLMProvider:
             params_section = f"""Called With Parameters:
 {json.dumps(input_params, indent=2)}"""
         else:
-            params_section = (
-                "Called With Parameters: (none - generate realistic sample data)"
-            )
+            params_section = "Called With Parameters: (none - generate realistic sample data)"
 
         prompt = f"""Generate a realistic JSON response for this tool call. If there are no parameters, generate realistic sample data based on the schema and or tool name.
 
@@ -192,9 +184,7 @@ Generate the JSON response now:"""
             logger.error(f"LLM API call failed: {e}")
             raise
 
-    def _validate_llm_response(
-        self, response: dict[str, Any], tool_def: ToolDefinition
-    ) -> None:
+    def _validate_llm_response(self, response: dict[str, Any], tool_def: ToolDefinition) -> None:
         """
         Validate LLM-generated response.
 

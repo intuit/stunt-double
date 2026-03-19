@@ -22,10 +22,7 @@ class TestInferServerName:
         assert _infer_server_name(["python3", "-m", "acme.tools.billing"]) == "billing"
 
     def test_run_command(self):
-        assert (
-            _infer_server_name(["codegen", "mcp", "run", "fintech-mcp"])
-            == "fintech-mcp"
-        )
+        assert _infer_server_name(["codegen", "mcp", "run", "fintech-mcp"]) == "fintech-mcp"
 
     def test_node_script(self):
         assert _infer_server_name(["node", "server.js"]) == "server"
@@ -97,9 +94,7 @@ class TestToolMirrorMirrorValidation:
             # by calling the real method after patching the mcp import
             pass
 
-        with patch.dict(
-            "sys.modules", {"stuntdouble.mirroring.mcp_client": MagicMock(MCPServerConfig=fake)}
-        ):
+        with patch.dict("sys.modules", {"stuntdouble.mirroring.mcp_client": MagicMock(MCPServerConfig=fake)}):
             with pytest.raises(ValueError, match="Either server_command or http_url"):
                 mirror.mirror(None)
 

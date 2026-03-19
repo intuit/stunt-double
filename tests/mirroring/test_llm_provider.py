@@ -51,9 +51,7 @@ class TestGenerateWithLLM:
             description="Get customer by ID",
             input_schema={
                 "type": "object",
-                "properties": {
-                    "customer_id": {"type": "string", "description": "Customer ID"}
-                },
+                "properties": {"customer_id": {"type": "string", "description": "Customer ID"}},
                 "required": ["customer_id"],
             },
         )
@@ -66,9 +64,7 @@ class TestGenerateWithLLM:
 
         with patch("langchain_core.messages.HumanMessage") as mock_msg:
             mock_msg.return_value = "mocked_message"
-            result = self.provider.generate_with_llm(
-                self.tool_def, {"customer_id": "123"}
-            )
+            result = self.provider.generate_with_llm(self.tool_def, {"customer_id": "123"})
 
         assert result == {"id": "123", "name": "Test Customer"}
         self.mock_client.invoke.assert_called_once()
@@ -81,9 +77,7 @@ class TestGenerateWithLLM:
 
         with patch("langchain_core.messages.HumanMessage") as mock_msg:
             mock_msg.return_value = "mocked_message"
-            result = self.provider.generate_with_llm(
-                self.tool_def, {"customer_id": "123"}
-            )
+            result = self.provider.generate_with_llm(self.tool_def, {"customer_id": "123"})
 
         assert result == {"id": "123", "name": "Test"}
 
@@ -95,9 +89,7 @@ class TestGenerateWithLLM:
 
         with patch("langchain_core.messages.HumanMessage") as mock_msg:
             mock_msg.return_value = "mocked_message"
-            result = self.provider.generate_with_llm(
-                self.tool_def, {"customer_id": "456"}
-            )
+            result = self.provider.generate_with_llm(self.tool_def, {"customer_id": "456"})
 
         assert result == {"id": "456", "name": "Plain"}
 
@@ -253,9 +245,7 @@ class TestBuildLLMPrompt:
             description="Get customer by ID",
             input_schema={
                 "type": "object",
-                "properties": {
-                    "customer_id": {"type": "string", "description": "Customer ID"}
-                },
+                "properties": {"customer_id": {"type": "string", "description": "Customer ID"}},
                 "required": ["customer_id"],
             },
         )
@@ -281,9 +271,7 @@ class TestBuildLLMPrompt:
 
     def test_build_prompt_includes_parameters(self):
         """Test that prompt includes called parameters."""
-        prompt = self.provider._build_llm_prompt(
-            self.tool_def, {"customer_id": "123", "include_orders": True}
-        )
+        prompt = self.provider._build_llm_prompt(self.tool_def, {"customer_id": "123", "include_orders": True})
 
         assert "Called With Parameters:" in prompt
         assert '"customer_id": "123"' in prompt

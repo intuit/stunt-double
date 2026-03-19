@@ -130,9 +130,7 @@ class InputMatcher:
         # Direct value comparison (implicit $eq)
         return actual_value == expected
 
-    def _match_operators(
-        self, actual_value: Any, operator_dict: dict[str, Any]
-    ) -> bool:
+    def _match_operators(self, actual_value: Any, operator_dict: dict[str, Any]) -> bool:
         """
         Match actual value against operator dictionary.
 
@@ -165,9 +163,7 @@ class InputMatcher:
                     if not op_func(actual_value, op_value):
                         return False
                 except (TypeError, ValueError, re.error) as e:
-                    logger.warning(
-                        f"Operator '{op}' failed for value {actual_value}: {e}"
-                    )
+                    logger.warning(f"Operator '{op}' failed for value {actual_value}: {e}")
                     return False
             else:
                 # Non-operator key in expected dict - do nested comparison

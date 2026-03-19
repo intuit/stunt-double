@@ -10,9 +10,7 @@ from stuntdouble.mirroring.strategies import (
 )
 
 
-def _make_tool_def(
-    name: str = "get_customer", description: str = "Get a customer"
-) -> ToolDefinition:
+def _make_tool_def(name: str = "get_customer", description: str = "Get a customer") -> ToolDefinition:
     """Helper to create a ToolDefinition for testing."""
     return ToolDefinition(
         name=name,
@@ -73,45 +71,35 @@ class TestStaticStrategy:
     def test_list_tool_generation(self):
         """Generates list-style response for 'list' tools."""
         strategy = StaticStrategy()
-        tool_def = _make_tool_def(
-            name="list_customers", description="List all customers"
-        )
+        tool_def = _make_tool_def(name="list_customers", description="List all customers")
         response = strategy.generate(tool_def)
         assert isinstance(response, dict)
 
     def test_create_tool_generation(self):
         """Generates creation response for 'create' tools."""
         strategy = StaticStrategy()
-        tool_def = _make_tool_def(
-            name="create_customer", description="Create a customer"
-        )
+        tool_def = _make_tool_def(name="create_customer", description="Create a customer")
         response = strategy.generate(tool_def)
         assert isinstance(response, dict)
 
     def test_update_tool_generation(self):
         """Generates update response for 'update' tools."""
         strategy = StaticStrategy()
-        tool_def = _make_tool_def(
-            name="update_customer", description="Update a customer"
-        )
+        tool_def = _make_tool_def(name="update_customer", description="Update a customer")
         response = strategy.generate(tool_def)
         assert isinstance(response, dict)
 
     def test_delete_tool_generation(self):
         """Generates deletion response for 'delete' tools."""
         strategy = StaticStrategy()
-        tool_def = _make_tool_def(
-            name="delete_customer", description="Delete a customer"
-        )
+        tool_def = _make_tool_def(name="delete_customer", description="Delete a customer")
         response = strategy.generate(tool_def)
         assert isinstance(response, dict)
 
     def test_generic_tool_generation(self):
         """Generates generic response for unrecognized tool names."""
         strategy = StaticStrategy()
-        tool_def = _make_tool_def(
-            name="process_payment", description="Process a payment"
-        )
+        tool_def = _make_tool_def(name="process_payment", description="Process a payment")
         response = strategy.generate(tool_def)
         assert isinstance(response, dict)
 

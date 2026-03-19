@@ -203,9 +203,7 @@ class TestMockToolsRegistry:
         registry.register("new_style_tool", mock_fn=new_style_factory)
 
         test_config = {"configurable": {"agent_context": {"user_id": "test_user"}}}
-        mock_fn = registry.resolve(
-            "new_style_tool", {"mode": "mock"}, config=test_config
-        )
+        mock_fn = registry.resolve("new_style_tool", {"mode": "mock"}, config=test_config)
 
         assert mock_fn is not None
         assert received_config == test_config
@@ -224,9 +222,7 @@ class TestMockToolsRegistry:
         registry.register("old_style_tool", mock_fn=old_style_factory)
 
         test_config = {"configurable": {"agent_context": {"user_id": "test_user"}}}
-        mock_fn = registry.resolve(
-            "old_style_tool", {"mode": "mock"}, config=test_config
-        )
+        mock_fn = registry.resolve("old_style_tool", {"mode": "mock"}, config=test_config)
 
         assert mock_fn is not None
         assert mock_fn() == {"from_old_style": True}

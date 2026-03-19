@@ -49,9 +49,7 @@ class TestReturns:
 class TestReturnsFn:
     def test_returns_fn(self):
         registry = MockToolsRegistry()
-        registry.mock("calc").returns_fn(
-            lambda items, tax: {"total": sum(items) * (1 + tax)}
-        )
+        registry.mock("calc").returns_fn(lambda items, tax: {"total": sum(items) * (1 + tax)})
 
         fn = registry.resolve("calc", {})
         assert fn is not None
@@ -106,9 +104,7 @@ class TestEchoesInput:
 class TestWhen:
     def test_when_scenario_predicate(self):
         registry = MockToolsRegistry()
-        registry.mock("send_email").when(lambda md: md.get("mode") == "test").returns(
-            {"sent": True}
-        )
+        registry.mock("send_email").when(lambda md: md.get("mode") == "test").returns({"sent": True})
 
         # Should resolve when predicate matches
         fn = registry.resolve("send_email", {"mode": "test"})
@@ -158,9 +154,9 @@ class TestWhen:
 class TestChaining:
     def test_full_chain(self):
         registry = MockToolsRegistry()
-        registry.mock("update_customer").when(
-            lambda md: "update_customer" in md.get("mocks", {})
-        ).echoes_input("customer_id").returns({"updated": True})
+        registry.mock("update_customer").when(lambda md: "update_customer" in md.get("mocks", {})).echoes_input(
+            "customer_id"
+        ).returns({"updated": True})
 
         fn = registry.resolve("update_customer", {"mocks": {"update_customer": []}})
         assert fn is not None

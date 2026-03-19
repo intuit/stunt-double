@@ -45,9 +45,7 @@ class TestMirroredToolRegistryInMemory:
 
     def test_register_and_get_mock_function(self):
         registry = MirroredToolRegistry()
-        registry.register_mirrored_tool(
-            _tool_def(), _mock_impl(), _mock_impl().metadata
-        )
+        registry.register_mirrored_tool(_tool_def(), _mock_impl(), _mock_impl().metadata)
 
         fn = registry.get_mock_function("get_customer")
         assert fn is not None
@@ -56,12 +54,8 @@ class TestMirroredToolRegistryInMemory:
 
     def test_list_mock_functions(self):
         registry = MirroredToolRegistry()
-        registry.register_mirrored_tool(
-            _tool_def("a"), _mock_impl("a"), _mock_impl("a").metadata
-        )
-        registry.register_mirrored_tool(
-            _tool_def("b"), _mock_impl("b"), _mock_impl("b").metadata
-        )
+        registry.register_mirrored_tool(_tool_def("a"), _mock_impl("a"), _mock_impl("a").metadata)
+        registry.register_mirrored_tool(_tool_def("b"), _mock_impl("b"), _mock_impl("b").metadata)
 
         mocks = registry.list_mock_functions()
         assert set(mocks.keys()) == {"a", "b"}
@@ -72,9 +66,7 @@ class TestMirroredToolRegistryInMemory:
 
     def test_get_mirror_info(self):
         registry = MirroredToolRegistry()
-        registry.register_mirrored_tool(
-            _tool_def(), _mock_impl(), _mock_impl().metadata
-        )
+        registry.register_mirrored_tool(_tool_def(), _mock_impl(), _mock_impl().metadata)
 
         info = registry.get_mirror_info("get_customer")
         assert info is not None
@@ -88,12 +80,8 @@ class TestMirroredToolRegistryInMemory:
 
     def test_list_mirrors(self):
         registry = MirroredToolRegistry()
-        registry.register_mirrored_tool(
-            _tool_def("a"), _mock_impl("a"), _mock_impl("a").metadata
-        )
-        registry.register_mirrored_tool(
-            _tool_def("b"), _mock_impl("b"), _mock_impl("b").metadata
-        )
+        registry.register_mirrored_tool(_tool_def("a"), _mock_impl("a"), _mock_impl("a").metadata)
+        registry.register_mirrored_tool(_tool_def("b"), _mock_impl("b"), _mock_impl("b").metadata)
 
         mirrors = registry.list_mirrors()
         assert len(mirrors) == 2
@@ -119,9 +107,7 @@ class TestMirroredToolRegistryInMemory:
 
     def test_unregister_mirror(self):
         registry = MirroredToolRegistry()
-        registry.register_mirrored_tool(
-            _tool_def(), _mock_impl(), _mock_impl().metadata
-        )
+        registry.register_mirrored_tool(_tool_def(), _mock_impl(), _mock_impl().metadata)
 
         result = registry.unregister_mirror("get_customer")
         assert result is True
@@ -134,12 +120,8 @@ class TestMirroredToolRegistryInMemory:
 
     def test_clear_all(self):
         registry = MirroredToolRegistry()
-        registry.register_mirrored_tool(
-            _tool_def("a"), _mock_impl("a"), _mock_impl("a").metadata
-        )
-        registry.register_mirrored_tool(
-            _tool_def("b"), _mock_impl("b"), _mock_impl("b").metadata
-        )
+        registry.register_mirrored_tool(_tool_def("a"), _mock_impl("a"), _mock_impl("a").metadata)
+        registry.register_mirrored_tool(_tool_def("b"), _mock_impl("b"), _mock_impl("b").metadata)
 
         count = registry.clear()
         assert count == 2
@@ -186,9 +168,7 @@ class TestMirroredToolRegistryWithLangGraph:
     def test_registers_in_langgraph_registry(self):
         lg_registry = MagicMock()
         registry = MirroredToolRegistry(langgraph_registry=lg_registry)
-        registry.register_mirrored_tool(
-            _tool_def(), _mock_impl(), _mock_impl().metadata
-        )
+        registry.register_mirrored_tool(_tool_def(), _mock_impl(), _mock_impl().metadata)
 
         lg_registry.register.assert_called_once()
         call_args = lg_registry.register.call_args
@@ -198,9 +178,7 @@ class TestMirroredToolRegistryWithLangGraph:
     def test_unregister_removes_from_langgraph(self):
         lg_registry = MagicMock()
         registry = MirroredToolRegistry(langgraph_registry=lg_registry)
-        registry.register_mirrored_tool(
-            _tool_def(), _mock_impl(), _mock_impl().metadata
-        )
+        registry.register_mirrored_tool(_tool_def(), _mock_impl(), _mock_impl().metadata)
 
         registry.unregister_mirror("get_customer")
         lg_registry.unregister.assert_called_once_with("get_customer")
@@ -208,9 +186,7 @@ class TestMirroredToolRegistryWithLangGraph:
     def test_clear_clears_langgraph_registry(self):
         lg_registry = MagicMock()
         registry = MirroredToolRegistry(langgraph_registry=lg_registry)
-        registry.register_mirrored_tool(
-            _tool_def(), _mock_impl(), _mock_impl().metadata
-        )
+        registry.register_mirrored_tool(_tool_def(), _mock_impl(), _mock_impl().metadata)
 
         registry.clear()
         lg_registry.clear.assert_called_once()
@@ -279,9 +255,7 @@ class TestMirroredToolRegistryDynamic:
     def test_static_fallback_without_generator(self):
         registry = MirroredToolRegistry()
         mi = _mock_impl()
-        registry.register_mirrored_tool(
-            _tool_def(), mi, mi.metadata, enable_dynamic=True
-        )
+        registry.register_mirrored_tool(_tool_def(), mi, mi.metadata, enable_dynamic=True)
 
         fn = registry.get_mock_function("get_customer")
         assert fn is not None

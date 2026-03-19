@@ -143,8 +143,7 @@ class MirroredToolRegistry:
                     return generator.generate_dynamic_mock(tool_def, kwargs)
 
                 mock_function.__doc__ = (
-                    f"Dynamic mock implementation of {tool_def.name} "
-                    f"(auto-generated from MCP server, parameter-aware)"
+                    f"Dynamic mock implementation of {tool_def.name} (auto-generated from MCP server, parameter-aware)"
                 )
             else:
 
@@ -153,8 +152,7 @@ class MirroredToolRegistry:
                     return mock_impl.mock_data.copy()
 
                 mock_function.__doc__ = (
-                    f"Static mock implementation of {tool_def.name} "
-                    f"(auto-generated from MCP server)"
+                    f"Static mock implementation of {tool_def.name} (auto-generated from MCP server)"
                 )
 
             mock_function.__name__ = tool_def.name
@@ -168,9 +166,7 @@ class MirroredToolRegistry:
                 def _make_factory(
                     fn: Callable[..., Any],
                 ) -> Callable[..., Callable[..., Any]]:
-                    def mock_factory(
-                        scenario_metadata: dict[str, Any], config: Any = None
-                    ) -> Callable[..., Any]:
+                    def mock_factory(scenario_metadata: dict[str, Any], config: Any = None) -> Callable[..., Any]:
                         return fn
 
                     return mock_factory
@@ -244,11 +240,7 @@ class MirroredToolRegistry:
         Returns:
             List of mirror info for tools from this server
         """
-        return [
-            mirror
-            for mirror in self.list_mirrors()
-            if mirror.server_name == server_name
-        ]
+        return [mirror for mirror in self.list_mirrors() if mirror.server_name == server_name]
 
     def get_mock_function(self, tool_name: str) -> Callable[..., Any] | None:
         """Get the mock callable for a mirrored tool, or None if not found."""
@@ -309,9 +301,7 @@ class MirroredToolRegistry:
         server_dir.mkdir(exist_ok=True)
 
         # Save metadata file
-        metadata_file = self._get_metadata_file(
-            metadata.server_name, metadata.tool_name
-        )
+        metadata_file = self._get_metadata_file(metadata.server_name, metadata.tool_name)
         if metadata_file is None:
             return
 
@@ -371,11 +361,7 @@ class MirroredToolRegistry:
         import shutil
 
         if server_name:
-            tools_to_clear = [
-                name
-                for name, meta in self._metadata_cache.items()
-                if meta.server_name == server_name
-            ]
+            tools_to_clear = [name for name, meta in self._metadata_cache.items() if meta.server_name == server_name]
 
             for tool_name in tools_to_clear:
                 self._metadata_cache.pop(tool_name, None)
@@ -389,9 +375,7 @@ class MirroredToolRegistry:
                 if server_dir.exists():
                     shutil.rmtree(server_dir)
 
-            logger.info(
-                f"Cleared {len(tools_to_clear)} mirrored tools from {server_name}"
-            )
+            logger.info(f"Cleared {len(tools_to_clear)} mirrored tools from {server_name}")
             return len(tools_to_clear)
 
         else:

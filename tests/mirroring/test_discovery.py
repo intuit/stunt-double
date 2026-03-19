@@ -177,9 +177,7 @@ class TestSchemaVersioning:
     def test_different_schema_different_hash(self):
         s1 = {"type": "object", "properties": {"id": {"type": "string"}}}
         s2 = {"type": "object", "properties": {"name": {"type": "string"}}}
-        assert MCPToolDiscoverer.compute_schema_version(
-            s1
-        ) != MCPToolDiscoverer.compute_schema_version(s2)
+        assert MCPToolDiscoverer.compute_schema_version(s1) != MCPToolDiscoverer.compute_schema_version(s2)
 
     def test_hash_length(self):
         schema = {"type": "object"}
@@ -189,9 +187,7 @@ class TestSchemaVersioning:
     def test_key_order_independent(self):
         s1 = {"properties": {"a": 1}, "type": "object"}
         s2 = {"type": "object", "properties": {"a": 1}}
-        assert MCPToolDiscoverer.compute_schema_version(
-            s1
-        ) == MCPToolDiscoverer.compute_schema_version(s2)
+        assert MCPToolDiscoverer.compute_schema_version(s1) == MCPToolDiscoverer.compute_schema_version(s2)
 
 
 class TestDiscoverRequiresMCPClient:

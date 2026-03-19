@@ -133,15 +133,11 @@ class DataDrivenMockFactory:
                 if case_input is None:
                     # Catch-all case
                     output = case.get("output", case)
-                    return resolver.resolve_dynamic_values(
-                        copy.deepcopy(output), context
-                    )
+                    return resolver.resolve_dynamic_values(copy.deepcopy(output), context)
 
                 if matcher.matches(case_input, kwargs):
                     output = case.get("output", case)
-                    return resolver.resolve_dynamic_values(
-                        copy.deepcopy(output), context
-                    )
+                    return resolver.resolve_dynamic_values(copy.deepcopy(output), context)
 
             # No match found
             if echo_input:

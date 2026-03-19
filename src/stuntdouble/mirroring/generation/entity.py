@@ -61,15 +61,11 @@ class EntityInference:
         # Find first match (priority ordering via dict iteration in Python 3.7+)
         for entity_type, keywords in patterns.items():
             if any(keyword in combined for keyword in keywords):
-                logger.debug(
-                    f"Inferred entity type '{entity_type}' for tool '{tool_def.name}'"
-                )
+                logger.debug(f"Inferred entity type '{entity_type}' for tool '{tool_def.name}'")
                 return entity_type
 
         # No match found, return generic
-        logger.debug(
-            f"No entity type match for tool '{tool_def.name}', using 'generic'"
-        )
+        logger.debug(f"No entity type match for tool '{tool_def.name}', using 'generic'")
         return "generic"
 
 
@@ -152,9 +148,7 @@ class StaticFieldGenerator:
                 "amount": round(25.00 + (counter * 7.25), 2),
                 "currency": "USD",
                 "status": ["success", "pending", "failed"][counter % 3],
-                "method": ["credit_card", "debit_card", "paypal", "bank_transfer"][
-                    counter % 4
-                ],
+                "method": ["credit_card", "debit_card", "paypal", "bank_transfer"][counter % 4],
                 "timestamp": now.isoformat(),
             },
             "user": {
@@ -162,18 +156,14 @@ class StaticFieldGenerator:
                 "username": f"user{counter}",
                 "email": f"user{counter}@example.com",
                 "first_name": ["John", "Jane", "Alex", "Sam", "Chris"][counter % 5],
-                "last_name": ["Smith", "Johnson", "Williams", "Brown", "Davis"][
-                    counter % 5
-                ],
+                "last_name": ["Smith", "Johnson", "Williams", "Brown", "Davis"][counter % 5],
                 "role": ["user", "admin", "moderator"][counter % 3],
                 "created_at": (now - timedelta(days=counter % 365)).isoformat(),
                 "last_login": (now - timedelta(hours=counter % 24)).isoformat(),
             },
             "transaction": {
                 "txn_id": f"TXN-{counter:010d}",
-                "amount": round(
-                    100.00 + (counter * 15.00) * (-1 if counter % 2 else 1), 2
-                ),
+                "amount": round(100.00 + (counter * 15.00) * (-1 if counter % 2 else 1), 2),
                 "type": ["credit", "debit", "transfer", "refund"][counter % 4],
                 "status": ["completed", "pending", "failed"][counter % 3],
                 "timestamp": now.isoformat(),

@@ -43,9 +43,7 @@ class ResponseBuilder:
         """
         # Generate 3-5 items with static data
         item_count = random.randint(3, 5)
-        items = [
-            self.field_generator.generate_fields(entity_type) for _ in range(item_count)
-        ]
+        items = [self.field_generator.generate_fields(entity_type) for _ in range(item_count)]
 
         return {
             "items": items,
@@ -113,9 +111,7 @@ class ResponseBuilder:
             "timestamp": datetime.now().isoformat(),
         }
 
-    def build_generic_response(
-        self, tool_def: ToolDefinition, entity_type: str
-    ) -> dict[str, Any]:
+    def build_generic_response(self, tool_def: ToolDefinition, entity_type: str) -> dict[str, Any]:
         """
         Generate generic success response for unrecognized operations.
 
@@ -156,9 +152,7 @@ class ResponseBuilder:
             item = self.field_generator.generate_fields(entity_type)
             # Apply filters to generated data
             for filter_key, filter_value in filters.items():
-                if filter_key in item or filter_key.lower() in [
-                    k.lower() for k in item.keys()
-                ]:
+                if filter_key in item or filter_key.lower() in [k.lower() for k in item.keys()]:
                     item[filter_key] = filter_value
             items.append(item)
 
@@ -170,9 +164,7 @@ class ResponseBuilder:
             "has_more": random.random() < 0.5,
         }
 
-    def build_entity_with_ids(
-        self, entity_type: str, id_params: dict[str, Any]
-    ) -> dict[str, Any]:
+    def build_entity_with_ids(self, entity_type: str, id_params: dict[str, Any]) -> dict[str, Any]:
         """
         Generate single entity response with IDs from input echoed back.
 
@@ -189,9 +181,7 @@ class ResponseBuilder:
             entity[id_key] = id_value
         return entity
 
-    def build_creation_with_input(
-        self, entity_type: str, input_params: dict[str, Any]
-    ) -> dict[str, Any]:
+    def build_creation_with_input(self, entity_type: str, input_params: dict[str, Any]) -> dict[str, Any]:
         """
         Generate creation response incorporating input data.
 
@@ -229,9 +219,7 @@ class ResponseBuilder:
         entity["updated_at"] = datetime.now().isoformat()
         return entity
 
-    def build_deletion_with_ids(
-        self, entity_type: str, id_params: dict[str, Any]
-    ) -> dict[str, Any]:
+    def build_deletion_with_ids(self, entity_type: str, id_params: dict[str, Any]) -> dict[str, Any]:
         """
         Generate deletion confirmation with specific ID from input.
 
@@ -251,9 +239,7 @@ class ResponseBuilder:
             "timestamp": datetime.now().isoformat(),
         }
 
-    def build_generic_with_echo(
-        self, entity_type: str, input_params: dict[str, Any]
-    ) -> dict[str, Any]:
+    def build_generic_with_echo(self, entity_type: str, input_params: dict[str, Any]) -> dict[str, Any]:
         """
         Generate generic response echoing input parameters.
 

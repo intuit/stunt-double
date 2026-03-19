@@ -252,9 +252,7 @@ class TestCreateMockableToolWrapper:
         registry = MockToolsRegistry()
         registry.mock("test_tool").when(status="active").returns({"bills": []})
 
-        wrapper = create_mockable_tool_wrapper(
-            registry, require_mock_when_scenario=True
-        )
+        wrapper = create_mockable_tool_wrapper(registry, require_mock_when_scenario=True)
 
         request = self._create_request(
             tool_args={"status": "inactive"},
@@ -277,9 +275,7 @@ class TestCreateMockableToolWrapper:
         registry = MockToolsRegistry()
         registry.mock("test_tool").when(status="active").returns({"bills": []})
 
-        wrapper = create_mockable_tool_wrapper(
-            registry, require_mock_when_scenario=False
-        )
+        wrapper = create_mockable_tool_wrapper(registry, require_mock_when_scenario=False)
 
         request = self._create_request(
             tool_args={"status": "inactive"},
@@ -730,9 +726,7 @@ class TestDefaultRegistryAndWrapper:
             tool_call = {"name": "default_registry_tool", "args": {}, "id": "call-1"}
             tool = MagicMock()
             tool.name = "default_registry_tool"
-            runtime = create_mock_tool_runtime(
-                {"configurable": {"scenario_metadata": {"mode": "mock"}}}
-            )
+            runtime = create_mock_tool_runtime({"configurable": {"scenario_metadata": {"mode": "mock"}}})
             request = ToolCallRequest(
                 tool_call=tool_call,
                 tool=tool,

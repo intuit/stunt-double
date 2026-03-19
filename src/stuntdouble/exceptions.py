@@ -56,11 +56,7 @@ class SignatureMismatchError(MockingError):
         self.tool_name = tool_name
         self.expected = expected
         self.actual = actual
-        super().__init__(
-            f"Mock for '{tool_name}' has mismatched signature.\n"
-            f"Expected: {expected}\n"
-            f"Actual: {actual}"
-        )
+        super().__init__(f"Mock for '{tool_name}' has mismatched signature.\nExpected: {expected}\nActual: {actual}")
 
 
 class InputNotMatchedError(MockingError):

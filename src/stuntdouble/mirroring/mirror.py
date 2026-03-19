@@ -207,10 +207,7 @@ class ToolMirror:
         try:
             from stuntdouble.mirroring.mcp_client import MCPServerConfig
         except ImportError:
-            raise ImportError(
-                "MCP client module not available. Install with: "
-                "pip install stuntdouble[mcp]"
-            )
+            raise ImportError("MCP client module not available. Install with: pip install stuntdouble[mcp]")
 
         # Validate input - either server_command or http_url must be provided
         if not server_command and not http_url:
@@ -244,11 +241,7 @@ class ToolMirror:
             }
             # Allow command to be passed optionally for HTTP transport
             if server_command:
-                config_kwargs["command"] = (
-                    server_command
-                    if isinstance(server_command, list)
-                    else [server_command]
-                )
+                config_kwargs["command"] = server_command if isinstance(server_command, list) else [server_command]
             # Add custom headers if provided
             if headers:
                 config_kwargs["headers"] = headers
@@ -257,9 +250,7 @@ class ToolMirror:
             # stdio transport (default)
             if server_command is None:
                 raise ValueError("server_command is required for stdio transport")
-            cmd_list = (
-                server_command if isinstance(server_command, list) else [server_command]
-            )
+            cmd_list = server_command if isinstance(server_command, list) else [server_command]
             server_config = MCPServerConfig(
                 name=server_name,
                 command=cmd_list,
@@ -287,9 +278,7 @@ class ToolMirror:
                 )
 
             raise RuntimeError(
-                f"Failed to discover tools from server '{server_name}'. "
-                f"Error: {e}\n\n"
-                f"{troubleshooting}"
+                f"Failed to discover tools from server '{server_name}'. Error: {e}\n\n{troubleshooting}"
             ) from e
 
         # Filter if specific tools requested
@@ -297,10 +286,7 @@ class ToolMirror:
             available_names = [t.name for t in tool_definitions]
             tool_definitions = [t for t in tool_definitions if t.name in tools]
             if not tool_definitions:
-                raise ValueError(
-                    f"None of the requested tools found: {tools}\n"
-                    f"Available tools: {available_names}"
-                )
+                raise ValueError(f"None of the requested tools found: {tools}\nAvailable tools: {available_names}")
 
         # Mirror each tool
         mirrored = []
@@ -320,9 +306,7 @@ class ToolMirror:
         logger.info(f"✓ Mirrored {len(mirrored)} tools from {server_name}")
         return result
 
-    def to_langchain_tools(
-        self, server_name: str | None = None, tool_names: list[str] | None = None
-    ) -> list[Any]:
+    def to_langchain_tools(self, server_name: str | None = None, tool_names: list[str] | None = None) -> list[Any]:
         """
         Convert mirrored tools to LangChain format.
 
@@ -399,10 +383,7 @@ class ToolMirror:
         # Validate quality preset
         valid_presets = ["fast", "balanced", "high"]
         if quality not in valid_presets:
-            raise ValueError(
-                f"Unknown quality preset: '{quality}'. "
-                f"Available: {', '.join(valid_presets)}"
-            )
+            raise ValueError(f"Unknown quality preset: '{quality}'. Available: {', '.join(valid_presets)}")
 
         # Quality-specific configs
         quality_configs = {
@@ -494,8 +475,7 @@ class ToolMirror:
             from stuntdouble.mock_registry import MockToolsRegistry
         except ImportError:
             raise ImportError(
-                "LangGraph integration requires stuntdouble. "
-                "Ensure stuntdouble dependencies are installed."
+                "LangGraph integration requires stuntdouble. Ensure stuntdouble dependencies are installed."
             )
 
         # Create or use provided registry
@@ -505,10 +485,7 @@ class ToolMirror:
         # Validate quality preset
         valid_presets = ["fast", "balanced", "high"]
         if quality not in valid_presets:
-            raise ValueError(
-                f"Unknown quality preset: '{quality}'. "
-                f"Available: {', '.join(valid_presets)}"
-            )
+            raise ValueError(f"Unknown quality preset: '{quality}'. Available: {', '.join(valid_presets)}")
 
         config = {"quality_preset": quality}
         return cls(_config=config, langgraph_registry=registry)
@@ -529,9 +506,7 @@ class ToolMirror:
         """
         return self._langgraph_registry
 
-    def enable_caching(
-        self, ttl_minutes: int = 60, max_entries: int = 10000
-    ) -> "ToolMirror":
+    def enable_caching(self, ttl_minutes: int = 60, max_entries: int = 10000) -> "ToolMirror":
         """
         Enable response caching.
 
@@ -573,9 +548,7 @@ class ToolMirror:
             langgraph_registry=self._langgraph_registry,
         )
 
-        logger.info(
-            f"Caching enabled (ttl={ttl_minutes}min, max_entries={max_entries})"
-        )
+        logger.info(f"Caching enabled (ttl={ttl_minutes}min, max_entries={max_entries})")
         return self
 
     def enable_llm(self, llm_client) -> "ToolMirror":
@@ -778,9 +751,7 @@ class ToolMirror:
 
         # Update metadata
         mock_impl.metadata.server_command = server_config.command
-        mock_impl.metadata.schema_version = MCPToolDiscoverer.compute_schema_version(
-            tool_def.input_schema
-        )
+        mock_impl.metadata.schema_version = MCPToolDiscoverer.compute_schema_version(tool_def.input_schema)
 
         # Register
         self.registry.register_mirrored_tool(

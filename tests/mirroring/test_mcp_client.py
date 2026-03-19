@@ -103,10 +103,7 @@ class TestMCPClient:
         mock_process.stdin = MagicMock()
         mock_process.stdout = MagicMock()
         mock_process.stdout.readline.return_value = (
-            json.dumps(
-                {"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}
-            )
-            + "\n"
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n"
         )
         mock_popen.return_value = mock_process
 
@@ -129,12 +126,7 @@ class TestMCPClient:
         mock_process.stdin = MagicMock()
         mock_process.stdout = MagicMock()
 
-        handshake_response = (
-            json.dumps(
-                {"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}
-            )
-            + "\n"
-        )
+        handshake_response = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n"
 
         list_tools_response = (
             json.dumps(
@@ -188,23 +180,14 @@ class TestMCPClient:
         mock_process.stdin = MagicMock()
         mock_process.stdout = MagicMock()
 
-        handshake_response = (
-            json.dumps(
-                {"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}
-            )
-            + "\n"
-        )
+        handshake_response = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n"
 
         list_tools_response = (
             json.dumps(
                 {
                     "jsonrpc": "2.0",
                     "id": 2,
-                    "result": {
-                        "tools": [
-                            {"name": "tool1", "description": "Test", "inputSchema": {}}
-                        ]
-                    },
+                    "result": {"tools": [{"name": "tool1", "description": "Test", "inputSchema": {}}]},
                 }
             )
             + "\n"
@@ -246,9 +229,7 @@ class TestMCPClient:
         mock_process = MagicMock()
         mock_process.stdin = MagicMock()
         mock_process.stdout = MagicMock()
-        mock_process.stdout.readline.return_value = (
-            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}) + "\n"
-        )
+        mock_process.stdout.readline.return_value = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}) + "\n"
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(name="test", command=["python", "-m", "test"])

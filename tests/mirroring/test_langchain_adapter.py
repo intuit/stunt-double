@@ -70,9 +70,7 @@ class TestLangChainAdapterJsonSchemaToPydantic:
         """Test creating a Pydantic model with a required string field."""
         json_schema = {
             "type": "object",
-            "properties": {
-                "customer_id": {"type": "string", "description": "Customer ID"}
-            },
+            "properties": {"customer_id": {"type": "string", "description": "Customer ID"}},
             "required": ["customer_id"],
         }
 
@@ -206,9 +204,7 @@ class TestLangChainAdapterJsonSchemaToPydantic:
         """Test that model name is formatted correctly with underscores."""
         json_schema = {"type": "object", "properties": {}}
 
-        model = LangChainAdapter._json_schema_to_pydantic(
-            json_schema, "get_customer_orders"
-        )
+        model = LangChainAdapter._json_schema_to_pydantic(json_schema, "get_customer_orders")
 
         assert model.__name__ == "GetCustomerOrdersSchema"
 
@@ -232,9 +228,7 @@ class TestLangChainAdapterImportError:
 
     def test_raises_import_error_when_langchain_not_installed(self):
         """Test that ImportError is raised when langchain_core is not installed."""
-        with patch.dict(
-            "sys.modules", {"langchain_core": None, "langchain_core.tools": None}
-        ):
+        with patch.dict("sys.modules", {"langchain_core": None, "langchain_core.tools": None}):
             # Force reimport to trigger ImportError
             import sys
 
@@ -250,9 +244,7 @@ class TestLangChainAdapterImportError:
                 with patch(
                     "stuntdouble.mirroring.integrations.langchain.LangChainAdapter.to_langchain_tools"
                 ) as mock_method:
-                    mock_method.side_effect = ImportError(
-                        "langchain_core is required for LangChain integration."
-                    )
+                    mock_method.side_effect = ImportError("langchain_core is required for LangChain integration.")
 
                     with pytest.raises(ImportError) as exc_info:
                         LangChainAdapter.to_langchain_tools([], MagicMock())

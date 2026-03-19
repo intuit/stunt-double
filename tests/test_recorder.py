@@ -179,10 +179,7 @@ class TestCallRecorder:
 
         assert recorder.was_called("get_customer", customer_id="123") is True
         assert recorder.was_called("get_customer", customer_id="456") is False
-        assert (
-            recorder.was_called("get_customer", customer_id="123", include_orders=True)
-            is True
-        )
+        assert recorder.was_called("get_customer", customer_id="123", include_orders=True) is True
 
     def test_get_last_call(self):
         """Test getting the last call."""
@@ -493,9 +490,7 @@ class TestCallRecorderThreadSafety:
             for i in range(calls_per_thread):
                 recorder.record(f"tool_{thread_id}", {"i": i})
 
-        threads = [
-            threading.Thread(target=record_calls, args=(i,)) for i in range(num_threads)
-        ]
+        threads = [threading.Thread(target=record_calls, args=(i,)) for i in range(num_threads)]
 
         for t in threads:
             t.start()

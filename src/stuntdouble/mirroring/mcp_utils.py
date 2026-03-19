@@ -64,10 +64,7 @@ def parse_mcp_config(config_data: dict[str, Any] | str) -> MCPServerConfig:
             raise ValueError(f"Invalid JSON in mcp_server_config: {e}") from e
 
     if not isinstance(config_data, dict):
-        raise ValueError(
-            f"mcp_server_config must be a dict or JSON string, "
-            f"got {type(config_data).__name__}"
-        )
+        raise ValueError(f"mcp_server_config must be a dict or JSON string, got {type(config_data).__name__}")
 
     # Extract fields with defaults
     name = config_data.get("name", "mcp-server")
@@ -97,9 +94,7 @@ def parse_mcp_config(config_data: dict[str, Any] | str) -> MCPServerConfig:
             args=args,
             env=env,
         )
-        logger.debug(
-            f"Parsed MCP config: name={config.name}, transport={config.transport}"
-        )
+        logger.debug(f"Parsed MCP config: name={config.name}, transport={config.transport}")
         return config
 
     except Exception as e:

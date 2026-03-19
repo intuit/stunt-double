@@ -55,10 +55,7 @@ class MCPToolDiscoverer:
             ImportError: If stuntdouble[mcp] is not installed
         """
         if MCPClient is None:
-            raise ImportError(
-                "MCP client is required for tool discovery. "
-                "Install with: pip install stuntdouble[mcp]"
-            )
+            raise ImportError("MCP client is required for tool discovery. Install with: pip install stuntdouble[mcp]")
 
         logger.info(f"Discovering tools from {server_config.name}")
 
@@ -73,9 +70,7 @@ class MCPToolDiscoverer:
                     tool_def = self._convert_to_definition(mcp_tool, server_config.name)
                     tool_definitions.append(tool_def)
 
-                logger.info(
-                    f"Discovered {len(tool_definitions)} tools from {server_config.name}"
-                )
+                logger.info(f"Discovered {len(tool_definitions)} tools from {server_config.name}")
                 return tool_definitions
 
         except Exception as e:
@@ -139,9 +134,7 @@ class MCPToolDiscoverer:
             estimated_mock_quality=quality,
         )
 
-    def _convert_to_definition(
-        self, mcp_tool: "MCPTool", server_name: str
-    ) -> ToolDefinition:
+    def _convert_to_definition(self, mcp_tool: "MCPTool", server_name: str) -> ToolDefinition:
         """Convert MCPTool to ToolDefinition."""
         return ToolDefinition(
             name=mcp_tool.name,
@@ -183,9 +176,7 @@ class MCPToolDiscoverer:
         # Simple otherwise
         return ToolComplexity.SIMPLE
 
-    def _estimate_mock_quality(
-        self, complexity: ToolComplexity, parameters: dict[str, ParameterInfo]
-    ) -> float:
+    def _estimate_mock_quality(self, complexity: ToolComplexity, parameters: dict[str, ParameterInfo]) -> float:
         """
         Estimate how well we can generate mocks for this tool.
 
@@ -207,9 +198,7 @@ class MCPToolDiscoverer:
 
         total_params = len(parameters)
         if total_params > 0:
-            metadata_ratio = (has_descriptions + has_enums + has_formats) / (
-                total_params * 3
-            )
+            metadata_ratio = (has_descriptions + has_enums + has_formats) / (total_params * 3)
             score += metadata_ratio * 0.2  # Up to 20% boost
 
         return min(score, 1.0)

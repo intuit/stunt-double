@@ -50,9 +50,7 @@ class TestInputMatcherBasic:
 
         assert matcher.matches(pattern, {"status": "active", "tier": "premium"}) is True
         assert matcher.matches(pattern, {"status": "active", "tier": "basic"}) is False
-        assert (
-            matcher.matches(pattern, {"status": "inactive", "tier": "premium"}) is False
-        )
+        assert matcher.matches(pattern, {"status": "inactive", "tier": "premium"}) is False
 
 
 class TestInputMatcherOperators:
@@ -61,25 +59,14 @@ class TestInputMatcherOperators:
     def test_eq_operator(self):
         """$eq operator for explicit equality."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches({"status": {"$eq": "active"}}, {"status": "active"}) is True
-        )
-        assert (
-            matcher.matches({"status": {"$eq": "active"}}, {"status": "inactive"})
-            is False
-        )
+        assert matcher.matches({"status": {"$eq": "active"}}, {"status": "active"}) is True
+        assert matcher.matches({"status": {"$eq": "active"}}, {"status": "inactive"}) is False
 
     def test_ne_operator(self):
         """$ne operator for not equal."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches({"status": {"$ne": "deleted"}}, {"status": "active"})
-            is True
-        )
-        assert (
-            matcher.matches({"status": {"$ne": "deleted"}}, {"status": "deleted"})
-            is False
-        )
+        assert matcher.matches({"status": {"$ne": "deleted"}}, {"status": "active"}) is True
+        assert matcher.matches({"status": {"$ne": "deleted"}}, {"status": "deleted"}) is False
 
     def test_gt_operator(self):
         """$gt operator for greater than."""
@@ -112,102 +99,40 @@ class TestInputMatcherOperators:
     def test_in_operator(self):
         """$in operator for value in list."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches(
-                {"status": {"$in": ["active", "pending"]}}, {"status": "active"}
-            )
-            is True
-        )
-        assert (
-            matcher.matches(
-                {"status": {"$in": ["active", "pending"]}}, {"status": "pending"}
-            )
-            is True
-        )
-        assert (
-            matcher.matches(
-                {"status": {"$in": ["active", "pending"]}}, {"status": "deleted"}
-            )
-            is False
-        )
+        assert matcher.matches({"status": {"$in": ["active", "pending"]}}, {"status": "active"}) is True
+        assert matcher.matches({"status": {"$in": ["active", "pending"]}}, {"status": "pending"}) is True
+        assert matcher.matches({"status": {"$in": ["active", "pending"]}}, {"status": "deleted"}) is False
 
     def test_nin_operator(self):
         """$nin operator for value not in list."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches(
-                {"status": {"$nin": ["deleted", "archived"]}}, {"status": "active"}
-            )
-            is True
-        )
-        assert (
-            matcher.matches(
-                {"status": {"$nin": ["deleted", "archived"]}}, {"status": "deleted"}
-            )
-            is False
-        )
+        assert matcher.matches({"status": {"$nin": ["deleted", "archived"]}}, {"status": "active"}) is True
+        assert matcher.matches({"status": {"$nin": ["deleted", "archived"]}}, {"status": "deleted"}) is False
 
     def test_contains_operator(self):
         """$contains operator for substring match."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches(
-                {"name": {"$contains": "Corp"}}, {"name": "Acme Corporation"}
-            )
-            is True
-        )
-        assert (
-            matcher.matches({"name": {"$contains": "Corp"}}, {"name": "Acme LLC"})
-            is False
-        )
+        assert matcher.matches({"name": {"$contains": "Corp"}}, {"name": "Acme Corporation"}) is True
+        assert matcher.matches({"name": {"$contains": "Corp"}}, {"name": "Acme LLC"}) is False
 
     def test_regex_operator(self):
         """$regex operator for regex pattern match."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches({"id": {"$regex": "^CUST-\\d+"}}, {"id": "CUST-123"})
-            is True
-        )
-        assert (
-            matcher.matches({"id": {"$regex": "^CUST-\\d+"}}, {"id": "CUST-999"})
-            is True
-        )
-        assert (
-            matcher.matches({"id": {"$regex": "^CUST-\\d+"}}, {"id": "ORD-123"})
-            is False
-        )
+        assert matcher.matches({"id": {"$regex": "^CUST-\\d+"}}, {"id": "CUST-123"}) is True
+        assert matcher.matches({"id": {"$regex": "^CUST-\\d+"}}, {"id": "CUST-999"}) is True
+        assert matcher.matches({"id": {"$regex": "^CUST-\\d+"}}, {"id": "ORD-123"}) is False
 
     def test_exists_operator_true(self):
         """$exists: true operator for key existence."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches(
-                {"optional_field": {"$exists": True}}, {"optional_field": "value"}
-            )
-            is True
-        )
-        assert (
-            matcher.matches(
-                {"optional_field": {"$exists": True}}, {"other_field": "value"}
-            )
-            is False
-        )
+        assert matcher.matches({"optional_field": {"$exists": True}}, {"optional_field": "value"}) is True
+        assert matcher.matches({"optional_field": {"$exists": True}}, {"other_field": "value"}) is False
 
     def test_exists_operator_false(self):
         """$exists: false operator for key absence."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches(
-                {"optional_field": {"$exists": False}}, {"other_field": "value"}
-            )
-            is True
-        )
-        assert (
-            matcher.matches(
-                {"optional_field": {"$exists": False}}, {"optional_field": "value"}
-            )
-            is False
-        )
+        assert matcher.matches({"optional_field": {"$exists": False}}, {"other_field": "value"}) is True
+        assert matcher.matches({"optional_field": {"$exists": False}}, {"optional_field": "value"}) is False
 
     def test_multiple_operators_same_field(self):
         """Multiple operators on same field (AND logic)."""
@@ -237,18 +162,12 @@ class TestInputMatcherEdgeCases:
     def test_unknown_operator_warning(self):
         """Unknown operators should return False with warning."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches({"field": {"$unknown": "value"}}, {"field": "test"})
-            is False
-        )
+        assert matcher.matches({"field": {"$unknown": "value"}}, {"field": "test"}) is False
 
     def test_type_mismatch_in_comparison(self):
         """Type mismatches in comparison should return False."""
         matcher = InputMatcher()
-        assert (
-            matcher.matches({"amount": {"$gt": 100}}, {"amount": "not a number"})
-            is False
-        )
+        assert matcher.matches({"amount": {"$gt": 100}}, {"amount": "not a number"}) is False
 
 
 class TestConvenienceFunction:

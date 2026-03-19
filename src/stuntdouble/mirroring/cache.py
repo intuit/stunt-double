@@ -61,9 +61,7 @@ class ResponseCache:
         self._hits = 0
         self._misses = 0
 
-        logger.info(
-            f"ResponseCache initialized (in-memory, TTL: {ttl_seconds}s, max: {max_entries})"
-        )
+        logger.info(f"ResponseCache initialized (in-memory, TTL: {ttl_seconds}s, max: {max_entries})")
 
     def get(self, tool_name: str, params: dict[str, Any]) -> dict[str, Any] | None:
         """
@@ -103,9 +101,7 @@ class ResponseCache:
             logger.debug(f"Cache hit for {tool_name} (age: {age:.1f}s)")
             return response.copy()  # Return copy to prevent mutation
 
-    def set(
-        self, tool_name: str, params: dict[str, Any], response: dict[str, Any]
-    ) -> None:
+    def set(self, tool_name: str, params: dict[str, Any], response: dict[str, Any]) -> None:
         """
         Store response in cache.
 

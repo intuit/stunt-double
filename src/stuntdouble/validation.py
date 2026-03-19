@@ -143,16 +143,12 @@ def _get_tool_parameter_info(tool: BaseTool) -> dict[str, dict[str, Any]]:
             # JSON Schema dict (from MCP tools via langchain-mcp-adapters)
             # Format: {"type": "object", "properties": {...}, "required": [...]}
             if schema.get("type") != "object":
-                logger.warning(
-                    f"Unexpected JSON Schema type: {schema.get('type')}, expected 'object'"
-                )
+                logger.warning(f"Unexpected JSON Schema type: {schema.get('type')}, expected 'object'")
                 return params
             properties = schema.get("properties", {})
             required_params = set(schema.get("required", []))
             for name, prop_def in properties.items():
-                has_default = (
-                    "default" in prop_def if isinstance(prop_def, dict) else False
-                )
+                has_default = "default" in prop_def if isinstance(prop_def, dict) else False
                 params[name] = {
                     "required": name in required_params,
                     "has_default": has_default or name not in required_params,
@@ -222,9 +218,7 @@ def _compare_signatures(
     extra = mock_param_names - tool_param_names
     extra_required = [p for p in extra if mock_params[p].get("required", False)]
     if extra_required:
-        errors.append(
-            f"Extra required parameters in mock: {', '.join(sorted(extra_required))}"
-        )
+        errors.append(f"Extra required parameters in mock: {', '.join(sorted(extra_required))}")
 
     # Check required/optional mismatch for matching parameters
     for param_name in tool_param_names & mock_param_names:
@@ -234,18 +228,12 @@ def _compare_signatures(
         # If tool requires it but mock has it optional, that's ok
         # If tool has it optional but mock requires it, that's a problem
         if not tool_required and mock_required:
-            errors.append(
-                f"Parameter '{param_name}' is optional in tool but required in mock"
-            )
+            errors.append(f"Parameter '{param_name}' is optional in tool but required in mock")
 
     if errors:
         expected_sig = _format_signature(tool_params)
         actual_sig = _format_signature(mock_params)
-        return False, (
-            f"{'; '.join(errors)}\n"
-            f"Expected signature: {expected_sig}\n"
-            f"Actual mock signature: {actual_sig}"
-        )
+        return False, (f"{'; '.join(errors)}\nExpected signature: {expected_sig}\nActual mock signature: {actual_sig}")
 
     return True, None
 
@@ -310,19 +298,14 @@ def validate_mock_parameters(
             continue
 
         if not isinstance(case_input, dict):
-            errors.append(
-                f"Case {i}: 'input' must be a dict, got {type(case_input).__name__}"
-            )
+            errors.append(f"Case {i}: 'input' must be a dict, got {type(case_input).__name__}")
             continue
 
         # Check for unknown parameters
         for param_name in case_input:
             if param_name not in expected_params:
                 valid_params = ", ".join(sorted(expected_params))
-                errors.append(
-                    f"Case {i}: Unknown parameter '{param_name}'. "
-                    f"Valid parameters: {valid_params}"
-                )
+                errors.append(f"Case {i}: Unknown parameter '{param_name}'. Valid parameters: {valid_params}")
 
         # Warn about missing required parameters (not an error, just informational)
         missing_required = required_params - set(case_input.keys())
@@ -370,9 +353,7 @@ def validate_registry_mocks(
 
         # Normalize to list of cases
         if not isinstance(mock_cases, list):
-            if isinstance(mock_cases, dict) and (
-                "output" in mock_cases or "input" in mock_cases
-            ):
+            if isinstance(mock_cases, dict) and ("output" in mock_cases or "input" in mock_cases):
                 mock_cases = [mock_cases]
             else:
                 mock_cases = [{"output": mock_cases}]

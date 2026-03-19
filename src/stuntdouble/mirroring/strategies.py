@@ -45,9 +45,7 @@ class BaseStrategy(ABC):
         self.cache = cache
 
     @abstractmethod
-    def generate(
-        self, tool_def: ToolDefinition, input_params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    def generate(self, tool_def: ToolDefinition, input_params: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Generate a mock response for the given tool and parameters.
 
@@ -63,9 +61,7 @@ class BaseStrategy(ABC):
         """
         pass
 
-    def _check_cache(
-        self, tool_def: ToolDefinition, input_params: dict[str, Any] | None
-    ) -> dict[str, Any] | None:
+    def _check_cache(self, tool_def: ToolDefinition, input_params: dict[str, Any] | None) -> dict[str, Any] | None:
         """
         Check cache for existing response.
 
@@ -147,9 +143,7 @@ class StaticStrategy(BaseStrategy):
         self.field_generator = StaticFieldGenerator()
         self.response_builder = ResponseBuilder(self.field_generator)
 
-    def generate(
-        self, tool_def: ToolDefinition, input_params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    def generate(self, tool_def: ToolDefinition, input_params: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Generate static mock response with parameter awareness.
 
@@ -179,26 +173,18 @@ class StaticStrategy(BaseStrategy):
         name_lower = tool_def.name.lower()
 
         # Route to appropriate response generator based on operation
-        if any(
-            keyword in name_lower for keyword in ["list", "search", "query", "find"]
-        ):
+        if any(keyword in name_lower for keyword in ["list", "search", "query", "find"]):
             response = self.response_builder.build_list_response(entity_type)
-        elif any(
-            keyword in name_lower for keyword in ["get", "fetch", "retrieve", "read"]
-        ):
+        elif any(keyword in name_lower for keyword in ["get", "fetch", "retrieve", "read"]):
             response = self.response_builder.build_entity_response(entity_type)
         elif any(keyword in name_lower for keyword in ["create", "add", "insert"]):
             response = self.response_builder.build_creation_response(entity_type)
-        elif any(
-            keyword in name_lower for keyword in ["update", "modify", "edit", "patch"]
-        ):
+        elif any(keyword in name_lower for keyword in ["update", "modify", "edit", "patch"]):
             response = self.response_builder.build_update_response(entity_type)
         elif any(keyword in name_lower for keyword in ["delete", "remove", "destroy"]):
             response = self.response_builder.build_deletion_response(entity_type)
         else:
-            response = self.response_builder.build_generic_response(
-                tool_def, entity_type
-            )
+            response = self.response_builder.build_generic_response(tool_def, entity_type)
 
         # Apply parameter awareness if we have input
         if input_params:
@@ -209,9 +195,7 @@ class StaticStrategy(BaseStrategy):
 
         return response
 
-    def _apply_parameter_awareness(
-        self, response: dict[str, Any], input_params: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _apply_parameter_awareness(self, response: dict[str, Any], input_params: dict[str, Any]) -> dict[str, Any]:
         """
         Make response parameter-aware by echoing IDs and applying filters.
 
@@ -305,9 +289,7 @@ class DynamicStrategy(BaseStrategy):
         self.llm_calls = 0
         self.cache_hits = 0
 
-    def generate(
-        self, tool_def: ToolDefinition, input_params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    def generate(self, tool_def: ToolDefinition, input_params: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Generate LLM-powered mock response.
 

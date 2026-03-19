@@ -200,9 +200,7 @@ class MockGenerator:
             metadata=metadata,
         )
 
-    def generate_dynamic_mock(
-        self, tool_def: ToolDefinition, input_params: dict[str, Any]
-    ) -> dict[str, Any]:
+    def generate_dynamic_mock(self, tool_def: ToolDefinition, input_params: dict[str, Any]) -> dict[str, Any]:
         """
         Generate dynamic mock response at runtime.
 
@@ -221,9 +219,7 @@ class MockGenerator:
             ... )
             >>> assert "customer_id" in response
         """
-        logger.debug(
-            f"Generating dynamic mock for {tool_def.name} using {self.strategy.name}"
-        )
+        logger.debug(f"Generating dynamic mock for {tool_def.name} using {self.strategy.name}")
 
         try:
             response = self.strategy.generate(tool_def, input_params)
@@ -246,9 +242,7 @@ class MockGenerator:
                 "error": f"Mock generation failed: {str(e)}",
             }
 
-    def _generate_function_code(
-        self, tool_def: ToolDefinition, analysis: ToolAnalysis, mock_data: Any
-    ) -> str:
+    def _generate_function_code(self, tool_def: ToolDefinition, analysis: ToolAnalysis, mock_data: Any) -> str:
         """
         Generate Python function code for the mock.
 

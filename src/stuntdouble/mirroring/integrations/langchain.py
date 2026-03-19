@@ -58,8 +58,7 @@ class LangChainAdapter:
             from langchain_core.tools import StructuredTool
         except ImportError:
             raise ImportError(
-                "langchain_core is required for LangChain integration. "
-                "Install with: pip install langchain-core"
+                "langchain_core is required for LangChain integration. Install with: pip install langchain-core"
             )
 
         available_mocks = mock_registry.list_mock_functions()
@@ -68,21 +67,15 @@ class LangChainAdapter:
         for tool_def in tool_definitions:
             mock_fn = available_mocks.get(tool_def.name)
             if mock_fn is None:
-                logger.warning(
-                    f"Tool {tool_def.name} discovered but not mocked, skipping"
-                )
+                logger.warning(f"Tool {tool_def.name} discovered but not mocked, skipping")
                 continue
 
             args_schema = None
             if tool_def.input_schema:
                 try:
-                    args_schema = LangChainAdapter._json_schema_to_pydantic(
-                        tool_def.input_schema, tool_def.name
-                    )
+                    args_schema = LangChainAdapter._json_schema_to_pydantic(tool_def.input_schema, tool_def.name)
                 except Exception as e:
-                    logger.debug(
-                        f"Could not convert schema to Pydantic for {tool_def.name}: {e}"
-                    )
+                    logger.debug(f"Could not convert schema to Pydantic for {tool_def.name}: {e}")
 
             if args_schema:
                 lc_tool = StructuredTool(
@@ -120,10 +113,7 @@ class LangChainAdapter:
         try:
             from pydantic import Field, create_model
         except ImportError:
-            raise ImportError(
-                "pydantic is required for schema conversion. "
-                "Install with: pip install pydantic"
-            )
+            raise ImportError("pydantic is required for schema conversion. Install with: pip install pydantic")
 
         # Extract properties and required fields
         properties = json_schema.get("properties", {})
@@ -133,9 +123,7 @@ class LangChainAdapter:
         field_definitions = {}
         for prop_name, prop_schema in properties.items():
             # Get type
-            prop_type = LangChainAdapter._json_type_to_python_type(
-                prop_schema.get("type", "string")
-            )
+            prop_type = LangChainAdapter._json_type_to_python_type(prop_schema.get("type", "string"))
 
             # Get description
             description = prop_schema.get("description", "")

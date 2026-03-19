@@ -357,9 +357,7 @@ class MirrorInfo:
     def __str__(self) -> str:
         """String representation with status indicator."""
         status = "⚠️ stale" if self.is_stale else "✓"
-        return (
-            f"{status} {self.tool_name} [{self.strategy.value}] from {self.server_name}"
-        )
+        return f"{status} {self.tool_name} [{self.strategy.value}] from {self.server_name}"
 
 
 @dataclass

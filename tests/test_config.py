@@ -186,10 +186,7 @@ class TestGetConfigurableContext:
         agent_context = ctx.get("agent_context")
 
         assert agent_context is not None
-        assert (
-            agent_context["auth_header"]["auth_context"]["user_id"]
-            == "user_123"
-        )
+        assert agent_context["auth_header"]["auth_context"]["user_id"] == "user_123"
 
     def test_can_access_custom_fields(self):
         """Test that custom fields in configurable can be accessed."""
@@ -261,9 +258,7 @@ class TestGetConfigurableContextUsageInMockFactory:
             ctx = get_configurable_context(config)
             user_id = ctx.get("agent_context", {}).get("user_id")
 
-            mock_data = scenario_metadata.get("mocks", {}).get(
-                "get_lending_factors", {}
-            )
+            mock_data = scenario_metadata.get("mocks", {}).get("get_lending_factors", {})
             user_data = mock_data.get(user_id, mock_data.get("default", {}))
 
             return lambda: user_data
@@ -281,27 +276,19 @@ class TestGetConfigurableContextUsageInMockFactory:
         }
 
         # Test excellent user
-        config_excellent = {
-            "configurable": {"agent_context": {"user_id": "user_excellent"}}
-        }
-        mock_fn = registry.resolve(
-            "get_lending_factors", scenario_metadata, config=config_excellent
-        )
+        config_excellent = {"configurable": {"agent_context": {"user_id": "user_excellent"}}}
+        mock_fn = registry.resolve("get_lending_factors", scenario_metadata, config=config_excellent)
         assert mock_fn is not None
         assert mock_fn() == {"approval_segment": "Excellent"}
 
         # Test poor user
         config_poor = {"configurable": {"agent_context": {"user_id": "user_poor"}}}
-        mock_fn = registry.resolve(
-            "get_lending_factors", scenario_metadata, config=config_poor
-        )
+        mock_fn = registry.resolve("get_lending_factors", scenario_metadata, config=config_poor)
         assert mock_fn is not None
         assert mock_fn() == {"approval_segment": "Poor"}
 
         # Test unknown user gets default
         config_unknown = {"configurable": {"agent_context": {"user_id": "unknown"}}}
-        mock_fn = registry.resolve(
-            "get_lending_factors", scenario_metadata, config=config_unknown
-        )
+        mock_fn = registry.resolve("get_lending_factors", scenario_metadata, config=config_unknown)
         assert mock_fn is not None
         assert mock_fn() == {"approval_segment": "Fair"}
