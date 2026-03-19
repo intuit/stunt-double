@@ -1,0 +1,60 @@
+[project]
+name = "stuntdouble"
+version = "0.1.0"
+description = "Tool mocking framework for AI agent testing"
+requires-python = ">= 3.11"
+license = "MIT"
+authors = [{ name = "Benjamin Benchaya" }]
+readme = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    "langchain-core>=1.2.5",
+    "pydantic>=2.0.0",
+    "langgraph>=1.0.0",
+]
+
+[project.optional-dependencies]
+mcp = ["aiohttp>=3.9.0"]
+
+[dependency-groups]
+dev = ["pytest", "pytest-cov", "pytest-xdist", "pytest-asyncio", "mypy", "ruff", "langchain-openai"]
+docs = ["sphinx>=7.0.0", "myst-parser>=3.0.0", "sphinx-rtd-theme>=2.0.0", "sphinx-copybutton>=0.5.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stuntdouble"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501", "N815"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["stuntdouble"]
+
+[project.urls]
+Homepage = "https://github.com/stuntdouble/stuntdouble"
+Documentation = "https://github.com/stuntdouble/stuntdouble/tree/main/docs"
+Source = "https://github.com/stuntdouble/stuntdouble"
+Issues = "https://github.com/stuntdouble/stuntdouble/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
