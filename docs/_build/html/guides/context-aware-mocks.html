@@ -63,6 +63,13 @@
 <li class="toctree-l3"><a class="reference internal" href="quickstart.html#complete-evaluation-scenario">Complete Evaluation Scenario</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#scenario-definition-examples">Scenario Definition Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#multi-tool-workflow-scenario">Multi-Tool Workflow Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#multi-case-same-tool-different-inputs-different-outputs">Multi-Case Same Tool (Different Inputs, Different Outputs)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#dynamic-placeholders-combined-with-input-matching">Dynamic Placeholders Combined with Input Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#multiple-operators-on-the-same-field">Multiple Operators on the Same Field</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#testing-examples">Testing Examples</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="quickstart.html#pytest-with-langgraph-recommended">pytest with LangGraph (Recommended)</a></li>
 </ul>
@@ -256,6 +263,14 @@
 <li class="toctree-l3"><a class="reference internal" href="mock-builder.html#builder-vs-data-driven">Builder vs. Data-Driven</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#advanced-mock-function-patterns">Advanced Mock Function Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#complex-logic-with-returns-fn">Complex Logic with <code class="docutils literal notranslate"><span class="pre">returns_fn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#error-simulation">Error Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#scenario-predicates-with-when">Scenario Predicates with <code class="docutils literal notranslate"><span class="pre">when()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#combining-when-echoes-input-returns">Combining <code class="docutils literal notranslate"><span class="pre">when()</span></code> + <code class="docutils literal notranslate"><span class="pre">echoes_input()</span></code> + <code class="docutils literal notranslate"><span class="pre">returns()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#mock-factory-with-registry-register-for-full-control">Mock Factory with <code class="docutils literal notranslate"><span class="pre">registry.register()</span></code> for Full Control</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="mock-builder.html#see-also">See Also</a></li>
 </ul>
 </li>
@@ -320,6 +335,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#key-points">Key Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#more-patterns">More Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mock-factory-using-both-scenario-metadata-and-config">Mock Factory Using Both scenario_metadata and config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-config-placeholders-in-scenario-definitions">Using <code class="docutils literal notranslate"><span class="pre">{{config.*}}</span></code> Placeholders in Scenario Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multi-tenant-mock-with-config-driven-behavior">Multi-Tenant Mock with Config-Driven Behavior</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
 </ul>
 </li>
@@ -799,6 +820,87 @@
 <li><p>The <code class="docutils literal notranslate"><span class="pre">config</span></code> parameter is detected via signature inspection—no registration changes needed</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">get_configurable_context</span></code> returns an empty dict if config is <code class="docutils literal notranslate"><span class="pre">None</span></code> or missing <code class="docutils literal notranslate"><span class="pre">configurable</span></code></p></li>
 </ul>
+</section>
+<hr class="docutils" />
+<section id="more-patterns">
+<h2>More Patterns<a class="headerlink" href="#more-patterns" title="Link to this heading"></a></h2>
+<section id="mock-factory-using-both-scenario-metadata-and-config">
+<h3>Mock Factory Using Both scenario_metadata and config<a class="headerlink" href="#mock-factory-using-both-scenario-metadata-and-config" title="Link to this heading"></a></h3>
+<p>A mock can merge test-scenario data with runtime context. <code class="docutils literal notranslate"><span class="pre">scenario_metadata</span></code> carries test-scenario data (locale, feature flags), while <code class="docutils literal notranslate"><span class="pre">config</span></code> carries per-request runtime context (user ID, auth tokens).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_configurable_context</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">personalized_mock</span><span class="p">(</span><span class="n">scenario_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mock that merges scenario data with runtime config.&quot;&quot;&quot;</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">get_configurable_context</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;agent_context&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user_id&quot;</span><span class="p">,</span> <span class="s2">&quot;anonymous&quot;</span><span class="p">)</span>
+    <span class="n">locale</span> <span class="o">=</span> <span class="n">scenario_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;locale&quot;</span><span class="p">,</span> <span class="s2">&quot;en-US&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fn</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Result for &#39;</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;locale&quot;</span><span class="p">:</span> <span class="n">locale</span><span class="p">}],</span>
+            <span class="s2">&quot;requested_by&quot;</span><span class="p">:</span> <span class="n">user_id</span><span class="p">,</span>
+            <span class="s2">&quot;cached&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">fn</span>
+
+<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;search&quot;</span><span class="p">,</span> <span class="n">mock_fn</span><span class="o">=</span><span class="n">personalized_mock</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="using-config-placeholders-in-scenario-definitions">
+<h3>Using <code class="docutils literal notranslate"><span class="pre">{{config.*}}</span></code> Placeholders in Scenario Definitions<a class="headerlink" href="#using-config-placeholders-in-scenario-definitions" title="Link to this heading"></a></h3>
+<p>You can reference <code class="docutils literal notranslate"><span class="pre">RunnableConfig</span></code> values directly in JSON scenarios without writing Python. <code class="docutils literal notranslate"><span class="pre">{{config.*}}</span></code> pulls values from <code class="docutils literal notranslate"><span class="pre">RunnableConfig.configurable</span></code> at resolution time. Use <code class="docutils literal notranslate"><span class="pre">|</span> <span class="pre">default(...)</span></code> for optional fields.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;scenario_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;user_dashboard&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;mocks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;get_profile&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;user_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{config.user_id}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;org_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{config.org_id | default(&#39;unknown&#39;)}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;last_login&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{now}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;dashboard_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/users/{{config.user_id}}/dashboard&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="multi-tenant-mock-with-config-driven-behavior">
+<h3>Multi-Tenant Mock with Config-Driven Behavior<a class="headerlink" href="#multi-tenant-mock-with-config-driven-behavior" title="Link to this heading"></a></h3>
+<p>Test the same scenario across different tenant configurations. Same mock definition, different runtime context — this is powerful for testing multi-tenant agents where behavior varies by config.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockToolsRegistry</span><span class="p">,</span> <span class="n">create_mockable_tool_wrapper</span><span class="p">,</span> <span class="n">inject_scenario_metadata</span>
+
+<span class="n">registry</span> <span class="o">=</span> <span class="n">MockToolsRegistry</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">tenant_db_mock</span><span class="p">(</span><span class="n">scenario_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">get_configurable_context</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">region</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;agent_context&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;region&quot;</span><span class="p">,</span> <span class="s2">&quot;us-east-1&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">table</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;region&quot;</span><span class="p">:</span> <span class="n">region</span><span class="p">}],</span>
+        <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;db-</span><span class="si">{</span><span class="n">region</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;query_database&quot;</span><span class="p">,</span> <span class="n">mock_fn</span><span class="o">=</span><span class="n">tenant_db_mock</span><span class="p">)</span>
+<span class="n">wrapper</span> <span class="o">=</span> <span class="n">create_mockable_tool_wrapper</span><span class="p">(</span><span class="n">registry</span><span class="p">)</span>
+
+<span class="c1"># Test US tenant</span>
+<span class="n">us_config</span> <span class="o">=</span> <span class="n">inject_scenario_metadata</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">&quot;configurable&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;agent_context&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;region&quot;</span><span class="p">:</span> <span class="s2">&quot;us-east-1&quot;</span><span class="p">}}},</span>
+    <span class="p">{</span><span class="s2">&quot;scenario_id&quot;</span><span class="p">:</span> <span class="s2">&quot;multi-region-test&quot;</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Test EU tenant — same scenario, different config</span>
+<span class="n">eu_config</span> <span class="o">=</span> <span class="n">inject_scenario_metadata</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">&quot;configurable&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;agent_context&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;region&quot;</span><span class="p">:</span> <span class="s2">&quot;eu-west-1&quot;</span><span class="p">}}},</span>
+    <span class="p">{</span><span class="s2">&quot;scenario_id&quot;</span><span class="p">:</span> <span class="s2">&quot;multi-region-test&quot;</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 <hr class="docutils" />
 <section id="see-also">

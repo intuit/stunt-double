@@ -386,6 +386,154 @@ A realistic scenario combining multiple tools, operators, and placeholders:
 
 ---
 
+## Scenario Definition Examples
+
+These examples show common patterns for defining scenario metadata. Each can be passed directly as `scenario_metadata` in your LangGraph config or loaded from a JSON file via `DataDrivenMockFactory`.
+
+### Multi-Tool Workflow Scenario
+
+Use this pattern when your agent orchestrates multiple tools in sequence — for example, looking up a customer, checking their bills, and sending a notification.
+
+```json
+{
+  "scenario_id": "overdue_notification_workflow",
+  "mocks": {
+    "get_customer": [
+      {
+        "input": {"customer_id": "CUST-001"},
+        "output": {
+          "id": "CUST-001",
+          "name": "Acme Corp",
+          "email": "billing@acme.com",
+          "tier": "enterprise"
+        }
+      }
+    ],
+    "list_bills": [
+      {
+        "input": {"customer_id": "CUST-001", "status": "overdue"},
+        "output": {
+          "bills": [
+            {"id": "{{sequence('BILL')}}", "amount": 4500.00, "due_date": "{{now - 14d}}"},
+            {"id": "{{sequence('BILL')}}", "amount": 1200.00, "due_date": "{{now - 7d}}"}
+          ],
+          "total_overdue": 5700.00
+        }
+      }
+    ],
+    "send_notification": [
+      {
+        "output": {
+          "notification_id": "{{uuid}}",
+          "sent_at": "{{now}}",
+          "status": "delivered"
+        }
+      }
+    ]
+  }
+}
+```
+
+Each tool has its own mock list. The agent calls them in whatever order it chooses, and StuntDouble matches each call independently.
+
+### Multi-Case Same Tool (Different Inputs, Different Outputs)
+
+Use this pattern when a single tool should return different responses depending on the input. Cases are evaluated top-to-bottom; the first match wins.
+
+```json
+{
+  "scenario_id": "customer_tier_lookup",
+  "mocks": {
+    "get_customer": [
+      {
+        "input": {"customer_id": {"$regex": "^VIP"}},
+        "output": {"tier": "platinum", "discount": 0.25, "support": "dedicated"}
+      },
+      {
+        "input": {"customer_id": {"$regex": "^CORP"}},
+        "output": {"tier": "enterprise", "discount": 0.15, "support": "priority"}
+      },
+      {
+        "input": {"customer_id": {"$exists": true}},
+        "output": {"tier": "standard", "discount": 0.0, "support": "community"}
+      }
+    ]
+  }
+}
+```
+
+The last case with `$exists: true` acts as a catch-all — it matches any call that includes a `customer_id` field, regardless of value.
+
+### Dynamic Placeholders Combined with Input Matching
+
+Use this pattern when the output needs to reflect values from the input or generate unique identifiers on the fly.
+
+```json
+{
+  "scenario_id": "invoice_creation",
+  "mocks": {
+    "create_invoice": [
+      {
+        "input": {"amount": {"$gte": 10000}},
+        "output": {
+          "id": "{{sequence('INV')}}",
+          "amount": "{{input.amount}}",
+          "customer_id": "{{input.customer_id}}",
+          "status": "pending_approval",
+          "requires_review": true,
+          "created_at": "{{now}}",
+          "due_date": "{{now + 30d}}"
+        }
+      },
+      {
+        "output": {
+          "id": "{{sequence('INV')}}",
+          "amount": "{{input.amount}}",
+          "customer_id": "{{input.customer_id}}",
+          "status": "approved",
+          "requires_review": false,
+          "created_at": "{{now}}",
+          "due_date": "{{now + 30d}}"
+        }
+      }
+    ]
+  }
+}
+```
+
+High-value invoices (>= $10,000) get `pending_approval` status; others auto-approve. Both cases use `{{input.*}}` to echo back the caller's data.
+
+### Multiple Operators on the Same Field
+
+Use this pattern when you need to combine conditions on a single field — all operators must match (AND logic).
+
+```json
+{
+  "scenario_id": "bill_filtering",
+  "mocks": {
+    "search_bills": [
+      {
+        "input": {
+          "amount": {"$gte": 1000, "$lte": 5000},
+          "status": {"$in": ["unpaid", "overdue"]},
+          "vendor": {"$contains": "Corp"}
+        },
+        "output": {
+          "bills": [
+            {"id": "B-101", "vendor": "Acme Corp", "amount": 2500, "status": "overdue"}
+          ],
+          "count": 1
+        }
+      }
+    ]
+  }
+}
+```
+
+This matches unpaid or overdue bills between $1,000-$5,000 from vendors whose name contains "Corp". All operators on a field must be satisfied for the case to match.
+
+---
+
 ## Testing Examples
 
 ### pytest with LangGraph (Recommended)

@@ -272,6 +272,116 @@ registry.register_data_driven("query_bills")
 
 ---
 
+## Advanced Mock Function Patterns
+
+Beyond the basics, `MockBuilder` supports patterns for complex business logic, error simulation, and context-aware mocking.
+
+### Complex Logic with `returns_fn()`
+
+When your mock needs branching logic, pass a callable to `returns_fn()`. Here a billing calculator computes totals from structured input:
+
+```python
+registry.mock("calculate_total").returns_fn(
+    lambda items, tax_rate=0.0: {
+        "subtotal": sum(item["price"] * item["qty"] for item in items),
+        "tax": sum(item["price"] * item["qty"] for item in items) * tax_rate,
+        "total": sum(item["price"] * item["qty"] for item in items) * (1 + tax_rate),
+        "item_count": len(items),
+    }
+)
+```
+
+The callable receives the same keyword arguments the real tool would. Use this whenever a static `.returns()` value isn't expressive enough.
+
+### Error Simulation
+
+Mock tools that return errors to verify your agent handles failures gracefully:
+
+```python
+# Simulate a service outage
+registry.mock("send_email").returns({"error": "Service unavailable", "status": 503})
+
+# Simulate rate limiting
+registry.mock("call_api").returns_fn(
+    lambda **kwargs: {"error": "Rate limit exceeded", "retry_after": 30}
+)
+
+# Simulate partial failure
+registry.mock("batch_update").returns_fn(
+    lambda records: {
+        "succeeded": [r["id"] for r in records[:3]],
+        "failed": [{"id": r["id"], "error": "Conflict"} for r in records[3:]],
+    }
+)
+```
+
+This is especially useful for testing retry logic, fallback paths, and user-facing error messages in your agent.
+
+### Scenario Predicates with `when()`
+
+Pass a lambda predicate to `.when()` to gate mocks on scenario metadata. This enables feature-flag style mocking:
+
+```python
+# Mock only when scenario has a specific flag
+registry.mock("get_pricing").when(
+    lambda metadata: metadata.get("feature_flags", {}).get("new_pricing") is True
+).returns({"plan": "v2", "price": 29.99})
+
+# Default pricing when flag is off
+registry.mock("get_pricing").returns({"plan": "v1", "price": 19.99})
+```
+
+Scenario predicates are checked first. If the predicate doesn't match, the next registered mock for that tool is tried. This lets you layer conditional mocks with a fallback default.
+
+### Combining `when()` + `echoes_input()` + `returns()`
+
+All three methods can be chained together. Input conditions, echoed fields, and static return values are merged into the final response:
+
+```python
+registry.mock("create_user").when(
+    role={"$in": ["admin", "superadmin"]}
+).echoes_input("email", "role").returns({
+    "id": "USR-001",
+    "status": "active",
+    "permissions": ["read", "write", "delete"],
+    "created_at": "2025-01-01T00:00:00Z",
+})
+# Input: {"email": "admin@acme.com", "role": "admin"}
+# Output: {"id": "USR-001", "status": "active", "permissions": [...],
+#          "created_at": "...", "email": "admin@acme.com", "role": "admin"}
+```
+
+The echoed fields (`email`, `role`) are merged into the static return value. If an input doesn't match the `.when()` conditions, `InputNotMatchedError` is raised as usual.
+
+### Mock Factory with `registry.register()` for Full Control
+
+When you need access to `scenario_metadata` at mock-creation time, use the lower-level `register()` method directly:
+
+```python
+def tenant_aware_mock(scenario_metadata: dict, config: dict = None):
+    """Mock that varies behavior based on scenario metadata."""
+    tenant = scenario_metadata.get("tenant", "default")
+
+    if tenant == "enterprise":
+        return lambda account_id: {
+            "account_id": account_id,
+            "features": ["sso", "audit_log", "custom_roles"],
+            "max_users": 10000,
+        }
+    else:
+        return lambda account_id: {
+            "account_id": account_id,
+            "features": ["basic_auth"],
+            "max_users": 5,
+        }
+
+registry.register("get_account_features", mock_fn=tenant_aware_mock)
+```
+
+`register()` gives you a two-phase mock: the outer function receives `scenario_metadata` and returns the actual mock callable. This is the most powerful pattern when you need runtime context to determine mock behavior.
+
+---
+
 ## See Also
 
 - [Quickstart Guide](quickstart.md) - Getting started with StuntDouble

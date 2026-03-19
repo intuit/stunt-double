@@ -63,6 +63,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#complete-evaluation-scenario">Complete Evaluation Scenario</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#scenario-definition-examples">Scenario Definition Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#multi-tool-workflow-scenario">Multi-Tool Workflow Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multi-case-same-tool-different-inputs-different-outputs">Multi-Case Same Tool (Different Inputs, Different Outputs)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-placeholders-combined-with-input-matching">Dynamic Placeholders Combined with Input Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-operators-on-the-same-field">Multiple Operators on the Same Field</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#testing-examples">Testing Examples</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pytest-with-langgraph-recommended">pytest with LangGraph (Recommended)</a></li>
 </ul>
@@ -256,6 +263,14 @@
 <li class="toctree-l3"><a class="reference internal" href="mock-builder.html#builder-vs-data-driven">Builder vs. Data-Driven</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#advanced-mock-function-patterns">Advanced Mock Function Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#complex-logic-with-returns-fn">Complex Logic with <code class="docutils literal notranslate"><span class="pre">returns_fn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#error-simulation">Error Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#scenario-predicates-with-when">Scenario Predicates with <code class="docutils literal notranslate"><span class="pre">when()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#combining-when-echoes-input-returns">Combining <code class="docutils literal notranslate"><span class="pre">when()</span></code> + <code class="docutils literal notranslate"><span class="pre">echoes_input()</span></code> + <code class="docutils literal notranslate"><span class="pre">returns()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#mock-factory-with-registry-register-for-full-control">Mock Factory with <code class="docutils literal notranslate"><span class="pre">registry.register()</span></code> for Full Control</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="mock-builder.html#see-also">See Also</a></li>
 </ul>
 </li>
@@ -320,6 +335,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#key-points">Key Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#more-patterns">More Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#mock-factory-using-both-scenario-metadata-and-config">Mock Factory Using Both scenario_metadata and config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#using-config-placeholders-in-scenario-definitions">Using <code class="docutils literal notranslate"><span class="pre">{{config.*}}</span></code> Placeholders in Scenario Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#multi-tenant-mock-with-config-driven-behavior">Multi-Tenant Mock with Config-Driven Behavior</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#see-also">See Also</a></li>
 </ul>
 </li>
@@ -838,6 +859,145 @@ poetry<span class="w"> </span>add<span class="w"> </span>stuntdouble
 <span class="p">}</span>
 </pre></div>
 </div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="scenario-definition-examples">
+<h2>Scenario Definition Examples<a class="headerlink" href="#scenario-definition-examples" title="Link to this heading"></a></h2>
+<p>These examples show common patterns for defining scenario metadata. Each can be passed directly as <code class="docutils literal notranslate"><span class="pre">scenario_metadata</span></code> in your LangGraph config or loaded from a JSON file via <code class="docutils literal notranslate"><span class="pre">DataDrivenMockFactory</span></code>.</p>
+<section id="multi-tool-workflow-scenario">
+<h3>Multi-Tool Workflow Scenario<a class="headerlink" href="#multi-tool-workflow-scenario" title="Link to this heading"></a></h3>
+<p>Use this pattern when your agent orchestrates multiple tools in sequence — for example, looking up a customer, checking their bills, and sending a notification.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;scenario_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;overdue_notification_workflow&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;mocks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;get_customer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CUST-001&quot;</span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CUST-001&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Acme Corp&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;billing@acme.com&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;tier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;enterprise&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;list_bills&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CUST-001&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;overdue&quot;</span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;bills&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{sequence(&#39;BILL&#39;)}}&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">4500.00</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;due_date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{now - 14d}}&quot;</span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{sequence(&#39;BILL&#39;)}}&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1200.00</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;due_date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{now - 7d}}&quot;</span><span class="p">}</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="nt">&quot;total_overdue&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">5700.00</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;send_notification&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;notification_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{uuid}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;sent_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{now}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;delivered&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Each tool has its own mock list. The agent calls them in whatever order it chooses, and StuntDouble matches each call independently.</p>
+</section>
+<section id="multi-case-same-tool-different-inputs-different-outputs">
+<h3>Multi-Case Same Tool (Different Inputs, Different Outputs)<a class="headerlink" href="#multi-case-same-tool-different-inputs-different-outputs" title="Link to this heading"></a></h3>
+<p>Use this pattern when a single tool should return different responses depending on the input. Cases are evaluated top-to-bottom; the first match wins.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;scenario_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;customer_tier_lookup&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;mocks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;get_customer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;$regex&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^VIP&quot;</span><span class="p">}},</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;tier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;platinum&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;discount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;support&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dedicated&quot;</span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;$regex&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^CORP&quot;</span><span class="p">}},</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;tier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;enterprise&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;discount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.15</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;support&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;priority&quot;</span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;$exists&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}},</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;tier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;standard&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;discount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;support&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;community&quot;</span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The last case with <code class="docutils literal notranslate"><span class="pre">$exists:</span> <span class="pre">true</span></code> acts as a catch-all — it matches any call that includes a <code class="docutils literal notranslate"><span class="pre">customer_id</span></code> field, regardless of value.</p>
+</section>
+<section id="dynamic-placeholders-combined-with-input-matching">
+<h3>Dynamic Placeholders Combined with Input Matching<a class="headerlink" href="#dynamic-placeholders-combined-with-input-matching" title="Link to this heading"></a></h3>
+<p>Use this pattern when the output needs to reflect values from the input or generate unique identifiers on the fly.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;scenario_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;invoice_creation&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;mocks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;create_invoice&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;$gte&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10000</span><span class="p">}},</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{sequence(&#39;INV&#39;)}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{input.amount}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{input.customer_id}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pending_approval&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;requires_review&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{now}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;due_date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{now + 30d}}&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{sequence(&#39;INV&#39;)}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{input.amount}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;customer_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{input.customer_id}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;approved&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;requires_review&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{now}}&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;due_date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{now + 30d}}&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>High-value invoices (&gt;= $10,000) get <code class="docutils literal notranslate"><span class="pre">pending_approval</span></code> status; others auto-approve. Both cases use <code class="docutils literal notranslate"><span class="pre">{{input.*}}</span></code> to echo back the caller’s data.</p>
+</section>
+<section id="multiple-operators-on-the-same-field">
+<h3>Multiple Operators on the Same Field<a class="headerlink" href="#multiple-operators-on-the-same-field" title="Link to this heading"></a></h3>
+<p>Use this pattern when you need to combine conditions on a single field — all operators must match (AND logic).</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;scenario_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;bill_filtering&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;mocks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;search_bills&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;input&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;$gte&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;$lte&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5000</span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;$in&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;unpaid&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;overdue&quot;</span><span class="p">]},</span>
+<span class="w">          </span><span class="nt">&quot;vendor&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;$contains&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Corp&quot;</span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;output&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;bills&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;B-101&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;vendor&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Acme Corp&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;amount&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2500</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;overdue&quot;</span><span class="p">}</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This matches unpaid or overdue bills between $1,000-$5,000 from vendors whose name contains “Corp”. All operators on a field must be satisfied for the case to match.</p>
 </section>
 </section>
 <hr class="docutils" />

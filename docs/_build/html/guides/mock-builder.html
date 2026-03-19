@@ -63,6 +63,13 @@
 <li class="toctree-l3"><a class="reference internal" href="quickstart.html#complete-evaluation-scenario">Complete Evaluation Scenario</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#scenario-definition-examples">Scenario Definition Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#multi-tool-workflow-scenario">Multi-Tool Workflow Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#multi-case-same-tool-different-inputs-different-outputs">Multi-Case Same Tool (Different Inputs, Different Outputs)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#dynamic-placeholders-combined-with-input-matching">Dynamic Placeholders Combined with Input Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#multiple-operators-on-the-same-field">Multiple Operators on the Same Field</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#testing-examples">Testing Examples</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="quickstart.html#pytest-with-langgraph-recommended">pytest with LangGraph (Recommended)</a></li>
 </ul>
@@ -256,6 +263,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#builder-vs-data-driven">Builder vs. Data-Driven</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-mock-function-patterns">Advanced Mock Function Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#complex-logic-with-returns-fn">Complex Logic with <code class="docutils literal notranslate"><span class="pre">returns_fn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error-simulation">Error Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scenario-predicates-with-when">Scenario Predicates with <code class="docutils literal notranslate"><span class="pre">when()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#combining-when-echoes-input-returns">Combining <code class="docutils literal notranslate"><span class="pre">when()</span></code> + <code class="docutils literal notranslate"><span class="pre">echoes_input()</span></code> + <code class="docutils literal notranslate"><span class="pre">returns()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mock-factory-with-registry-register-for-full-control">Mock Factory with <code class="docutils literal notranslate"><span class="pre">registry.register()</span></code> for Full Control</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
 </ul>
 </li>
@@ -320,6 +335,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#key-points">Key Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#more-patterns">More Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#mock-factory-using-both-scenario-metadata-and-config">Mock Factory Using Both scenario_metadata and config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#using-config-placeholders-in-scenario-definitions">Using <code class="docutils literal notranslate"><span class="pre">{{config.*}}</span></code> Placeholders in Scenario Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#multi-tenant-mock-with-config-driven-behavior">Multi-Tenant Mock with Config-Driven Behavior</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#see-also">See Also</a></li>
 </ul>
 </li>
@@ -756,6 +777,105 @@
 <span class="c1"># ]}}</span>
 </pre></div>
 </div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="advanced-mock-function-patterns">
+<h2>Advanced Mock Function Patterns<a class="headerlink" href="#advanced-mock-function-patterns" title="Link to this heading"></a></h2>
+<p>Beyond the basics, <code class="docutils literal notranslate"><span class="pre">MockBuilder</span></code> supports patterns for complex business logic, error simulation, and context-aware mocking.</p>
+<section id="complex-logic-with-returns-fn">
+<h3>Complex Logic with <code class="docutils literal notranslate"><span class="pre">returns_fn()</span></code><a class="headerlink" href="#complex-logic-with-returns-fn" title="Link to this heading"></a></h3>
+<p>When your mock needs branching logic, pass a callable to <code class="docutils literal notranslate"><span class="pre">returns_fn()</span></code>. Here a billing calculator computes totals from structured input:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;calculate_total&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns_fn</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">items</span><span class="p">,</span> <span class="n">tax_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;subtotal&quot;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;qty&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">),</span>
+        <span class="s2">&quot;tax&quot;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;qty&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span> <span class="o">*</span> <span class="n">tax_rate</span><span class="p">,</span>
+        <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;qty&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">tax_rate</span><span class="p">),</span>
+        <span class="s2">&quot;item_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">),</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The callable receives the same keyword arguments the real tool would. Use this whenever a static <code class="docutils literal notranslate"><span class="pre">.returns()</span></code> value isn’t expressive enough.</p>
+</section>
+<section id="error-simulation">
+<h3>Error Simulation<a class="headerlink" href="#error-simulation" title="Link to this heading"></a></h3>
+<p>Mock tools that return errors to verify your agent handles failures gracefully:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Simulate a service outage</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;send_email&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Service unavailable&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">503</span><span class="p">})</span>
+
+<span class="c1"># Simulate rate limiting</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;call_api&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns_fn</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Rate limit exceeded&quot;</span><span class="p">,</span> <span class="s2">&quot;retry_after&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Simulate partial failure</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;batch_update&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns_fn</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">records</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;succeeded&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">[:</span><span class="mi">3</span><span class="p">]],</span>
+        <span class="s2">&quot;failed&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Conflict&quot;</span><span class="p">}</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">[</span><span class="mi">3</span><span class="p">:]],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This is especially useful for testing retry logic, fallback paths, and user-facing error messages in your agent.</p>
+</section>
+<section id="scenario-predicates-with-when">
+<h3>Scenario Predicates with <code class="docutils literal notranslate"><span class="pre">when()</span></code><a class="headerlink" href="#scenario-predicates-with-when" title="Link to this heading"></a></h3>
+<p>Pass a lambda predicate to <code class="docutils literal notranslate"><span class="pre">.when()</span></code> to gate mocks on scenario metadata. This enables feature-flag style mocking:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Mock only when scenario has a specific flag</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;get_pricing&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">when</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feature_flags&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;new_pricing&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
+<span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;plan&quot;</span><span class="p">:</span> <span class="s2">&quot;v2&quot;</span><span class="p">,</span> <span class="s2">&quot;price&quot;</span><span class="p">:</span> <span class="mf">29.99</span><span class="p">})</span>
+
+<span class="c1"># Default pricing when flag is off</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;get_pricing&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;plan&quot;</span><span class="p">:</span> <span class="s2">&quot;v1&quot;</span><span class="p">,</span> <span class="s2">&quot;price&quot;</span><span class="p">:</span> <span class="mf">19.99</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Scenario predicates are checked first. If the predicate doesn’t match, the next registered mock for that tool is tried. This lets you layer conditional mocks with a fallback default.</p>
+</section>
+<section id="combining-when-echoes-input-returns">
+<h3>Combining <code class="docutils literal notranslate"><span class="pre">when()</span></code> + <code class="docutils literal notranslate"><span class="pre">echoes_input()</span></code> + <code class="docutils literal notranslate"><span class="pre">returns()</span></code><a class="headerlink" href="#combining-when-echoes-input-returns" title="Link to this heading"></a></h3>
+<p>All three methods can be chained together. Input conditions, echoed fields, and static return values are merged into the final response:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;create_user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">when</span><span class="p">(</span>
+    <span class="n">role</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;$in&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="s2">&quot;superadmin&quot;</span><span class="p">]}</span>
+<span class="p">)</span><span class="o">.</span><span class="n">echoes_input</span><span class="p">(</span><span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;role&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;USR-001&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;active&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;permissions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;read&quot;</span><span class="p">,</span> <span class="s2">&quot;write&quot;</span><span class="p">,</span> <span class="s2">&quot;delete&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;created_at&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">})</span>
+<span class="c1"># Input: {&quot;email&quot;: &quot;admin@acme.com&quot;, &quot;role&quot;: &quot;admin&quot;}</span>
+<span class="c1"># Output: {&quot;id&quot;: &quot;USR-001&quot;, &quot;status&quot;: &quot;active&quot;, &quot;permissions&quot;: [...],</span>
+<span class="c1">#          &quot;created_at&quot;: &quot;...&quot;, &quot;email&quot;: &quot;admin@acme.com&quot;, &quot;role&quot;: &quot;admin&quot;}</span>
+</pre></div>
+</div>
+<p>The echoed fields (<code class="docutils literal notranslate"><span class="pre">email</span></code>, <code class="docutils literal notranslate"><span class="pre">role</span></code>) are merged into the static return value. If an input doesn’t match the <code class="docutils literal notranslate"><span class="pre">.when()</span></code> conditions, <code class="docutils literal notranslate"><span class="pre">InputNotMatchedError</span></code> is raised as usual.</p>
+</section>
+<section id="mock-factory-with-registry-register-for-full-control">
+<h3>Mock Factory with <code class="docutils literal notranslate"><span class="pre">registry.register()</span></code> for Full Control<a class="headerlink" href="#mock-factory-with-registry-register-for-full-control" title="Link to this heading"></a></h3>
+<p>When you need access to <code class="docutils literal notranslate"><span class="pre">scenario_metadata</span></code> at mock-creation time, use the lower-level <code class="docutils literal notranslate"><span class="pre">register()</span></code> method directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">tenant_aware_mock</span><span class="p">(</span><span class="n">scenario_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mock that varies behavior based on scenario metadata.&quot;&quot;&quot;</span>
+    <span class="n">tenant</span> <span class="o">=</span> <span class="n">scenario_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tenant&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">tenant</span> <span class="o">==</span> <span class="s2">&quot;enterprise&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">account_id</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;account_id&quot;</span><span class="p">:</span> <span class="n">account_id</span><span class="p">,</span>
+            <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sso&quot;</span><span class="p">,</span> <span class="s2">&quot;audit_log&quot;</span><span class="p">,</span> <span class="s2">&quot;custom_roles&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;max_users&quot;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">account_id</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;account_id&quot;</span><span class="p">:</span> <span class="n">account_id</span><span class="p">,</span>
+            <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;basic_auth&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;max_users&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="p">}</span>
+
+<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;get_account_features&quot;</span><span class="p">,</span> <span class="n">mock_fn</span><span class="o">=</span><span class="n">tenant_aware_mock</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">register()</span></code> gives you a two-phase mock: the outer function receives <code class="docutils literal notranslate"><span class="pre">scenario_metadata</span></code> and returns the actual mock callable. This is the most powerful pattern when you need runtime context to determine mock behavior.</p>
 </section>
 </section>
 <hr class="docutils" />
