@@ -1,0 +1,489 @@
+# Quickstart Guide
+
+Get up and running with StuntDouble in 5 minutes.
+
+---
+
+## Installation
+
+```bash
+# Using uv (recommended)
+uv add dev-devsuccess.stuntdouble.stuntdouble
+
+# Using pip
+pip install dev-devsuccess.stuntdouble.stuntdouble
+
+# Using Poetry
+poetry add dev-devsuccess.stuntdouble.stuntdouble
+```
+
+**Python compatibility:** 3.11, 3.12, 3.13, 3.14
+
+---
+
+## Cursor AI Skill
+
+Using [Cursor](https://cursor.com)? Skip the manual setup — StuntDouble's **Cursor AI Skill** automates the full 8-phase integration workflow. Install the skill and ask Cursor *"Add StuntDouble to this project"*.
+
+```bash
+npx @dev-devsuccess/skills add dev-devsuccess/StuntDouble -s stunt-double-adoption
+```
+
+→ [Cursor AI Skill Guide](../skills/cursor-skill.md)
+
+---
+
+## Choose Your Path
+
+### Path A: LangGraph Agent (Recommended)
+
+If you're using LangGraph, use per-invocation mocking via `RunnableConfig`. The simplest approach uses the **default registry** and pre-configured wrapper.
+
+#### Option 1: Default Registry (Simplest)
+
+Use the pre-configured `mockable_tool_wrapper` and `default_registry` for zero-setup mocking:
+
+```python
+from langgraph.graph import StateGraph, MessagesState, START
+from langgraph.prebuilt import ToolNode, tools_condition
+from langchain_core.messages import HumanMessage
+from stuntdouble import (
+    mockable_tool_wrapper,      # Pre-configured awrap_tool_call wrapper
+    default_registry,           # Default MockToolsRegistry instance
+    inject_scenario_metadata,   # Config helper
+)
+
+# Your real tools (unchanged production code)
+tools = [get_customer_tool, list_bills_tool]
+
+# Step 1: Register mocks on the default registry
+default_registry.mock("get_customer").returns({
+    "id": "CUST-001",
+    "name": "Test Corp",
+    "balance": 1500,
+})
+default_registry.mock("list_bills").returns({
+    "bills": [{"id": "B001", "amount": 500}]
+})
+
+# Step 2: Build graph with native ToolNode + mockable wrapper
+builder = StateGraph(MessagesState)
+builder.add_node("agent", agent_node)
+builder.add_node("tools", ToolNode(tools, awrap_tool_call=mockable_tool_wrapper))  # ← Just add the wrapper!
+builder.add_edge(START, "agent")
+builder.add_conditional_edges("agent", tools_condition)
+builder.add_edge("tools", "agent")
+graph = builder.compile()
+
+# Step 3: Invoke WITH mocks (any scenario_metadata enables registered mocks)
+config = inject_scenario_metadata({}, {
+    "scenario_id": "quickstart-demo"
+})
+result = await graph.ainvoke(
+    {"messages": [HumanMessage("List my bills")]},
+    config=config
+)
+# → Uses mocked get_customer / list_bills
+
+# Step 4: Invoke WITHOUT mocks (no scenario_metadata = real tools)
+result = await graph.ainvoke(
+    {"messages": [HumanMessage("List my bills")]}
+)
+# → Uses real list_bills tool
+```
+
+#### Option 2: Fluent Builder API (Most Concise)
+
+Use the `mock()` fluent builder for one-liner mock registration:
+
+```python
+from stuntdouble import default_registry, mockable_tool_wrapper
+
+# Register mocks with fluent API (uses default_registry automatically)
+default_registry.mock("get_customer").returns({"id": "CUST-001", "name": "Test Corp", "status": "active"})
+default_registry.mock("list_bills").returns({"bills": [{"id": "B001", "amount": 500}]})
+
+# Conditional mocks
+default_registry.mock("get_invoice").when(status={"$in": ["paid", "pending"]}).returns({"priority": "low"})
+
+# Build graph (same as above)
+builder.add_node("tools", ToolNode(tools, awrap_tool_call=mockable_tool_wrapper))
+```
+
+#### Option 3: Custom Registry (Full Control)
+
+For advanced scenarios where you need multiple registries or custom wrappers:
+
+```python
+from stuntdouble import register_data_driven
+from stuntdouble import MockToolsRegistry, create_mockable_tool_wrapper, inject_scenario_metadata
+
+# Create a custom registry
+registry = MockToolsRegistry()
+
+# Register builder mocks and data-driven mocks on the same registry
+registry.mock("get_customer").returns({
+    "id": "CUST-001",
+    "name": "Test Corp",
+    "status": "active",
+})
+register_data_driven(registry, "list_bills")
+
+# Create a wrapper with custom registry
+wrapper = create_mockable_tool_wrapper(registry)
+
+# Build graph
+builder = StateGraph(MessagesState)
+builder.add_node("agent", agent_node)
+builder.add_node("tools", ToolNode(tools, awrap_tool_call=wrapper))
+builder.add_edge(START, "agent")
+builder.add_conditional_edges("agent", tools_condition)
+builder.add_edge("tools", "agent")
+graph = builder.compile()
+
+# Invoke with mocks
+config = inject_scenario_metadata({}, {
+    "mocks": {
+        "list_bills": [{"output": {"bills": [{"id": "B001", "amount": 500}]}}]
+    }
+})
+result = await graph.ainvoke(
+    {"messages": [HumanMessage("Get customer CUST-001")]},
+    config=config
+)
+```
+
+**Next steps:**
+- [LangGraph Approach Guide](langgraph-integration.md) — Per-invocation mocking and custom mocked tool patterns
+- [Call Recording Guide](call-recording.md) — Verify tool calls in tests
+- [Signature Validation Guide](signature-validation.md) — Catch mock errors early
+
+---
+
+### Path B: MCP Server Auto-Mocking
+
+If you have an MCP server and want automatic mock generation.
+
+Install the optional MCP support before using mirroring:
+
+```bash
+pip install "dev-devsuccess.stuntdouble.stuntdouble[mcp]"
+```
+
+```python
+from stuntdouble.mirroring import ToolMirror
+
+# 1. Create mirror
+mirror = ToolMirror()
+
+# 2. Mirror tools from your MCP server (stdio transport)
+mirror.mirror(["python", "-m", "my_mcp_server"])
+
+# 3. Get LangChain tools
+tools = mirror.to_langchain_tools()
+
+# 4. Use with agent
+agent = llm.bind_tools(tools)
+response = agent.invoke("Create an invoice")
+```
+
+**With LLM for realistic data:**
+
+```python
+from langchain_openai import ChatOpenAI
+from stuntdouble.mirroring import ToolMirror
+
+llm = ChatOpenAI(model="gpt-4o")
+mirror = ToolMirror.with_llm(llm)
+mirror.mirror(["python", "-m", "my_mcp_server"])
+tools = mirror.to_langchain_tools()
+```
+
+**With HTTP transport and authentication:**
+
+```python
+from stuntdouble.mirroring import ToolMirror
+
+mirror = ToolMirror()
+result = mirror.mirror(
+    http_url="https://api.example.com/mcp",
+    headers={"Authorization": "Bearer your-token-here"}
+)
+tools = mirror.to_langchain_tools()
+```
+
+**Next steps:**
+- [MCP Tool Mirroring Guide](mcp-mirroring.md)
+
+---
+
+## Common Patterns
+
+### Using MockBuilder (Fluent API)
+
+The `MockBuilder` provides a chainable API for registering mocks, making common patterns more concise:
+
+```python
+from stuntdouble import MockToolsRegistry
+
+registry = MockToolsRegistry()
+
+# Simple static mock
+registry.mock("get_customer").returns({"id": "123", "name": "Test Corp"})
+
+# Conditional mock with input matching
+registry.mock("list_bills").when(status="active").returns({"bills": [{"id": "B001"}]})
+
+# Echo input fields back in response
+registry.mock("create_user").echoes_input("user_id", "email").returns({"status": "created"})
+
+# Custom callable
+registry.mock("calculate_total").returns_fn(
+    lambda items, tax_rate: {"total": sum(i["price"] for i in items) * (1 + tax_rate)}
+)
+```
+
+**Using the default registry (no explicit registry needed):**
+
+```python
+from stuntdouble import default_registry
+
+# Uses default_registry
+default_registry.mock("get_customer").returns({"id": "123", "name": "Mocked"})
+default_registry.mock("list_bills").when(status="active").returns({"bills": []})
+```
+
+For complete MockBuilder documentation and examples, see the [MockBuilder Guide](mock-builder.md).
+
+### Call Recording and Verification
+
+Use `CallRecorder` to capture and verify tool calls during test execution:
+
+```python
+from stuntdouble import MockToolsRegistry, CallRecorder, create_mockable_tool_wrapper
+from langgraph.prebuilt import ToolNode
+
+# Create registry and recorder
+registry = MockToolsRegistry()
+recorder = CallRecorder()
+
+# Register mocks using builder
+registry.mock("get_customer").returns({"id": "123", "name": "Test Corp"})
+registry.mock("list_bills").returns({"bills": [{"id": "B001", "amount": 500}]})
+
+# Create wrapper with recorder
+wrapper = create_mockable_tool_wrapper(registry, recorder=recorder)
+
+# Build graph
+builder = StateGraph(MessagesState)
+builder.add_node("agent", agent_node)
+builder.add_node("tools", ToolNode(tools, awrap_tool_call=wrapper))
+# ... add edges ...
+graph = builder.compile()
+
+# Run your agent
+result = await graph.ainvoke({"messages": [HumanMessage("Get customer 123")]})
+
+# Verify calls were made
+recorder.assert_called("get_customer")
+recorder.assert_not_called("delete_account")
+recorder.assert_called_once("list_bills")
+recorder.assert_called_with("get_customer", customer_id="123")
+
+# Verify call order
+recorder.assert_call_order("get_customer", "list_bills")
+
+# Inspect recorded calls
+print(recorder.summary())
+# Output:
+# Recorded 2 call(s):
+#   1. get_customer [MOCKED] args={'customer_id': '123'}
+#   2. list_bills [MOCKED] args={'status': 'active'}
+```
+
+For the complete Call Recording API, see the [Call Recording Guide](call-recording.md).
+
+### Context-Aware Mocks
+
+Access runtime context (user ID, tenant info) in mock factories—especially useful for no-argument tools:
+
+```python
+from stuntdouble import get_configurable_context
+
+def user_context_mock(scenario_metadata: dict, config: dict = None):
+    """Mock factory that extracts user context from RunnableConfig."""
+    ctx = get_configurable_context(config)
+    agent_context = ctx.get("agent_context", {})
+    user_id = agent_context.get("user_id", "unknown")
+
+    return lambda: {"user_id": user_id, "name": "Test User"}
+
+registry.register("get_current_user", mock_fn=user_context_mock)
+```
+
+For full documentation, see the [Context-Aware Mocks Guide](context-aware-mocks.md).
+
+### Input-Based Mocking
+
+Return different outputs based on input:
+
+```python
+# LangGraph approach (via scenario_metadata)
+scenario_metadata = {
+    "mocks": {
+        "get_customer": [
+            {"input": {"customer_id": "VIP-001"}, "output": {"tier": "platinum"}},
+            {"input": {"customer_id": {"$regex": "^CORP"}}, "output": {"tier": "enterprise"}},
+            {"output": {"tier": "standard"}}  # Catch-all
+        ]
+    }
+}
+```
+
+### Dynamic Values
+
+Use placeholders for dynamic outputs:
+
+```python
+scenario_metadata = {
+    "mocks": {
+        "create_invoice": [{
+            "output": {
+                "id": "{{uuid}}",
+                "created_at": "{{now}}",
+                "due_date": "{{now + 30d}}",
+                "customer_id": "{{input.customer_id}}"
+            }
+        }]
+    }
+}
+```
+
+### Complete Evaluation Scenario
+
+A realistic scenario combining multiple tools, operators, and placeholders:
+
+```json
+{
+  "scenario_id": "overdue_bills_workflow",
+  "mocks": {
+    "query_bills": [
+      {
+        "input": {"status": {"$in": ["unpaid", "overdue"]}, "min_amount": {"$gte": 5000}},
+        "output": {
+          "bills": [
+            {"id": "{{sequence('BILL')}}", "vendor": "Major Corp", "amount": 12500, "status": "overdue", "due_date": "{{now - 14d}}"}
+          ],
+          "realm_id": "{{input.realm_id}}",
+          "total": 1
+        }
+      },
+      {
+        "output": {"bills": [], "realm_id": "{{input.realm_id | default(unknown)}}", "total": 0}
+      }
+    ],
+    "get_billing_summary": [
+      {
+        "input": {"period": "current_month"},
+        "output": {
+          "total_billed": 26122.73,
+          "outstanding": 5035.38,
+          "period_start": "{{start_of_month}}",
+          "generated_at": "{{now}}",
+          "report_id": "{{uuid}}"
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Testing Examples
+
+### pytest with LangGraph (Recommended)
+
+```python
+import pytest
+from stuntdouble import MockToolsRegistry, CallRecorder, create_mockable_tool_wrapper, inject_scenario_metadata
+from langgraph.prebuilt import ToolNode
+
+@pytest.fixture
+def mock_setup():
+    """Create fresh registry and recorder for each test."""
+    registry = MockToolsRegistry()
+    recorder = CallRecorder()
+
+    registry.mock("get_customer").returns({"id": "123", "name": "Test Corp"})
+    registry.mock("list_bills").returns({"bills": []})
+
+    wrapper = create_mockable_tool_wrapper(registry, recorder=recorder)
+    return wrapper, recorder
+
+@pytest.fixture
+def agent_graph(mock_setup):
+    """Build graph with mock wrapper."""
+    wrapper, _ = mock_setup
+    builder = StateGraph(MessagesState)
+    builder.add_node("agent", agent_node)
+    builder.add_node("tools", ToolNode(tools, awrap_tool_call=wrapper))
+    builder.add_edge(START, "agent")
+    builder.add_conditional_edges("agent", tools_condition)
+    builder.add_edge("tools", "agent")
+    return builder.compile()
+
+async def test_customer_workflow(agent_graph, mock_setup):
+    _, recorder = mock_setup
+
+    config = inject_scenario_metadata({}, {
+        "scenario_id": "pytest-demo"
+    })
+
+    result = await agent_graph.ainvoke(
+        {"messages": [HumanMessage("Get bills for customer 123")]},
+        config=config
+    )
+
+    # Verify tool usage
+    recorder.assert_called("get_customer")
+    recorder.assert_called("list_bills")
+    recorder.assert_called_with("get_customer", customer_id="123")
+```
+
+---
+
+## Debugging
+
+Enable debug logging:
+
+```python
+import logging
+
+logging.getLogger("stuntdouble").setLevel(logging.DEBUG)
+```
+
+Check registered mocks:
+
+```python
+# LangGraph default registry
+from stuntdouble import default_registry
+print(default_registry.list_registered())  # ['get_customer', 'list_bills']
+```
+
+---
+
+## Next Steps
+
+| Topic | Guide |
+|-------|-------|
+| Cursor AI Skill | [Automated StuntDouble integration for Cursor](../skills/cursor-skill.md) |
+| MockBuilder fluent API | [MockBuilder Guide](mock-builder.md) |
+| Call Recording | [Call Recording Guide](call-recording.md) |
+| Context-Aware Mocks | [Context-Aware Mocks Guide](context-aware-mocks.md) |
+| Signature Validation | [Signature Validation Guide](signature-validation.md) |
+| LangGraph deep dive | [LangGraph Approach](langgraph-integration.md) |
+| MCP mirroring | [MCP Mirroring Guide](mcp-mirroring.md) |
+| Mock format reference | [Mock Format](../reference/mock-format.md) |
+| Matchers and Resolvers | [Matchers and Resolvers](matchers-and-resolvers.md) |
+| Architecture | [Architecture Overview](../architecture/overview.md) |

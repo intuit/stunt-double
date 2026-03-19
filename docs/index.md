@@ -1,0 +1,227 @@
+# StuntDouble Documentation
+
+**Tool Mocking Framework for AI Agent Testing**
+
+---
+
+## What is StuntDouble?
+
+StuntDouble is a Python framework for **mocking AI agent tool calls**. Just like a stunt double performs risky scenes in place of an actor, StuntDouble lets you test your AI agents without the risk, cost, and unpredictability of production APIs.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│     Production                              Testing with StuntDouble        │
+│     ──────────                              ────────────────────────        │
+│                                                                             │
+│     Agent ──▶ Real API ──▶ $$$              Agent ──▶ StuntDouble ──▶ Mock  │
+│               ↓                                       ↓                     │
+│          Slow, Flaky,                            Fast, Reliable,            │
+│          Unpredictable                           Deterministic              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Motivation
+
+### The Problem
+
+AI agents rely heavily on external tools—APIs for customer data, billing systems, communication services, and more. Testing these agents presents unique challenges:
+
+| Challenge | Impact |
+|-----------|--------|
+| **API Costs** | Every test run hits real APIs, accumulating costs |
+| **Slow Execution** | Network latency makes test suites painfully slow |
+| **Non-Deterministic** | Real data changes, causing flaky tests |
+| **Environment Dependencies** | Tests require production-like environments |
+| **Risk of Side Effects** | Tests might accidentally send emails, create invoices |
+
+### The Solution
+
+StuntDouble provides **transparent tool mocking** that intercepts tool calls and returns controlled responses:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                        Before StuntDouble                                   │
+│                        ─────────────────                                    │
+│                                                                             │
+│     ┌─────────┐     ┌──────────────┐     ┌────────────────┐                │
+│     │  Agent  │────▶│ list_bills() │────▶│  Real API      │                │
+│     └─────────┘     └──────────────┘     │  • Slow        │                │
+│                                          │  • Costly      │                │
+│                                          │  • Flaky       │                │
+│                                          └────────────────┘                │
+│                                                                             │
+│                        After StuntDouble                                    │
+│                        ─────────────────                                    │
+│                                                                             │
+│     ┌─────────┐     ┌──────────────┐     ┌────────────────┐                │
+│     │  Agent  │────▶│ StuntDouble  │────▶│  Mock Function │                │
+│     └─────────┘     └──────────────┘     │  • Instant     │                │
+│                           │              │  • Free        │                │
+│                           │              │  • Controlled  │                │
+│                           ▼              └────────────────┘                │
+│                     scenario_metadata?                                      │
+│                     ├── YES ──▶ Return mock                                │
+│                     └── NO  ──▶ Call real tool                             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🚀 **LangGraph Native** | Per-invocation mocking via `RunnableConfig`—no global state |
+| ✨ **Transparent Mocking** | Wrap tools once, toggle between real and mock |
+| 🔄 **Zero Code Changes** | Agent code remains unchanged, production-ready |
+| 🔍 **Smart Input Matching** | Operators like `$gt`, `$in`, `$regex` for conditional mocking |
+| ⏰ **Dynamic Outputs** | Placeholders for `{{now}}`, `{{input.id}}`, `{{uuid}}` |
+| 🔗 **Fluent Builder API** | Chainable mock registration: `mock("tool").when(...).returns(...)` |
+| 📝 **Call Recording** | Capture and assert on tool calls with `CallRecorder` |
+| 🔐 **Signature Validation** | Catch mock/tool signature mismatches at registration or runtime |
+| 🪞 **MCP Tool Mirroring** | Auto-generate mocks from MCP server schemas |
+| 🔑 **Context-Aware Mocks** | Access runtime config (user ID, headers) in mock factories |
+
+## Which Approach Should I Use?
+
+StuntDouble offers two main capabilities:
+
+1. **LangGraph Approach** — Per-invocation mocking via `RunnableConfig`. Use this for LangGraph agents.
+2. **MCP Tool Mirroring** — Auto-generate mock implementations from MCP server schemas. Use this when you need mocks derived from an MCP server.
+
+### LangGraph Approach Features
+
+| Feature | Description |
+|---------|-------------|
+| **Best for** | LangGraph agents |
+| **Configuration** | RunnableConfig |
+| **Concurrent-safe** | ✅ Yes |
+| **Per-request mocks** | ✅ Yes |
+| **Code changes** | Minimal |
+
+## Getting Started
+
+### 1. LangGraph Approach ⭐ (Recommended)
+
+Best for LangGraph agents. Per-invocation mocking via `RunnableConfig`.
+
+```python
+from langgraph.prebuilt import ToolNode
+from stuntdouble import (
+    mockable_tool_wrapper,
+    default_registry,
+    inject_scenario_metadata,
+)
+
+mock = default_registry.mock  # Fluent builder on default registry
+
+# Register mocks on the default registry (fluent API)
+mock("list_bills").returns({"bills": [{"id": "B001", "amount": 500}]})
+
+# Build graph with native ToolNode + mockable wrapper
+builder.add_node("tools", ToolNode(tools, awrap_tool_call=mockable_tool_wrapper))
+
+# Invoke with mocks via config
+config = inject_scenario_metadata({}, {
+    "scenario_id": "landing-page-demo"
+})
+result = await graph.ainvoke(state, config=config)
+```
+
+**Benefits:**
+- ✅ Fully concurrent—each request gets its own mocks
+- ✅ No global state or environment variables
+- ✅ Native `ToolNode` integration—minimal code changes
+- ✅ Call recording for test assertions
+- ✅ Signature validation to catch config errors early
+
+→ [LangGraph Integration Guide](guides/langgraph-integration.md)
+
+### 2. MCP Tool Mirroring
+
+Auto-generate mock implementations from MCP server tool schemas:
+
+```python
+from stuntdouble.mirroring import ToolMirror
+
+mirror = ToolMirror()
+mirror.mirror(["python", "-m", "my_mcp_server"])
+tools = mirror.to_langchain_tools()
+```
+
+→ [MCP Mirroring Guide](guides/mcp-mirroring.md)
+
+## Installation
+
+```shell
+# Using uv (recommended)
+uv add dev-devsuccess.stuntdouble.stuntdouble
+
+# Using pip
+pip install dev-devsuccess.stuntdouble.stuntdouble
+
+# Using Poetry
+poetry add dev-devsuccess.stuntdouble.stuntdouble
+```
+
+For MCP mirroring support, install the optional extra:
+
+```shell
+pip install "dev-devsuccess.stuntdouble.stuntdouble[mcp]"
+```
+
+## Cursor AI Skill
+
+Using [Cursor](https://cursor.com)? StuntDouble has a **Cursor AI Skill** that automates the entire integration — from installing StuntDouble to wiring up mocks and verifying everything works. Just ask Cursor *"Add StuntDouble to this project"* and the skill handles the rest.
+
+```bash
+npx @dev-devsuccess/skills add dev-devsuccess/StuntDouble -s stunt-double-adoption
+```
+
+→ [Cursor AI Skill Guide](skills/cursor-skill.md)
+
+## Documentation Structure
+
+```{toctree}
+:maxdepth: 2
+:caption: Getting Started
+
+guides/quickstart
+guides/langgraph-integration
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: Guides
+
+guides/mcp-mirroring
+guides/matchers-and-resolvers
+guides/mock-builder
+guides/call-recording
+guides/context-aware-mocks
+guides/signature-validation
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: Reference
+
+reference/mock-format
+reference/dependencies
+reference/schema-validation
+architecture/overview
+```
+
+```{toctree}
+:maxdepth: 2
+:caption: Skills
+
+skills/cursor-skill
+```
+
+## Support
+
+For questions or feedback, please open an issue on the repository.
+

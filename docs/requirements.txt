@@ -1,0 +1,15 @@
+# Sphinx documentation dependencies
+# Install with: pip install -r requirements.txt
+
+# Core Sphinx
+sphinx>=7.0.0
+
+# Markdown support via MyST-Parser
+myst-parser>=3.0.0
+
+# Read the Docs theme
+sphinx-rtd-theme>=2.0.0
+
+# Optional: Copy button for code blocks
+sphinx-copybutton>=0.5.0
+

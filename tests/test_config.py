@@ -172,10 +172,10 @@ class TestGetConfigurableContext:
         config = {
             "configurable": {
                 "agent_context": {
-                    "intuit_header": {
+                    "auth_header": {
                         "auth_context": {
-                            "intuit_user_id": "user_123",
-                            "intuit_realmid": "realm_456",
+                            "user_id": "user_123",
+                            "org_id": "org_456",
                         }
                     }
                 }
@@ -187,7 +187,7 @@ class TestGetConfigurableContext:
 
         assert agent_context is not None
         assert (
-            agent_context["intuit_header"]["auth_context"]["intuit_user_id"]
+            agent_context["auth_header"]["auth_context"]["user_id"]
             == "user_123"
         )
 
