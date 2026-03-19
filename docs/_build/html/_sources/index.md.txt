@@ -84,26 +84,9 @@ StuntDouble provides **transparent tool mocking** that intercepts tool calls and
 | 🪞 **MCP Tool Mirroring** | Auto-generate mocks from MCP server schemas |
 | 🔑 **Context-Aware Mocks** | Access runtime config (user ID, headers) in mock factories |
 
-## Which Approach Should I Use?
-
-StuntDouble offers two main capabilities:
-
-1. **LangGraph Approach** — Per-invocation mocking via `RunnableConfig`. Use this for LangGraph agents.
-2. **MCP Tool Mirroring** — Auto-generate mock implementations from MCP server schemas. Use this when you need mocks derived from an MCP server.
-
-### LangGraph Approach Features
-
-| Feature | Description |
-|---------|-------------|
-| **Best for** | LangGraph agents |
-| **Configuration** | RunnableConfig |
-| **Concurrent-safe** | ✅ Yes |
-| **Per-request mocks** | ✅ Yes |
-| **Code changes** | Minimal |
-
 ## Getting Started
 
-### 1. LangGraph Approach ⭐ (Recommended)
+### Quick Example
 
 Best for LangGraph agents. Per-invocation mocking via `RunnableConfig`.
 
@@ -139,9 +122,9 @@ result = await graph.ainvoke(state, config=config)
 
 → [LangGraph Integration Guide](guides/langgraph-integration.md)
 
-### 2. MCP Tool Mirroring
+### Auto-Generate Mocks from MCP Servers
 
-Auto-generate mock implementations from MCP server tool schemas:
+Already using an MCP server? StuntDouble can auto-discover its tools and generate mock implementations, which you can then use in your LangGraph agent workflow:
 
 ```python
 from stuntdouble.mirroring import ToolMirror

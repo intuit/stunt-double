@@ -46,16 +46,13 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guides/quickstart.html">Quickstart Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#choose-your-path">Choose Your Path</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="guides/quickstart.html#path-a-langgraph-agent-recommended">Path A: LangGraph Agent (Recommended)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="guides/quickstart.html#option-1-default-registry-simplest">Option 1: Default Registry (Simplest)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="guides/quickstart.html#option-2-fluent-builder-api-most-concise">Option 2: Fluent Builder API (Most Concise)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="guides/quickstart.html#option-3-custom-registry-full-control">Option 3: Custom Registry (Full Control)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#quick-start">Quick Start</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="guides/quickstart.html#option-1-default-registry-simplest">Option 1: Default Registry (Simplest)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guides/quickstart.html#option-2-fluent-builder-api-most-concise">Option 2: Fluent Builder API (Most Concise)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="guides/quickstart.html#option-3-custom-registry-full-control">Option 3: Custom Registry (Full Control)</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="guides/quickstart.html#path-b-mcp-server-auto-mocking">Path B: MCP Server Auto-Mocking</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#going-further-auto-generate-mocks-from-mcp-servers">Going Further: Auto-Generate Mocks from MCP Servers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#common-patterns">Common Patterns</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="guides/quickstart.html#using-mockbuilder-fluent-api">Using MockBuilder (Fluent API)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="guides/quickstart.html#call-recording-and-verification">Call Recording and Verification</a></li>
@@ -606,45 +603,10 @@
 </tbody>
 </table>
 </section>
-<section id="which-approach-should-i-use">
-<h2>Which Approach Should I Use?<a class="headerlink" href="#which-approach-should-i-use" title="Link to this heading"></a></h2>
-<p>StuntDouble offers two main capabilities:</p>
-<ol class="arabic simple">
-<li><p><strong>LangGraph Approach</strong> — Per-invocation mocking via <code class="docutils literal notranslate"><span class="pre">RunnableConfig</span></code>. Use this for LangGraph agents.</p></li>
-<li><p><strong>MCP Tool Mirroring</strong> — Auto-generate mock implementations from MCP server schemas. Use this when you need mocks derived from an MCP server.</p></li>
-</ol>
-<section id="langgraph-approach-features">
-<h3>LangGraph Approach Features<a class="headerlink" href="#langgraph-approach-features" title="Link to this heading"></a></h3>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Feature</p></th>
-<th class="head"><p>Description</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><strong>Best for</strong></p></td>
-<td><p>LangGraph agents</p></td>
-</tr>
-<tr class="row-odd"><td><p><strong>Configuration</strong></p></td>
-<td><p>RunnableConfig</p></td>
-</tr>
-<tr class="row-even"><td><p><strong>Concurrent-safe</strong></p></td>
-<td><p>✅ Yes</p></td>
-</tr>
-<tr class="row-odd"><td><p><strong>Per-request mocks</strong></p></td>
-<td><p>✅ Yes</p></td>
-</tr>
-<tr class="row-even"><td><p><strong>Code changes</strong></p></td>
-<td><p>Minimal</p></td>
-</tr>
-</tbody>
-</table>
-</section>
-</section>
 <section id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h2>
-<section id="langgraph-approach-recommended">
-<h3>1. LangGraph Approach ⭐ (Recommended)<a class="headerlink" href="#langgraph-approach-recommended" title="Link to this heading"></a></h3>
+<section id="quick-example">
+<h3>Quick Example<a class="headerlink" href="#quick-example" title="Link to this heading"></a></h3>
 <p>Best for LangGraph agents. Per-invocation mocking via <code class="docutils literal notranslate"><span class="pre">RunnableConfig</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.prebuilt</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolNode</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -678,9 +640,9 @@
 </ul>
 <p>→ <a class="reference internal" href="guides/langgraph-integration.html"><span class="std std-doc">LangGraph Integration Guide</span></a></p>
 </section>
-<section id="mcp-tool-mirroring">
-<h3>2. MCP Tool Mirroring<a class="headerlink" href="#mcp-tool-mirroring" title="Link to this heading"></a></h3>
-<p>Auto-generate mock implementations from MCP server tool schemas:</p>
+<section id="auto-generate-mocks-from-mcp-servers">
+<h3>Auto-Generate Mocks from MCP Servers<a class="headerlink" href="#auto-generate-mocks-from-mcp-servers" title="Link to this heading"></a></h3>
+<p>Already using an MCP server? StuntDouble can auto-discover its tools and generate mock implementations, which you can then use in your LangGraph agent workflow:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMirror</span>
 
 <span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="p">()</span>
@@ -715,7 +677,8 @@ poetry<span class="w"> </span>add<span class="w"> </span>stuntdouble
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guides/quickstart.html">Quickstart Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#choose-your-path">Choose Your Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#going-further-auto-generate-mocks-from-mcp-servers">Going Further: Auto-Generate Mocks from MCP Servers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#common-patterns">Common Patterns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#testing-examples">Testing Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="guides/quickstart.html#debugging">Debugging</a></li>

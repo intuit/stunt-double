@@ -21,13 +21,11 @@ poetry add stuntdouble
 
 ---
 
-## Choose Your Path
+## Quick Start
 
-### Path A: LangGraph Agent (Recommended)
+Per-invocation mocking via `RunnableConfig`. The simplest approach uses the **default registry** and pre-configured wrapper.
 
-If you're using LangGraph, use per-invocation mocking via `RunnableConfig`. The simplest approach uses the **default registry** and pre-configured wrapper.
-
-#### Option 1: Default Registry (Simplest)
+### Option 1: Default Registry (Simplest)
 
 Use the pre-configured `mockable_tool_wrapper` and `default_registry` for zero-setup mocking:
 
@@ -80,7 +78,7 @@ result = await graph.ainvoke(
 # → Uses real list_bills tool
 ```
 
-#### Option 2: Fluent Builder API (Most Concise)
+### Option 2: Fluent Builder API (Most Concise)
 
 Use the `mock()` fluent builder for one-liner mock registration:
 
@@ -98,7 +96,7 @@ default_registry.mock("get_invoice").when(status={"$in": ["paid", "pending"]}).r
 builder.add_node("tools", ToolNode(tools, awrap_tool_call=mockable_tool_wrapper))
 ```
 
-#### Option 3: Custom Registry (Full Control)
+### Option 3: Custom Registry (Full Control)
 
 For advanced scenarios where you need multiple registries or custom wrappers:
 
@@ -148,9 +146,9 @@ result = await graph.ainvoke(
 
 ---
 
-### Path B: MCP Server Auto-Mocking
+## Going Further: Auto-Generate Mocks from MCP Servers
 
-If you have an MCP server and want automatic mock generation.
+If your agent uses tools from an MCP server, StuntDouble can auto-discover them and generate mock implementations. These mocks integrate directly into the LangGraph workflow shown above.
 
 Install the optional MCP support before using mirroring:
 

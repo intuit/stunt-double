@@ -47,16 +47,13 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#choose-your-path">Choose Your Path</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#path-a-langgraph-agent-recommended">Path A: LangGraph Agent (Recommended)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#option-1-default-registry-simplest">Option 1: Default Registry (Simplest)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#option-2-fluent-builder-api-most-concise">Option 2: Fluent Builder API (Most Concise)</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#option-3-custom-registry-full-control">Option 3: Custom Registry (Full Control)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#option-1-default-registry-simplest">Option 1: Default Registry (Simplest)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#option-2-fluent-builder-api-most-concise">Option 2: Fluent Builder API (Most Concise)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#option-3-custom-registry-full-control">Option 3: Custom Registry (Full Control)</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#path-b-mcp-server-auto-mocking">Path B: MCP Server Auto-Mocking</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#going-further-auto-generate-mocks-from-mcp-servers">Going Further: Auto-Generate Mocks from MCP Servers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#common-patterns">Common Patterns</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#using-mockbuilder-fluent-api">Using MockBuilder (Fluent API)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#call-recording-and-verification">Call Recording and Verification</a></li>
@@ -500,13 +497,11 @@ poetry<span class="w"> </span>add<span class="w"> </span>stuntdouble
 <p><strong>Python compatibility:</strong> 3.11, 3.12, 3.13, 3.14</p>
 </section>
 <hr class="docutils" />
-<section id="choose-your-path">
-<h2>Choose Your Path<a class="headerlink" href="#choose-your-path" title="Link to this heading"></a></h2>
-<section id="path-a-langgraph-agent-recommended">
-<h3>Path A: LangGraph Agent (Recommended)<a class="headerlink" href="#path-a-langgraph-agent-recommended" title="Link to this heading"></a></h3>
-<p>If you’re using LangGraph, use per-invocation mocking via <code class="docutils literal notranslate"><span class="pre">RunnableConfig</span></code>. The simplest approach uses the <strong>default registry</strong> and pre-configured wrapper.</p>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h2>
+<p>Per-invocation mocking via <code class="docutils literal notranslate"><span class="pre">RunnableConfig</span></code>. The simplest approach uses the <strong>default registry</strong> and pre-configured wrapper.</p>
 <section id="option-1-default-registry-simplest">
-<h4>Option 1: Default Registry (Simplest)<a class="headerlink" href="#option-1-default-registry-simplest" title="Link to this heading"></a></h4>
+<h3>Option 1: Default Registry (Simplest)<a class="headerlink" href="#option-1-default-registry-simplest" title="Link to this heading"></a></h3>
 <p>Use the pre-configured <code class="docutils literal notranslate"><span class="pre">mockable_tool_wrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">default_registry</span></code> for zero-setup mocking:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateGraph</span><span class="p">,</span> <span class="n">MessagesState</span><span class="p">,</span> <span class="n">START</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.prebuilt</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolNode</span><span class="p">,</span> <span class="n">tools_condition</span>
@@ -558,7 +553,7 @@ poetry<span class="w"> </span>add<span class="w"> </span>stuntdouble
 </div>
 </section>
 <section id="option-2-fluent-builder-api-most-concise">
-<h4>Option 2: Fluent Builder API (Most Concise)<a class="headerlink" href="#option-2-fluent-builder-api-most-concise" title="Link to this heading"></a></h4>
+<h3>Option 2: Fluent Builder API (Most Concise)<a class="headerlink" href="#option-2-fluent-builder-api-most-concise" title="Link to this heading"></a></h3>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">mock()</span></code> fluent builder for one-liner mock registration:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_registry</span><span class="p">,</span> <span class="n">mockable_tool_wrapper</span>
 
@@ -575,7 +570,7 @@ poetry<span class="w"> </span>add<span class="w"> </span>stuntdouble
 </div>
 </section>
 <section id="option-3-custom-registry-full-control">
-<h4>Option 3: Custom Registry (Full Control)<a class="headerlink" href="#option-3-custom-registry-full-control" title="Link to this heading"></a></h4>
+<h3>Option 3: Custom Registry (Full Control)<a class="headerlink" href="#option-3-custom-registry-full-control" title="Link to this heading"></a></h3>
 <p>For advanced scenarios where you need multiple registries or custom wrappers:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_data_driven</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockToolsRegistry</span><span class="p">,</span> <span class="n">create_mockable_tool_wrapper</span><span class="p">,</span> <span class="n">inject_scenario_metadata</span>
@@ -624,9 +619,9 @@ poetry<span class="w"> </span>add<span class="w"> </span>stuntdouble
 </section>
 </section>
 <hr class="docutils" />
-<section id="path-b-mcp-server-auto-mocking">
-<h3>Path B: MCP Server Auto-Mocking<a class="headerlink" href="#path-b-mcp-server-auto-mocking" title="Link to this heading"></a></h3>
-<p>If you have an MCP server and want automatic mock generation.</p>
+<section id="going-further-auto-generate-mocks-from-mcp-servers">
+<h2>Going Further: Auto-Generate Mocks from MCP Servers<a class="headerlink" href="#going-further-auto-generate-mocks-from-mcp-servers" title="Link to this heading"></a></h2>
+<p>If your agent uses tools from an MCP server, StuntDouble can auto-discover them and generate mock implementations. These mocks integrate directly into the LangGraph workflow shown above.</p>
 <p>Install the optional MCP support before using mirroring:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;stuntdouble[mcp]&quot;</span>
 </pre></div>
@@ -672,7 +667,6 @@ poetry<span class="w"> </span>add<span class="w"> </span>stuntdouble
 <ul class="simple">
 <li><p><a class="reference internal" href="mcp-mirroring.html"><span class="std std-doc">MCP Tool Mirroring Guide</span></a></p></li>
 </ul>
-</section>
 </section>
 <hr class="docutils" />
 <section id="common-patterns">
