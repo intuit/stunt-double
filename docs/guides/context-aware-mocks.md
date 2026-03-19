@@ -318,6 +318,90 @@ async def test_tenant_specific_behavior(tenant_id, expected_plan):
 
 ---
 
+## More Patterns
+
+### Mock Factory Using Both scenario_metadata and config
+
+A mock can merge test-scenario data with runtime context. `scenario_metadata` carries test-scenario data (locale, feature flags), while `config` carries per-request runtime context (user ID, auth tokens).
+
+```python
+from stuntdouble import get_configurable_context
+
+def personalized_mock(scenario_metadata: dict, config: dict = None):
+    """Mock that merges scenario data with runtime config."""
+    ctx = get_configurable_context(config)
+    user_id = ctx.get("agent_context", {}).get("user_id", "anonymous")
+    locale = scenario_metadata.get("locale", "en-US")
+
+    def fn(query: str) -> dict:
+        return {
+            "results": [{"title": f"Result for '{query}'", "locale": locale}],
+            "requested_by": user_id,
+            "cached": False,
+        }
+    return fn
+
+registry.register("search", mock_fn=personalized_mock)
+```
+
+### Using `{{config.*}}` Placeholders in Scenario Definitions
+
+You can reference `RunnableConfig` values directly in JSON scenarios without writing Python. `{{config.*}}` pulls values from `RunnableConfig.configurable` at resolution time. Use `| default(...)` for optional fields.
+
+```json
+{
+  "scenario_id": "user_dashboard",
+  "mocks": {
+    "get_profile": [
+      {
+        "output": {
+          "user_id": "{{config.user_id}}",
+          "org_id": "{{config.org_id | default('unknown')}}",
+          "last_login": "{{now}}",
+          "dashboard_url": "/users/{{config.user_id}}/dashboard"
+        }
+      }
+    ]
+  }
+}
+```
+
+### Multi-Tenant Mock with Config-Driven Behavior
+
+Test the same scenario across different tenant configurations. Same mock definition, different runtime context — this is powerful for testing multi-tenant agents where behavior varies by config.
+
+```python
+from stuntdouble import MockToolsRegistry, create_mockable_tool_wrapper, inject_scenario_metadata
+
+registry = MockToolsRegistry()
+
+def tenant_db_mock(scenario_metadata: dict, config: dict = None):
+    ctx = get_configurable_context(config)
+    region = ctx.get("agent_context", {}).get("region", "us-east-1")
+
+    return lambda table, query: {
+        "results": [{"id": "1", "region": region}],
+        "source": f"db-{region}",
+    }
+
+registry.register("query_database", mock_fn=tenant_db_mock)
+wrapper = create_mockable_tool_wrapper(registry)
+
+# Test US tenant
+us_config = inject_scenario_metadata(
+    {"configurable": {"agent_context": {"region": "us-east-1"}}},
+    {"scenario_id": "multi-region-test"}
+)
+
+# Test EU tenant — same scenario, different config
+eu_config = inject_scenario_metadata(
+    {"configurable": {"agent_context": {"region": "eu-west-1"}}},
+    {"scenario_id": "multi-region-test"}
+)
+```
+
+---
+
 ## See Also
 
 - [Quickstart Guide](quickstart.md) — Getting started with StuntDouble
