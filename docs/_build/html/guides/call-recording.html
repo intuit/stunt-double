@@ -1,0 +1,953 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call Recording Guide &mdash; StuntDouble 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Context-Aware Mocks" href="context-aware-mocks.html" />
+    <link rel="prev" title="MockBuilder: Fluent Mock Registration" href="mock-builder.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/stuntdouble_logo2.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#choose-your-path">Choose Your Path</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#path-a-langgraph-agent-recommended">Path A: LangGraph Agent (Recommended)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="quickstart.html#option-1-default-registry-simplest">Option 1: Default Registry (Simplest)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quickstart.html#option-2-fluent-builder-api-most-concise">Option 2: Fluent Builder API (Most Concise)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quickstart.html#option-3-custom-registry-full-control">Option 3: Custom Registry (Full Control)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#path-b-mcp-server-auto-mocking">Path B: MCP Server Auto-Mocking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#common-patterns">Common Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#using-mockbuilder-fluent-api">Using MockBuilder (Fluent API)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#call-recording-and-verification">Call Recording and Verification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#context-aware-mocks">Context-Aware Mocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#input-based-mocking">Input-Based Mocking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#dynamic-values">Dynamic Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#complete-evaluation-scenario">Complete Evaluation Scenario</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#testing-examples">Testing Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#pytest-with-langgraph-recommended">pytest with LangGraph (Recommended)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="langgraph-integration.html">LangGraph Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="langgraph-integration.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="langgraph-integration.html#toolnode-wrapper">ToolNode Wrapper</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#option-a-default-registry-simplest">Option A: Default Registry (Simplest) ⭐</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#option-b-custom-registry-full-control">Option B: Custom Registry (Full Control)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#api-reference">API Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#mocks-not-working">Mocks Not Working</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#callrecorder-tool-call-verification">CallRecorder: Tool Call Verification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#quick-start">Quick Start</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#id1">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#query-methods">Query Methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#assertion-methods">Assertion Methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#callrecord-properties">CallRecord Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#thread-safety">Thread Safety</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="langgraph-integration.html#shared-concepts">Shared Concepts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mockbuilder-fluent-mock-registration">MockBuilder: Fluent Mock Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mocked-tool-patterns">Mocked Tool Patterns</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-1-static-mock">Pattern 1: Static Mock</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-2-input-echo-mock">Pattern 2: Input-Echo Mock</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-3-mocks-based-mock-data-driven">Pattern 3: Mocks-Based Mock (Data-Driven)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-4-conditional-mock-with-when-predicate">Pattern 4: Conditional Mock (with <code class="docutils literal notranslate"><span class="pre">when</span></code> predicate)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-5-dynamic-placeholders">Pattern 5: Dynamic Placeholders</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-6-context-aware-mock-runtime-config-access">Pattern 6: Context-Aware Mock (Runtime Config Access)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#scenario-metadata-structure">scenario_metadata Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#input-matching">Input Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#dynamic-placeholders">Dynamic Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#custom-mocked-tools">Custom Mocked Tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#mocked-tool-signature">Mocked Tool Signature</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-custom-key-name">Example: Custom Key Name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-stateful-factory">Example: Stateful Factory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-tenant-aware-factory">Example: Tenant-Aware Factory</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#best-practices">Best Practices</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#register-at-startup">1. Register at Startup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#keep-mocked-tools-pure">2. Keep Mocked Tools Pure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#enable-logging-for-debugging">3. Enable Logging for Debugging</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mock-signature-validation">Mock Signature Validation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#validation-points">Validation Points</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#controlling-validation">Controlling Validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-registration-time-validation">Example: Registration-Time Validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-runtime-validation">Example: Runtime Validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#what-gets-validated">What Gets Validated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#opting-out">Opting Out</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#mcp-tool-support">MCP Tool Support</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="langgraph-integration.html#using-mirrored-tools">Using Mirrored Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#quick-start-with-mirroring">Quick Start with Mirroring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#langgraph-optimized-mirroring">LangGraph-Optimized Mirroring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mirroring-with-http-authentication">Mirroring with HTTP Authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mirroring-with-langgraph-registry-integration">Mirroring with LangGraph Registry Integration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#combining-with-custom-mocks">Combining with Custom Mocks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="mcp-mirroring.html">MCP Tool Mirroring Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#when-to-use-mirroring">When to Use Mirroring</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#quick-start">Quick Start</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#basic-mirroring-stdio">Basic Mirroring (stdio)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#http-server-mirroring">HTTP Server Mirroring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#one-line-convenience-functions">One-Line Convenience Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#llm-powered-generation">LLM-Powered Generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#quality-presets">Quality Presets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#http-authentication">HTTP Authentication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#security-features">Security Features</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#customizing-mock-data">Customizing Mock Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#ci-cd-optimization">CI/CD Optimization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#caching">Caching</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#toolmirror-class">ToolMirror Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#mirroring-methods">Mirroring Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mcp-mirroring.html#convenience-functions">Convenience Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#integration-with-approaches">Integration with Approaches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcp-mirroring.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matchers-and-resolvers.html">Matchers and Resolvers Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#input-matchers">Input Matchers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#supported-operators">Supported Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#multiple-conditions">Multiple Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#catch-all-patterns">Catch-All Patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#real-world-examples">Real-World Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-1-customer-tier-logic">Example 1: Customer Tier Logic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-2-bill-filtering">Example 2: Bill Filtering</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#value-resolvers">Value Resolvers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#id1">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#timestamp-placeholders">Timestamp Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#input-reference-placeholders">Input Reference Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#generator-placeholders">Generator Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#id2">Real-World Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-1-invoice-creation">Example 1: Invoice Creation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-2-user-profile">Example 2: User Profile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-3-billing-period">Example 3: Billing Period</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#combining-matchers-and-resolvers">Combining Matchers and Resolvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#using-with-langgraph">Using with LangGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#best-practices">Best Practices</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#order-patterns-from-specific-to-general">1. Order Patterns from Specific to General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#use-defaults-for-missing-fields">2. Use Defaults for Missing Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#use-sequences-for-related-ids">3. Use Sequences for Related IDs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#combine-operators-for-range-matching">4. Combine Operators for Range Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#use-exists-for-optional-fields">5. Use $exists for Optional Fields</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#debugging">Debugging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#check-if-a-pattern-matches">Check if a Pattern Matches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#check-for-placeholders">Check for Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#enable-debug-logging">Enable Debug Logging</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#matchers">Matchers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#resolvers">Resolvers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mock-builder.html">MockBuilder: Fluent Mock Registration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#using-the-default-registry">Using the Default Registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#api-reference">API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#methods">Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#static-return-value">Static Return Value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#conditional-mocking">Conditional Mocking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#input-echoing">Input Echoing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#custom-callable">Custom Callable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#chaining-methods">Chaining Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#scenario-predicates-and-input-conditions">Scenario Predicates and Input Conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#notes-and-limits">Notes and Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#integration-examples">Integration Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#with-langgraph-per-invocation-mocking">With LangGraph Per-Invocation Mocking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#with-default-registry-simplest">With Default Registry (Simplest)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#input-condition-behavior">Input Condition Behavior</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#builder-vs-data-driven">Builder vs. Data-Driven</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Call Recording Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#with-custom-registry">With Custom Registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-point">Key Point</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#query-methods">Query Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#assertion-methods">Assertion Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#callrecord-properties">CallRecord Properties</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#inspecting-callrecords">Inspecting CallRecords</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pytest-integration">pytest Integration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-fixture-pattern">Basic Fixture Pattern</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#resetting-between-tests">Resetting Between Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parametrized-tests">Parametrized Tests</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-patterns">Advanced Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#verifying-tool-call-sequences">Verifying Tool Call Sequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#checking-call-counts">Checking Call Counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verifying-mock-vs-real-calls">Verifying Mock vs Real Calls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#combining-with-signature-validation">Combining with Signature Validation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#thread-safety">Thread Safety</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="context-aware-mocks.html">Context-Aware Mocks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#when-to-use">When to Use</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#how-it-works">How It Works</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#signature-inspection">Signature Inspection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#the-get-configurable-context-helper">The <code class="docutils literal notranslate"><span class="pre">get_configurable_context</span></code> Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#example-1-user-identity-mock">Example 1: User Identity Mock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#example-2-tenant-specific-data">Example 2: Tenant-Specific Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#example-3-request-specific-mock">Example 3: Request-Specific Mock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#example-4-combined-with-scenario-metadata">Example 4: Combined with scenario_metadata</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#testing-with-context-aware-mocks">Testing with Context-Aware Mocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#pytest-example">pytest Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#multi-tenant-test">Multi-Tenant Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#key-points">Key Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="signature-validation.html">Mock Signature Validation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#validation-options">Validation Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#registration-time-validation">Registration-Time Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="signature-validation.html#how-to-enable">How to Enable</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#runtime-validation">Runtime Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="signature-validation.html#id1">How to Enable</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#validating-scenario-metadata-cases">Validating Scenario Metadata Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#strict-mock-errors">Strict Mock Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#opting-out">Opting Out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#what-gets-validated">What Gets Validated</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#mcp-tool-support">MCP Tool Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#complete-example">Complete Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="signature-validation.html#belt-and-suspenders-validation">Belt-and-Suspenders Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="signature-validation.html#pytest-integration">pytest Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#api-reference">API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/mock-format.html">Mock Data Format Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#basic-structure">Basic Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#single-case">Single Case</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#multiple-cases-with-input-matching">Multiple Cases with Input Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#case-fields">Case Fields</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#input-matching-operators">Input Matching Operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#comparison-operators">Comparison Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#set-operators">Set Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#string-operators">String Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#existence-operator">Existence Operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#combined-operators">Combined Operators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#dynamic-placeholders">Dynamic Placeholders</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#timestamp-placeholders">Timestamp Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#input-reference-placeholders">Input Reference Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#config-reference-placeholders">Config Reference Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#generator-placeholders">Generator Placeholders</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#complete-examples">Complete Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#customer-service-mock">Customer Service Mock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#invoice-creation-mock">Invoice Creation Mock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#bills-query-mock">Bills Query Mock</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#matching-precedence">Matching Precedence</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#no-match-behavior">No-Match Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#validation">Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#required-fields">Required Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#type-coercion">Type Coercion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#null-handling">Null Handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/dependencies.html">Dependencies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#core-dependencies">Core Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#langchain-core">langchain-core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#pydantic">pydantic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#langgraph">langgraph</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#development-dependencies">Development Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#optional-dependencies">Optional Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#for-llm-powered-mock-generation">For LLM-powered mock generation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#for-mcp-mirroring-support">For MCP mirroring support</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#version-compatibility">Version Compatibility</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#python-versions">Python Versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#langchain-ecosystem">LangChain Ecosystem</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#dependency-graph">Dependency Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#minimal-installation">Minimal Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#dependency-conflicts">Dependency Conflicts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#missing-optional-dependencies">Missing Optional Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/schema-validation.html">Mock Input Validation Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#signature-validation">Signature Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/schema-validation.html#what-it-catches">What it catches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/schema-validation.html#what-happens-at-runtime">What happens at runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#parameter-validation-for-data-driven-mocks">Parameter Validation for Data-Driven Mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#validating-full-scenario-metadata">Validating Full Scenario Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#data-driven-mock-notes">Data-Driven Mock Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#what-this-page-does-not-cover">What This Page Does Not Cover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/overview.html">Architecture Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#high-level-architecture">High-Level Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#module-structure">Module Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#core-components">Core Components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#inputmatcher">1. InputMatcher</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#valueresolver">2. ValueResolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#mockbuilder">3. MockBuilder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#callrecorder">4. CallRecorder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#mocktoolsregistry-langgraph">5. MockToolsRegistry (LangGraph)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#langgraph-integration-flow">LangGraph Integration Flow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#wrapper-pattern-recommended">Wrapper Pattern ⭐ (Recommended)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#mcp-mirroring-architecture">MCP Mirroring Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#thread-safety">Thread Safety</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#extension-points">Extension Points</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">StuntDouble</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Call Recording Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guides/call-recording.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="call-recording-guide">
+<h1>Call Recording Guide<a class="headerlink" href="#call-recording-guide" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">CallRecorder</span></code> captures all tool calls during test execution, enabling verification of what tools were called, with what arguments, and in what order.</p>
+<hr class="docutils" />
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>┌─────────────────────────────────────────────────────────────────────────────┐
+│                     Call Recording Flow                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Agent invokes tool                                                        │
+│        │                                                                    │
+│        ▼                                                                    │
+│   mockable_tool_wrapper                                                     │
+│        │                                                                    │
+│        ├── Record call → CallRecorder                                      │
+│        │     • tool_name                                                    │
+│        │     • args                                                         │
+│        │     • was_mocked                                                   │
+│        │     • duration_ms                                                  │
+│        │                                                                    │
+│        ├── Execute (mock or real tool)                                      │
+│        │                                                                    │
+│        └── Record result → CallRecorder                                    │
+│              • result                                                       │
+│              • error (if any)                                               │
+│                                                                             │
+│   After agent run:                                                          │
+│   recorder.assert_called(&quot;tool_name&quot;)                                      │
+│   recorder.assert_called_with(&quot;tool_name&quot;, arg=&quot;value&quot;)                    │
+│   recorder.assert_call_order(&quot;tool_a&quot;, &quot;tool_b&quot;, &quot;tool_c&quot;)                │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockToolsRegistry</span><span class="p">,</span> <span class="n">CallRecorder</span><span class="p">,</span> <span class="n">create_mockable_tool_wrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.prebuilt</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolNode</span>
+
+<span class="c1"># Create registry and recorder</span>
+<span class="n">registry</span> <span class="o">=</span> <span class="n">MockToolsRegistry</span><span class="p">()</span>
+<span class="n">recorder</span> <span class="o">=</span> <span class="n">CallRecorder</span><span class="p">()</span>
+
+<span class="c1"># Register mocks</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Test Corp&quot;</span><span class="p">})</span>
+
+<span class="c1"># Create wrapper WITH recorder</span>
+<span class="n">wrapper</span> <span class="o">=</span> <span class="n">create_mockable_tool_wrapper</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">recorder</span><span class="o">=</span><span class="n">recorder</span><span class="p">)</span>
+
+<span class="c1"># Build your graph</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_customer</span><span class="p">,</span> <span class="n">list_bills</span><span class="p">,</span> <span class="n">create_invoice</span><span class="p">]</span>
+<span class="n">tool_node</span> <span class="o">=</span> <span class="n">ToolNode</span><span class="p">(</span><span class="n">tools</span><span class="p">,</span> <span class="n">awrap_tool_call</span><span class="o">=</span><span class="n">wrapper</span><span class="p">)</span>
+
+<span class="c1"># ... add to graph and run agent ...</span>
+
+<span class="c1"># Verify calls were made</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_called</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_not_called</span><span class="p">(</span><span class="s2">&quot;delete_account&quot;</span><span class="p">)</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_called_once</span><span class="p">(</span><span class="s2">&quot;list_bills&quot;</span><span class="p">)</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_called_times</span><span class="p">(</span><span class="s2">&quot;create_invoice&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Verify arguments</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">,</span> <span class="n">customer_id</span><span class="o">=</span><span class="s2">&quot;123&quot;</span><span class="p">)</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_last_called_with</span><span class="p">(</span><span class="s2">&quot;list_bills&quot;</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">&quot;active&quot;</span><span class="p">)</span>
+
+<span class="c1"># Verify call order</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_call_order</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">,</span> <span class="s2">&quot;list_bills&quot;</span><span class="p">,</span> <span class="s2">&quot;create_invoice&quot;</span><span class="p">)</span>
+
+<span class="c1"># Inspect recorded calls</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">recorder</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+<span class="c1"># Output:</span>
+<span class="c1"># Recorded 4 call(s):</span>
+<span class="c1">#   1. get_customer [MOCKED] args={&#39;customer_id&#39;: &#39;123&#39;}</span>
+<span class="c1">#   2. list_bills [MOCKED] args={&#39;status&#39;: &#39;active&#39;}</span>
+<span class="c1">#   3. create_invoice [MOCKED] args={&#39;amount&#39;: 500}</span>
+<span class="c1">#   4. create_invoice [MOCKED] args={&#39;amount&#39;: 1200}</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading"></a></h2>
+<section id="with-custom-registry">
+<h3>With Custom Registry<a class="headerlink" href="#with-custom-registry" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockToolsRegistry</span><span class="p">,</span> <span class="n">CallRecorder</span><span class="p">,</span> <span class="n">create_mockable_tool_wrapper</span>
+
+<span class="n">registry</span> <span class="o">=</span> <span class="n">MockToolsRegistry</span><span class="p">()</span>
+<span class="n">recorder</span> <span class="o">=</span> <span class="n">CallRecorder</span><span class="p">()</span>
+
+<span class="c1"># Register your mocks</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Test Corp&quot;</span><span class="p">})</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;list_bills&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;bills&quot;</span><span class="p">:</span> <span class="p">[]})</span>
+
+<span class="c1"># Pass recorder to the wrapper</span>
+<span class="n">wrapper</span> <span class="o">=</span> <span class="n">create_mockable_tool_wrapper</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">recorder</span><span class="o">=</span><span class="n">recorder</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="key-point">
+<h3>Key Point<a class="headerlink" href="#key-point" title="Link to this heading"></a></h3>
+<p>The recorder is attached to the <strong>wrapper</strong>, not the registry. Every tool call that passes through the wrapper is recorded, whether mocked or real.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="query-methods">
+<h2>Query Methods<a class="headerlink" href="#query-methods" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Return Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">was_called(tool,</span> <span class="pre">**args)</span></code></p></td>
+<td><p>Check if tool was called (optionally with specific args)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">call_count(tool)</span></code></p></td>
+<td><p>Get number of calls to a tool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_calls(tool=None)</span></code></p></td>
+<td><p>Get list of <code class="docutils literal notranslate"><span class="pre">CallRecord</span></code> objects</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list[CallRecord]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_last_call(tool)</span></code></p></td>
+<td><p>Get the most recent call</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CallRecord</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_first_call(tool)</span></code></p></td>
+<td><p>Get the first call</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CallRecord</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_args(tool,</span> <span class="pre">call_index=-1)</span></code></p></td>
+<td><p>Get arguments from a specific call</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_result(tool,</span> <span class="pre">call_index=-1)</span></code></p></td>
+<td><p>Get result from a specific call</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">summary()</span></code></p></td>
+<td><p>Human-readable summary of all calls</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">clear()</span></code></p></td>
+<td><p>Reset recorder for next test</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if a tool was called</span>
+<span class="k">if</span> <span class="n">recorder</span><span class="o">.</span><span class="n">was_called</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Customer was fetched&quot;</span><span class="p">)</span>
+
+<span class="c1"># Check with specific arguments</span>
+<span class="k">if</span> <span class="n">recorder</span><span class="o">.</span><span class="n">was_called</span><span class="p">(</span><span class="s2">&quot;create_invoice&quot;</span><span class="p">,</span> <span class="n">amount</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Invoice for $100 was created&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get call count</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">recorder</span><span class="o">.</span><span class="n">call_count</span><span class="p">(</span><span class="s2">&quot;list_bills&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;list_bills was called </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> times&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get all calls for a tool</span>
+<span class="n">calls</span> <span class="o">=</span> <span class="n">recorder</span><span class="o">.</span><span class="n">get_calls</span><span class="p">(</span><span class="s2">&quot;create_invoice&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">calls</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Amount: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;amount&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, Result: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get specific call arguments</span>
+<span class="n">first_args</span> <span class="o">=</span> <span class="n">recorder</span><span class="o">.</span><span class="n">get_args</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">,</span> <span class="n">call_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">last_result</span> <span class="o">=</span> <span class="n">recorder</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="s2">&quot;list_bills&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get full summary</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">recorder</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="assertion-methods">
+<h2>Assertion Methods<a class="headerlink" href="#assertion-methods" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">assert_called(tool)</span></code></p></td>
+<td><p>Assert tool was called at least once</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">assert_not_called(tool)</span></code></p></td>
+<td><p>Assert tool was never called</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">assert_called_once(tool)</span></code></p></td>
+<td><p>Assert tool was called exactly once</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">assert_called_times(tool,</span> <span class="pre">n)</span></code></p></td>
+<td><p>Assert tool was called exactly n times</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">assert_called_with(tool,</span> <span class="pre">**args)</span></code></p></td>
+<td><p>Assert <strong>any</strong> call matches the arguments</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">assert_any_call(tool,</span> <span class="pre">**args)</span></code></p></td>
+<td><p>Alias for <code class="docutils literal notranslate"><span class="pre">assert_called_with()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">assert_last_called_with(tool,</span> <span class="pre">**args)</span></code></p></td>
+<td><p>Assert the <strong>last</strong> call matches the arguments</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">assert_call_order(*tools)</span></code></p></td>
+<td><p>Assert tools were called in the given order</p></td>
+</tr>
+</tbody>
+</table>
+<p>All assertion methods raise <code class="docutils literal notranslate"><span class="pre">MockAssertionError</span></code> on failure:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockAssertionError</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">recorder</span><span class="o">.</span><span class="n">assert_called</span><span class="p">(</span><span class="s2">&quot;nonexistent_tool&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">MockAssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Assertion failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic assertions</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_called</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_not_called</span><span class="p">(</span><span class="s2">&quot;delete_account&quot;</span><span class="p">)</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_called_once</span><span class="p">(</span><span class="s2">&quot;list_bills&quot;</span><span class="p">)</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_called_times</span><span class="p">(</span><span class="s2">&quot;create_invoice&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Argument assertions</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">,</span> <span class="n">customer_id</span><span class="o">=</span><span class="s2">&quot;123&quot;</span><span class="p">)</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_last_called_with</span><span class="p">(</span><span class="s2">&quot;list_bills&quot;</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Order assertions</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_call_order</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">,</span> <span class="s2">&quot;list_bills&quot;</span><span class="p">,</span> <span class="s2">&quot;create_invoice&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="callrecord-properties">
+<h2>CallRecord Properties<a class="headerlink" href="#callrecord-properties" title="Link to this heading"></a></h2>
+<p>Each recorded call is a <code class="docutils literal notranslate"><span class="pre">CallRecord</span></code> with these properties:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Property</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tool_name</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p>Name of the tool</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">args</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+<td><p>Arguments passed to the tool</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">result</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p>Return value (mock or real)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Exception</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p>Exception if call failed</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timestamp</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p>Unix timestamp when the call was recorded</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">was_mocked</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p>Whether a mock was used</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">duration_ms</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p>Call duration in milliseconds</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scenario_id</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p>Scenario ID from metadata</p></td>
+</tr>
+</tbody>
+</table>
+<section id="inspecting-callrecords">
+<h3>Inspecting CallRecords<a class="headerlink" href="#inspecting-callrecords" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallRecord</span>
+
+<span class="c1"># Get all calls for a tool</span>
+<span class="n">calls</span> <span class="o">=</span> <span class="n">recorder</span><span class="o">.</span><span class="n">get_calls</span><span class="p">(</span><span class="s2">&quot;create_invoice&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">calls</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tool: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Args: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Result: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mocked: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">was_mocked</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duration: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">duration_ms</span><span class="si">}</span><span class="s2">ms&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="pytest-integration">
+<h2>pytest Integration<a class="headerlink" href="#pytest-integration" title="Link to this heading"></a></h2>
+<section id="basic-fixture-pattern">
+<h3>Basic Fixture Pattern<a class="headerlink" href="#basic-fixture-pattern" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble</span><span class="w"> </span><span class="kn">import</span> <span class="n">MockToolsRegistry</span><span class="p">,</span> <span class="n">CallRecorder</span><span class="p">,</span> <span class="n">create_mockable_tool_wrapper</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">recorder</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fresh recorder for each test.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">CallRecorder</span><span class="p">()</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mock_wrapper</span><span class="p">(</span><span class="n">recorder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create wrapper with mocks and recorder.&quot;&quot;&quot;</span>
+    <span class="n">registry</span> <span class="o">=</span> <span class="n">MockToolsRegistry</span><span class="p">()</span>
+    <span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;123&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Test Corp&quot;</span><span class="p">})</span>
+    <span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;list_bills&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;bills&quot;</span><span class="p">:</span> <span class="p">[]})</span>
+    <span class="k">return</span> <span class="n">create_mockable_tool_wrapper</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">recorder</span><span class="o">=</span><span class="n">recorder</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_customer_workflow</span><span class="p">(</span><span class="n">mock_wrapper</span><span class="p">,</span> <span class="n">recorder</span><span class="p">):</span>
+    <span class="c1"># Build graph with wrapper</span>
+    <span class="n">tool_node</span> <span class="o">=</span> <span class="n">ToolNode</span><span class="p">(</span><span class="n">tools</span><span class="p">,</span> <span class="n">awrap_tool_call</span><span class="o">=</span><span class="n">mock_wrapper</span><span class="p">)</span>
+    <span class="c1"># ... build and run graph ...</span>
+
+    <span class="c1"># Verify behavior</span>
+    <span class="n">recorder</span><span class="o">.</span><span class="n">assert_called</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span>
+    <span class="n">recorder</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">,</span> <span class="n">customer_id</span><span class="o">=</span><span class="s2">&quot;123&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">recorder</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Test Corp&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="resetting-between-tests">
+<h3>Resetting Between Tests<a class="headerlink" href="#resetting-between-tests" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">autouse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">reset_recorder</span><span class="p">(</span><span class="n">recorder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear recorder between tests.&quot;&quot;&quot;</span>
+    <span class="k">yield</span>
+    <span class="n">recorder</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="parametrized-tests">
+<h3>Parametrized Tests<a class="headerlink" href="#parametrized-tests" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s2">&quot;customer_id,expected_name&quot;</span><span class="p">,</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;CUST-001&quot;</span><span class="p">,</span> <span class="s2">&quot;Acme Corp&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;CUST-002&quot;</span><span class="p">,</span> <span class="s2">&quot;Test Inc&quot;</span><span class="p">),</span>
+<span class="p">])</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_get_customer</span><span class="p">(</span><span class="n">customer_id</span><span class="p">,</span> <span class="n">expected_name</span><span class="p">,</span> <span class="n">recorder</span><span class="p">):</span>
+    <span class="n">registry</span> <span class="o">=</span> <span class="n">MockToolsRegistry</span><span class="p">()</span>
+    <span class="n">registry</span><span class="o">.</span><span class="n">mock</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">returns</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">customer_id</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">expected_name</span><span class="p">})</span>
+    <span class="n">wrapper</span> <span class="o">=</span> <span class="n">create_mockable_tool_wrapper</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">recorder</span><span class="o">=</span><span class="n">recorder</span><span class="p">)</span>
+
+    <span class="c1"># ... run agent ...</span>
+
+    <span class="n">recorder</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">,</span> <span class="n">customer_id</span><span class="o">=</span><span class="n">customer_id</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">recorder</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">expected_name</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="advanced-patterns">
+<h2>Advanced Patterns<a class="headerlink" href="#advanced-patterns" title="Link to this heading"></a></h2>
+<section id="verifying-tool-call-sequences">
+<h3>Verifying Tool Call Sequences<a class="headerlink" href="#verifying-tool-call-sequences" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ensure the agent follows the expected workflow</span>
+<span class="n">recorder</span><span class="o">.</span><span class="n">assert_call_order</span><span class="p">(</span>
+    <span class="s2">&quot;get_customer&quot;</span><span class="p">,</span>       <span class="c1"># First: fetch customer</span>
+    <span class="s2">&quot;list_bills&quot;</span><span class="p">,</span>         <span class="c1"># Second: get their bills</span>
+    <span class="s2">&quot;create_invoice&quot;</span>      <span class="c1"># Third: create a new invoice</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="checking-call-counts">
+<h3>Checking Call Counts<a class="headerlink" href="#checking-call-counts" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ensure the agent doesn&#39;t make redundant calls</span>
+<span class="k">assert</span> <span class="n">recorder</span><span class="o">.</span><span class="n">call_count</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Should only fetch customer once&quot;</span>
+<span class="k">assert</span> <span class="n">recorder</span><span class="o">.</span><span class="n">call_count</span><span class="p">(</span><span class="s2">&quot;create_invoice&quot;</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Should not create too many invoices&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="verifying-mock-vs-real-calls">
+<h3>Verifying Mock vs Real Calls<a class="headerlink" href="#verifying-mock-vs-real-calls" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check which calls were mocked and which were real</span>
+<span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">recorder</span><span class="o">.</span><span class="n">get_calls</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">call</span><span class="o">.</span><span class="n">was_mocked</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">: MOCKED → </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">: REAL → </span><span class="si">{</span><span class="n">call</span><span class="o">.</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="combining-with-signature-validation">
+<h3>Combining with Signature Validation<a class="headerlink" href="#combining-with-signature-validation" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">wrapper</span> <span class="o">=</span> <span class="n">create_mockable_tool_wrapper</span><span class="p">(</span>
+    <span class="n">registry</span><span class="p">,</span>
+    <span class="n">recorder</span><span class="o">=</span><span class="n">recorder</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="n">all_tools</span><span class="p">,</span>            <span class="c1"># Enable signature validation</span>
+    <span class="n">validate_signatures</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>   <span class="c1"># Validate mock signatures at runtime</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="thread-safety">
+<h2>Thread Safety<a class="headerlink" href="#thread-safety" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CallRecorder</span></code> is thread-safe and suitable for concurrent test execution. All methods use internal locking to protect the call list during concurrent access.</p>
+</section>
+<hr class="docutils" />
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart Guide</span></a> — Getting started with StuntDouble</p></li>
+<li><p><a class="reference internal" href="langgraph-integration.html"><span class="std std-doc">LangGraph Approach</span></a> — Per-invocation mocking</p></li>
+<li><p><a class="reference internal" href="mock-builder.html"><span class="std std-doc">MockBuilder Guide</span></a> — Fluent mock registration API</p></li>
+<li><p><a class="reference internal" href="signature-validation.html"><span class="std std-doc">Signature Validation</span></a> — Catch mock errors early</p></li>
+<li><p><a class="reference internal" href="context-aware-mocks.html"><span class="std std-doc">Context-Aware Mocks</span></a> — Access runtime config in mocks</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mock-builder.html" class="btn btn-neutral float-left" title="MockBuilder: Fluent Mock Registration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="context-aware-mocks.html" class="btn btn-neutral float-right" title="Context-Aware Mocks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025-2026, StuntDouble Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

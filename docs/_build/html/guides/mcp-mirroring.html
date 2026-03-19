@@ -1,0 +1,880 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP Tool Mirroring Guide &mdash; StuntDouble 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Matchers and Resolvers Guide" href="matchers-and-resolvers.html" />
+    <link rel="prev" title="LangGraph Integration" href="langgraph-integration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/stuntdouble_logo2.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#choose-your-path">Choose Your Path</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#path-a-langgraph-agent-recommended">Path A: LangGraph Agent (Recommended)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="quickstart.html#option-1-default-registry-simplest">Option 1: Default Registry (Simplest)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quickstart.html#option-2-fluent-builder-api-most-concise">Option 2: Fluent Builder API (Most Concise)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="quickstart.html#option-3-custom-registry-full-control">Option 3: Custom Registry (Full Control)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#path-b-mcp-server-auto-mocking">Path B: MCP Server Auto-Mocking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#common-patterns">Common Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#using-mockbuilder-fluent-api">Using MockBuilder (Fluent API)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#call-recording-and-verification">Call Recording and Verification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#context-aware-mocks">Context-Aware Mocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#input-based-mocking">Input-Based Mocking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#dynamic-values">Dynamic Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#complete-evaluation-scenario">Complete Evaluation Scenario</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#testing-examples">Testing Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html#pytest-with-langgraph-recommended">pytest with LangGraph (Recommended)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="langgraph-integration.html">LangGraph Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="langgraph-integration.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="langgraph-integration.html#toolnode-wrapper">ToolNode Wrapper</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#option-a-default-registry-simplest">Option A: Default Registry (Simplest) ⭐</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#option-b-custom-registry-full-control">Option B: Custom Registry (Full Control)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#api-reference">API Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#mocks-not-working">Mocks Not Working</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#callrecorder-tool-call-verification">CallRecorder: Tool Call Verification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#quick-start">Quick Start</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#id1">API Reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#query-methods">Query Methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#assertion-methods">Assertion Methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#callrecord-properties">CallRecord Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#examples">Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#thread-safety">Thread Safety</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="langgraph-integration.html#shared-concepts">Shared Concepts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mockbuilder-fluent-mock-registration">MockBuilder: Fluent Mock Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mocked-tool-patterns">Mocked Tool Patterns</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-1-static-mock">Pattern 1: Static Mock</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-2-input-echo-mock">Pattern 2: Input-Echo Mock</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-3-mocks-based-mock-data-driven">Pattern 3: Mocks-Based Mock (Data-Driven)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-4-conditional-mock-with-when-predicate">Pattern 4: Conditional Mock (with <code class="docutils literal notranslate"><span class="pre">when</span></code> predicate)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-5-dynamic-placeholders">Pattern 5: Dynamic Placeholders</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#pattern-6-context-aware-mock-runtime-config-access">Pattern 6: Context-Aware Mock (Runtime Config Access)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#scenario-metadata-structure">scenario_metadata Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#input-matching">Input Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#dynamic-placeholders">Dynamic Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#custom-mocked-tools">Custom Mocked Tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#mocked-tool-signature">Mocked Tool Signature</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-custom-key-name">Example: Custom Key Name</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-stateful-factory">Example: Stateful Factory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-tenant-aware-factory">Example: Tenant-Aware Factory</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#best-practices">Best Practices</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#register-at-startup">1. Register at Startup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#keep-mocked-tools-pure">2. Keep Mocked Tools Pure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#enable-logging-for-debugging">3. Enable Logging for Debugging</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mock-signature-validation">Mock Signature Validation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#validation-points">Validation Points</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#controlling-validation">Controlling Validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-registration-time-validation">Example: Registration-Time Validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#example-runtime-validation">Example: Runtime Validation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#what-gets-validated">What Gets Validated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#opting-out">Opting Out</a></li>
+<li class="toctree-l4"><a class="reference internal" href="langgraph-integration.html#mcp-tool-support">MCP Tool Support</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="langgraph-integration.html#using-mirrored-tools">Using Mirrored Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#quick-start-with-mirroring">Quick Start with Mirroring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#langgraph-optimized-mirroring">LangGraph-Optimized Mirroring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mirroring-with-http-authentication">Mirroring with HTTP Authentication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#mirroring-with-langgraph-registry-integration">Mirroring with LangGraph Registry Integration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="langgraph-integration.html#combining-with-custom-mocks">Combining with Custom Mocks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Guides</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MCP Tool Mirroring Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#when-to-use-mirroring">When to Use Mirroring</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-mirroring-stdio">Basic Mirroring (stdio)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#http-server-mirroring">HTTP Server Mirroring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#one-line-convenience-functions">One-Line Convenience Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#llm-powered-generation">LLM-Powered Generation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#quality-presets">Quality Presets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#http-authentication">HTTP Authentication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#security-features">Security Features</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#customizing-mock-data">Customizing Mock Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ci-cd-optimization">CI/CD Optimization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#caching">Caching</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#toolmirror-class">ToolMirror Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mirroring-methods">Mirroring Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convenience-functions">Convenience Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#integration-with-approaches">Integration with Approaches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matchers-and-resolvers.html">Matchers and Resolvers Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#input-matchers">Input Matchers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#supported-operators">Supported Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#multiple-conditions">Multiple Conditions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#catch-all-patterns">Catch-All Patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#real-world-examples">Real-World Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-1-customer-tier-logic">Example 1: Customer Tier Logic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-2-bill-filtering">Example 2: Bill Filtering</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#value-resolvers">Value Resolvers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#id1">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#timestamp-placeholders">Timestamp Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#input-reference-placeholders">Input Reference Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#generator-placeholders">Generator Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#id2">Real-World Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-1-invoice-creation">Example 1: Invoice Creation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-2-user-profile">Example 2: User Profile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="matchers-and-resolvers.html#example-3-billing-period">Example 3: Billing Period</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#combining-matchers-and-resolvers">Combining Matchers and Resolvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#using-with-langgraph">Using with LangGraph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#best-practices">Best Practices</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#order-patterns-from-specific-to-general">1. Order Patterns from Specific to General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#use-defaults-for-missing-fields">2. Use Defaults for Missing Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#use-sequences-for-related-ids">3. Use Sequences for Related IDs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#combine-operators-for-range-matching">4. Combine Operators for Range Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#use-exists-for-optional-fields">5. Use $exists for Optional Fields</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#debugging">Debugging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#check-if-a-pattern-matches">Check if a Pattern Matches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#check-for-placeholders">Check for Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#enable-debug-logging">Enable Debug Logging</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#matchers">Matchers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="matchers-and-resolvers.html#resolvers">Resolvers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="matchers-and-resolvers.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mock-builder.html">MockBuilder: Fluent Mock Registration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#using-the-default-registry">Using the Default Registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#api-reference">API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#methods">Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#static-return-value">Static Return Value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#conditional-mocking">Conditional Mocking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#input-echoing">Input Echoing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#custom-callable">Custom Callable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#chaining-methods">Chaining Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#scenario-predicates-and-input-conditions">Scenario Predicates and Input Conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#notes-and-limits">Notes and Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#integration-examples">Integration Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#with-langgraph-per-invocation-mocking">With LangGraph Per-Invocation Mocking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#with-default-registry-simplest">With Default Registry (Simplest)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#input-condition-behavior">Input Condition Behavior</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mock-builder.html#builder-vs-data-driven">Builder vs. Data-Driven</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mock-builder.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="call-recording.html">Call Recording Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#setup">Setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#with-custom-registry">With Custom Registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#key-point">Key Point</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#query-methods">Query Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#assertion-methods">Assertion Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#id1">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#callrecord-properties">CallRecord Properties</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#inspecting-callrecords">Inspecting CallRecords</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#pytest-integration">pytest Integration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#basic-fixture-pattern">Basic Fixture Pattern</a></li>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#resetting-between-tests">Resetting Between Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#parametrized-tests">Parametrized Tests</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#advanced-patterns">Advanced Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#verifying-tool-call-sequences">Verifying Tool Call Sequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#checking-call-counts">Checking Call Counts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#verifying-mock-vs-real-calls">Verifying Mock vs Real Calls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="call-recording.html#combining-with-signature-validation">Combining with Signature Validation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#thread-safety">Thread Safety</a></li>
+<li class="toctree-l2"><a class="reference internal" href="call-recording.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="context-aware-mocks.html">Context-Aware Mocks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#when-to-use">When to Use</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#how-it-works">How It Works</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#signature-inspection">Signature Inspection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#the-get-configurable-context-helper">The <code class="docutils literal notranslate"><span class="pre">get_configurable_context</span></code> Helper</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#example-1-user-identity-mock">Example 1: User Identity Mock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#example-2-tenant-specific-data">Example 2: Tenant-Specific Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#example-3-request-specific-mock">Example 3: Request-Specific Mock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#example-4-combined-with-scenario-metadata">Example 4: Combined with scenario_metadata</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#testing-with-context-aware-mocks">Testing with Context-Aware Mocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#pytest-example">pytest Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="context-aware-mocks.html#multi-tenant-test">Multi-Tenant Test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#key-points">Key Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context-aware-mocks.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="signature-validation.html">Mock Signature Validation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#validation-options">Validation Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#registration-time-validation">Registration-Time Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="signature-validation.html#how-to-enable">How to Enable</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#runtime-validation">Runtime Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="signature-validation.html#id1">How to Enable</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#validating-scenario-metadata-cases">Validating Scenario Metadata Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#strict-mock-errors">Strict Mock Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#opting-out">Opting Out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#what-gets-validated">What Gets Validated</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#mcp-tool-support">MCP Tool Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#complete-example">Complete Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="signature-validation.html#belt-and-suspenders-validation">Belt-and-Suspenders Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="signature-validation.html#pytest-integration">pytest Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#api-reference">API Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="signature-validation.html#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/mock-format.html">Mock Data Format Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#basic-structure">Basic Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#single-case">Single Case</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#multiple-cases-with-input-matching">Multiple Cases with Input Matching</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#case-fields">Case Fields</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#input-matching-operators">Input Matching Operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#comparison-operators">Comparison Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#set-operators">Set Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#string-operators">String Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#existence-operator">Existence Operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#combined-operators">Combined Operators</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#dynamic-placeholders">Dynamic Placeholders</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#timestamp-placeholders">Timestamp Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#input-reference-placeholders">Input Reference Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#config-reference-placeholders">Config Reference Placeholders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#generator-placeholders">Generator Placeholders</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#complete-examples">Complete Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#customer-service-mock">Customer Service Mock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#invoice-creation-mock">Invoice Creation Mock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#bills-query-mock">Bills Query Mock</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#matching-precedence">Matching Precedence</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#no-match-behavior">No-Match Behavior</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/mock-format.html#validation">Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#required-fields">Required Fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#type-coercion">Type Coercion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/mock-format.html#null-handling">Null Handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/dependencies.html">Dependencies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#core-dependencies">Core Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#langchain-core">langchain-core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#pydantic">pydantic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#langgraph">langgraph</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#development-dependencies">Development Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#optional-dependencies">Optional Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#for-llm-powered-mock-generation">For LLM-powered mock generation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#for-mcp-mirroring-support">For MCP mirroring support</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#version-compatibility">Version Compatibility</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#python-versions">Python Versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#langchain-ecosystem">LangChain Ecosystem</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#dependency-graph">Dependency Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#minimal-installation">Minimal Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/dependencies.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#dependency-conflicts">Dependency Conflicts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/dependencies.html#missing-optional-dependencies">Missing Optional Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/schema-validation.html">Mock Input Validation Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#signature-validation">Signature Validation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/schema-validation.html#what-it-catches">What it catches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/schema-validation.html#what-happens-at-runtime">What happens at runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#parameter-validation-for-data-driven-mocks">Parameter Validation for Data-Driven Mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#validating-full-scenario-metadata">Validating Full Scenario Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#data-driven-mock-notes">Data-Driven Mock Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#what-this-page-does-not-cover">What This Page Does Not Cover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/schema-validation.html#see-also">See Also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/overview.html">Architecture Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#high-level-architecture">High-Level Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#module-structure">Module Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#core-components">Core Components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#inputmatcher">1. InputMatcher</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#valueresolver">2. ValueResolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#mockbuilder">3. MockBuilder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#callrecorder">4. CallRecorder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#mocktoolsregistry-langgraph">5. MockToolsRegistry (LangGraph)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#langgraph-integration-flow">LangGraph Integration Flow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../architecture/overview.html#wrapper-pattern-recommended">Wrapper Pattern ⭐ (Recommended)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#mcp-mirroring-architecture">MCP Mirroring Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#thread-safety">Thread Safety</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../architecture/overview.html#extension-points">Extension Points</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">StuntDouble</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">MCP Tool Mirroring Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guides/mcp-mirroring.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mcp-tool-mirroring-guide">
+<h1>MCP Tool Mirroring Guide<a class="headerlink" href="#mcp-tool-mirroring-guide" title="Link to this heading"></a></h1>
+<p>Auto-generate mock implementations from MCP server tool schemas. ToolMirror discovers tools from an MCP server and creates mock implementations without manual coding.</p>
+<hr class="docutils" />
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<p>Install the optional MCP support before using live mirroring:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;stuntdouble[mcp]&quot;</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>MCP (Model Context Protocol) Tool Mirroring allows you to:</p>
+<ol class="arabic simple">
+<li><p><strong>Discover</strong> tools from any MCP server (stdio or HTTP)</p></li>
+<li><p><strong>Generate</strong> mock implementations automatically from schemas</p></li>
+<li><p><strong>Use</strong> the mocked tools in your AI agent tests</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>┌─────────────────────────────────────────────────────────────────────────────┐
+│                         MCP Mirroring Flow                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   1. Discovery                  2. Generation               3. Usage       │
+│   ────────────                  ─────────────               ──────         │
+│                                                                             │
+│   ┌─────────────┐          ┌─────────────────┐        ┌──────────────┐     │
+│   │ MCP Server  │          │ MockGenerator   │        │ AI Agent     │     │
+│   │             │          │                 │        │              │     │
+│   │ tools/list  │──────▶   │ Schema analysis │──────▶ │ bind_tools() │     │
+│   │             │          │ Type inference  │        │              │     │
+│   │ - tool_a    │          │ Mock creation   │        │ or           │     │
+│   │ - tool_b    │          │                 │        │ ToolNode()   │     │
+│   │ - tool_c    │          │ Optional: LLM   │        │              │     │
+│   └─────────────┘          └─────────────────┘        └──────────────┘     │
+│                                                                             │
+│   Supported transports: stdio (subprocess), HTTP (remote server)           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+</pre></div>
+</div>
+<section id="when-to-use-mirroring">
+<h3>When to Use Mirroring<a class="headerlink" href="#when-to-use-mirroring" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Scenario</p></th>
+<th class="head"><p>Recommendation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Testing agent with MCP tools</p></td>
+<td><p>✅ Mirror tools for fast, offline testing</p></td>
+</tr>
+<tr class="row-odd"><td><p>CI/CD pipelines</p></td>
+<td><p>✅ Use <code class="docutils literal notranslate"><span class="pre">ToolMirror.for_ci()</span></code> for deterministic mocks</p></td>
+</tr>
+<tr class="row-even"><td><p>Development without MCP server</p></td>
+<td><p>✅ Mirror once, develop offline</p></td>
+</tr>
+<tr class="row-odd"><td><p>Need realistic mock data</p></td>
+<td><p>✅ Use <code class="docutils literal notranslate"><span class="pre">ToolMirror.with_llm()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Production</p></td>
+<td><p>❌ Use real MCP tools</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<hr class="docutils" />
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h2>
+<section id="basic-mirroring-stdio">
+<h3>Basic Mirroring (stdio)<a class="headerlink" href="#basic-mirroring-stdio" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMirror</span>
+
+<span class="c1"># Create mirror instance</span>
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="p">()</span>
+
+<span class="c1"># Mirror tools from MCP server (subprocess)</span>
+<span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">([</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;my_mcp_server&quot;</span><span class="p">])</span>
+
+<span class="c1"># Get LangChain-compatible tools</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">to_langchain_tools</span><span class="p">()</span>
+
+<span class="c1"># Use with agent</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">bind_tools</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="s2">&quot;Create an invoice for customer CUST-001&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="http-server-mirroring">
+<h3>HTTP Server Mirroring<a class="headerlink" href="#http-server-mirroring" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMirror</span>
+
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="p">()</span>
+
+<span class="c1"># Mirror from HTTP MCP server</span>
+<span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="n">http_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:8080/mcp&quot;</span><span class="p">)</span>
+
+<span class="n">tools</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">to_langchain_tools</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="one-line-convenience-functions">
+<h3>One-Line Convenience Functions<a class="headerlink" href="#one-line-convenience-functions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">mirror</span><span class="p">,</span> <span class="n">mirror_for_agent</span>
+
+<span class="c1"># One-line mirroring (returns result dict)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mirror</span><span class="p">([</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;my_server&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mirrored </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;mirrored_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> tools: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;tools&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Mirror and get tools ready for agent</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="n">mirror_for_agent</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;my_server&quot;</span><span class="p">])</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">bind_tools</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="llm-powered-generation">
+<h2>LLM-Powered Generation<a class="headerlink" href="#llm-powered-generation" title="Link to this heading"></a></h2>
+<p>For realistic, contextual mock data, use an LLM to generate responses:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChatOpenAI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMirror</span>
+
+<span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="o">.</span><span class="n">with_llm</span><span class="p">(</span><span class="n">llm</span><span class="p">)</span>
+
+<span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">([</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;financial_mcp&quot;</span><span class="p">])</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">to_langchain_tools</span><span class="p">()</span>
+
+<span class="c1"># Tools return realistic, contextual mock data</span>
+<span class="c1"># e.g., create_invoice returns realistic invoice data</span>
+</pre></div>
+</div>
+<section id="quality-presets">
+<h3>Quality Presets<a class="headerlink" href="#quality-presets" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMirror</span><span class="p">,</span> <span class="n">QualityPreset</span>
+
+<span class="c1"># High quality - uses LLM for all responses</span>
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="o">.</span><span class="n">with_llm</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">quality</span><span class="o">=</span><span class="n">QualityPreset</span><span class="o">.</span><span class="n">HIGH</span><span class="p">)</span>
+
+<span class="c1"># Balanced quality - parameter-aware static generation</span>
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="o">.</span><span class="n">with_llm</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">quality</span><span class="o">=</span><span class="n">QualityPreset</span><span class="o">.</span><span class="n">BALANCED</span><span class="p">)</span>
+
+<span class="c1"># Fast - static responses only (no LLM calls)</span>
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="o">.</span><span class="n">for_ci</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="http-authentication">
+<h2>HTTP Authentication<a class="headerlink" href="#http-authentication" title="Link to this heading"></a></h2>
+<p>Mirror tools from remote MCP servers that require authentication:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMirror</span>
+
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="p">()</span>
+
+<span class="c1"># Bearer token authentication</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span>
+    <span class="n">http_url</span><span class="o">=</span><span class="s2">&quot;https://api.example.com/mcp&quot;</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="s2">&quot;Bearer your-token-here&quot;</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># API key authentication</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span>
+    <span class="n">http_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:8080&quot;</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;X-API-Key&quot;</span><span class="p">:</span> <span class="s2">&quot;abc123&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;X-Client-ID&quot;</span><span class="p">:</span> <span class="s2">&quot;my-app&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Multiple custom headers</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span>
+    <span class="n">http_url</span><span class="o">=</span><span class="s2">&quot;http://internal.company.com/mcp&quot;</span><span class="p">,</span>
+    <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="s2">&quot;Bearer token&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;X-Request-ID&quot;</span><span class="p">:</span> <span class="s2">&quot;unique-id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;X-Environment&quot;</span><span class="p">:</span> <span class="s2">&quot;production&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">tools</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">to_langchain_tools</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="security-features">
+<h3>Security Features<a class="headerlink" href="#security-features" title="Link to this heading"></a></h3>
+<p>Headers are automatically included in all HTTP requests:</p>
+<ul class="simple">
+<li><p>SSE connection establishment (<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/sse</span></code>)</p></li>
+<li><p>JSON-RPC message calls (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/messages</span></code>)</p></li>
+</ul>
+<p>StuntDouble provides built-in security:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Header Validation</strong></p></td>
+<td><p>Headers must be a dict with string keys/values</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Sensitive Data Protection</strong></p></td>
+<td><p>Headers are redacted in logs and errors</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Protocol Compliance</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Content-Type:</span> <span class="pre">application/json</span></code> auto-enforced</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Transport Validation</strong></p></td>
+<td><p>Warning if headers specified for stdio</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<hr class="docutils" />
+<section id="customizing-mock-data">
+<h2>Customizing Mock Data<a class="headerlink" href="#customizing-mock-data" title="Link to this heading"></a></h2>
+<p>Override generated mock data for specific tools:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMirror</span>
+
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="p">()</span>
+<span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">([</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;my_server&quot;</span><span class="p">])</span>
+
+<span class="c1"># Customize specific tool responses</span>
+<span class="n">mirror</span><span class="o">.</span><span class="n">customize</span><span class="p">(</span><span class="s2">&quot;get_customer&quot;</span><span class="p">,</span> <span class="p">{</span>
+    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;CUST-001&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Custom Test Corp&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tier&quot;</span><span class="p">:</span> <span class="s2">&quot;platinum&quot;</span>
+<span class="p">})</span>
+
+<span class="c1"># List all mirrored tools</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mirror</span><span class="o">.</span><span class="n">list_mirrors</span><span class="p">())</span>
+<span class="c1"># [MirrorInfo(...), MirrorInfo(...), ...]</span>
+
+<span class="n">tools</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">to_langchain_tools</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="ci-cd-optimization">
+<h2>CI/CD Optimization<a class="headerlink" href="#ci-cd-optimization" title="Link to this heading"></a></h2>
+<p>For CI/CD pipelines, use the optimized factory:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMirror</span>
+
+<span class="c1"># Optimized for CI: deterministic, no LLM calls, fast</span>
+<span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="o">.</span><span class="n">for_ci</span><span class="p">()</span>
+<span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">([</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;my_server&quot;</span><span class="p">])</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="n">mirror</span><span class="o">.</span><span class="n">to_langchain_tools</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="caching">
+<h3>Caching<a class="headerlink" href="#caching" title="Link to this heading"></a></h3>
+<p>Enable caching for faster subsequent runs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mirror</span> <span class="o">=</span> <span class="n">ToolMirror</span><span class="p">()</span><span class="o">.</span><span class="n">enable_caching</span><span class="p">(</span><span class="n">ttl_minutes</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">([</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;my_server&quot;</span><span class="p">])</span>
+<span class="c1"># Second call uses cached tool definitions</span>
+<span class="n">mirror</span><span class="o">.</span><span class="n">mirror</span><span class="p">([</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;my_server&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h2>
+<section id="toolmirror-class">
+<h3>ToolMirror Class<a class="headerlink" href="#toolmirror-class" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ToolMirror()</span></code></p></td>
+<td><p>Create mirror with default settings</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ToolMirror.with_llm(llm,</span> <span class="pre">quality=)</span></code></p></td>
+<td><p>Create with LLM-powered generation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ToolMirror.for_ci()</span></code></p></td>
+<td><p>Create mirror optimized for CI/CD</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ToolMirror.for_langgraph(registry=None,</span> <span class="pre">quality=)</span></code></p></td>
+<td><p>Create mirror that also registers mirrored mocks in a LangGraph registry</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.enable_caching(ttl_minutes=)</span></code></p></td>
+<td><p>Enable response caching</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.enable_llm(llm)</span></code></p></td>
+<td><p>Add LLM generation to existing mirror</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="mirroring-methods">
+<h3>Mirroring Methods<a class="headerlink" href="#mirroring-methods" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.mirror(server_command=,</span> <span class="pre">http_url=,</span> <span class="pre">headers=)</span></code></p></td>
+<td><p>Mirror tools from MCP server</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.to_langchain_tools()</span></code></p></td>
+<td><p>Convert to LangChain StructuredTool format</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.customize(tool_name,</span> <span class="pre">data)</span></code></p></td>
+<td><p>Override mock data for a tool</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.list_mirrors()</span></code></p></td>
+<td><p>List mirrored tools as <code class="docutils literal notranslate"><span class="pre">MirrorInfo</span></code> objects</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.list_mirrors_by_server(server_name)</span></code></p></td>
+<td><p>Filter mirrored tools by source server</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.get_stats()</span></code></p></td>
+<td><p>Return cache and generation statistics</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mirror.unregister(tool_name)</span></code></p></td>
+<td><p>Remove a mirrored tool</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="convenience-functions">
+<h3>Convenience Functions<a class="headerlink" href="#convenience-functions" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stuntdouble.mirroring</span><span class="w"> </span><span class="kn">import</span> <span class="n">mirror</span><span class="p">,</span> <span class="n">mirror_for_agent</span>
+
+<span class="c1"># Mirror and get result dict</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mirror</span><span class="p">(</span><span class="n">server_command</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;server&quot;</span><span class="p">])</span>
+<span class="c1"># Returns: {&#39;mirrored_count&#39;: 5, &#39;tools&#39;: [...], &#39;server_name&#39;: &#39;...&#39;}</span>
+
+<span class="c1"># Mirror and get tools ready for agent</span>
+<span class="n">tools</span> <span class="o">=</span> <span class="n">mirror_for_agent</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">server_command</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;server&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="integration-with-approaches">
+<h2>Integration with Approaches<a class="headerlink" href="#integration-with-approaches" title="Link to this heading"></a></h2>
+<p>MCP Tool Mirroring works with both StuntDouble approaches:</p>
+<ul class="simple">
+<li><p><strong><a class="reference internal" href="langgraph-integration.html#using-mirrored-tools"><span class="std std-ref">LangGraph Approach</span></a></strong> — Use mirrored tools with LangGraph’s per-invocation mocking</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="langgraph-integration.html"><span class="std std-doc">LangGraph Approach</span></a> — Per-invocation mocking</p></li>
+<li><p><a class="reference internal" href="quickstart.html"><span class="std std-doc">Quickstart Guide</span></a> — Getting started</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="langgraph-integration.html" class="btn btn-neutral float-left" title="LangGraph Integration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="matchers-and-resolvers.html" class="btn btn-neutral float-right" title="Matchers and Resolvers Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025-2026, StuntDouble Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
