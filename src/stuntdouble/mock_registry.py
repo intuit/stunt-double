@@ -16,7 +16,7 @@ Mock Factory Signatures:
     The new signature allows access to RunnableConfig for extracting runtime context
     like user identity from HTTP headers, useful for no-argument tools.
 
-This registry is used by the LangGraph mockable-tool wrapper.
+This registry is used by the mockable tool wrapper (stuntdouble.wrapper).
 """
 
 from __future__ import annotations

@@ -331,7 +331,6 @@ mockable_tool_wrapper = create_mockable_tool_wrapper(default_registry)
 
 __all__ = [
     "create_mockable_tool_wrapper",
-    "get_scenario_metadata",
     "default_registry",
     "mockable_tool_wrapper",
 ]

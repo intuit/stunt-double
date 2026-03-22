@@ -514,14 +514,6 @@ class CallRecorder:
         return f"CallRecorder(calls={len(self)})"
 
 
-# =============================================================================
-# CUSTOM EXCEPTION
-# =============================================================================
-
-
-# Add our own AssertionError to exceptions module for import convenience
-# This is re-exported from the module's __init__.py
-
 
 __all__ = [
     "CallRecord",
