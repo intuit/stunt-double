@@ -7,7 +7,7 @@ Provides flexible mock generation through:
 - Smart caching and LLM integration
 
 Quick Start:
-    >>> from .base import MockGenerator
+    >>> from stuntdouble.mirroring.generation import MockGenerator
     >>>
     >>> # Recommended: Use presets
     >>> gen = MockGenerator.from_preset("balanced")
@@ -16,7 +16,7 @@ Quick Start:
     >>> gen = MockGenerator.from_preset("high", llm_client=my_llm)
 
 Advanced:
-    >>> from ..strategies import StaticStrategy
+    >>> from stuntdouble.mirroring.strategies import StaticStrategy
     >>> strategy = StaticStrategy(cache=cache)
     >>> gen = MockGenerator(strategy=strategy)
 """

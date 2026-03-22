@@ -79,6 +79,7 @@ class ToolMirror:
         >>> mirror.mirror(["python", "-m", "myserver"])
 
     For LangGraph integration:
+        >>> from stuntdouble import create_mockable_tool_wrapper
         >>> mirror = ToolMirror.for_langgraph()
         >>> mirror.mirror(["python", "-m", "myserver"])
         >>> wrapper = create_mockable_tool_wrapper(mirror.langgraph_registry)
@@ -475,7 +476,8 @@ class ToolMirror:
             from stuntdouble.mock_registry import MockToolsRegistry
         except ImportError:
             raise ImportError(
-                "LangGraph integration requires stuntdouble. Ensure stuntdouble dependencies are installed."
+                "LangGraph integration requires the stuntdouble package to be properly installed "
+                "(mock_registry module not found)."
             )
 
         # Create or use provided registry

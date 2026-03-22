@@ -32,8 +32,7 @@ class MirroredToolRegistry:
     Manages the lifecycle of mirrored tools.
 
     This registry tracks which tools have been mirrored, stores their metadata,
-    and integrates with StuntDouble's mock registries:
-    - LangGraph MockToolsRegistry: For ToolNode awrap_tool_call pattern
+    and integrates with StuntDouble's MockToolsRegistry for the ToolNode awrap_tool_call pattern.
 
     Supports both static and dynamic mock generation:
     - Static: Returns fixed mock data
@@ -114,8 +113,8 @@ class MirroredToolRegistry:
         Register a mirrored tool in the registry.
 
         This:
-        1. Registers the mock in LangGraph registry if configured (for ToolNode)
-        2. Saves metadata to disk
+        1. Registers the mock in MockToolsRegistry if configured (for ToolNode)
+        2. Saves metadata to disk (no-op if storage_dir is None)
         3. Caches metadata in memory
 
         Args:
