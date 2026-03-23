@@ -16,13 +16,14 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   release:
     name: Tag & Publish
     runs-on: ubuntu-latest
     environment: pypi
+    permissions:
+      id-token: write  # required for OIDC trusted publishing
     steps:
       - uses: actions/checkout@v6
         with:
