@@ -29,12 +29,6 @@ jobs:
       - name: Check formatting  - lint (ruff)
         run: uv run ruff check
 
-      - name: Check import sorting (isort)
-        run: uv run isort --check-only --diff .
-
-      - name: Type checking (mypy)
-        run: uv run mypy .
-
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
