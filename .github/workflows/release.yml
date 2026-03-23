@@ -1,18 +1,9 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to release (e.g. 0.2.0)"
-        required: true
-        type: string
-      bump-type:
-        description: "Version bump type (used as label only)"
-        required: false
-        default: "patch"
-        type: choice
-        options: [patch, minor, major]
+  pull_request:
+    types: [ closed ]
+    branches: [ master ]
 
 permissions:
   contents: write
@@ -21,6 +12,7 @@ permissions:
 jobs:
   release:
     name: Tag & Publish
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     environment: pypi
 
@@ -39,6 +31,13 @@ jobs:
       - name: Run tests before release
         run: uv run pytest tests/
 
+      - name: Read version from pyproject.toml
+        id: version
+        run: |
+          VERSION=$(python -c "import tomllib; f=open('pyproject.toml','rb'); d=tomllib.load(f); print(d['project']['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: bot login
         run: |
           git config user.name "github-actions[bot]"
@@ -46,9 +45,8 @@ jobs:
 
       - name: Create and push tag
         run: |
-          TAG="v${{ github.event.inputs.version }}"
-          git tag "$TAG" -m "Release $TAG"
-          git push origin "$TAG"
+          git tag "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
 
       - name: Build package
         run: uv build
@@ -61,7 +59,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          name: v${{ github.event.inputs.version }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
           generate_release_notes: true
           files: dist/*
