@@ -37,20 +37,6 @@ jobs:
       - name: Run tests before release
         run: uv run pytest tests/
 
-      - name: Bump version in pyproject.toml
-        run: |
-          VERSION="${{ github.event.inputs.version }}"
-          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
-          grep '^version' pyproject.toml
-
-      - name: Commit version bump
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pyproject.toml
-          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
-          git push
-
       - name: Create and push tag
         run: |
           TAG="v${{ github.event.inputs.version }}"
