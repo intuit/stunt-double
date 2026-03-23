@@ -4,7 +4,7 @@ import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.tools import tool
-from langgraph.graph import MessagesState, StateGraph, START
+from langgraph.graph import START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from stuntdouble import (
@@ -475,7 +475,7 @@ class TestMockVsRealToggleE2E:
             {"scenario_id": "toggle-mock"},
         )
 
-        result = await _invoke(graph, config)
+        await _invoke(graph, config)
         recorder.assert_called("get_customer")
         assert recorder.calls[0].was_mocked is True
 
