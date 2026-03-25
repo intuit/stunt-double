@@ -30,6 +30,7 @@ jobs:
         run: uv run ruff check
 
   test:
+    needs: [ lint ]
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
@@ -57,15 +58,6 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-fail-under=74 \
             -v
-      - name: Run e2e tests with coverage
-        run: |
-          uv run pytest tests-e2e/ \
-            --color=yes \
-            --cov=src/stuntdouble \
-            --cov-report=term \
-            --cov-report=xml:coverage.xml \
-            --cov-fail-under=22 \
-            -v
 
       - name: Upload coverage
         if: matrix.python-version == '3.13'
@@ -73,4 +65,41 @@ jobs:
         with:
           name: coverage-report
           path: coverage.xml
+  
+  tests-e2e:
+    needs: [ lint ]
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras --group dev
+
+      - name: Run e2e tests with coverage
+        run: |
+          uv run pytest tests-e2e/ \
+            --color=yes \
+            --cov=src/stuntdouble \
+            --cov-report=term \
+            --cov-report=xml:coverage-e2e.xml \
+            --cov-fail-under=22 \
+            -v
+
+      - name: Upload coverage
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-e2e-report
+          path: coverage-e2e.xml
 
