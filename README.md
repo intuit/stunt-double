@@ -7,7 +7,7 @@
 
   [![PyPI version](https://img.shields.io/pypi/v/stuntdouble)](https://pypi.org/project/stuntdouble/)
   [![Python versions](https://img.shields.io/pypi/pyversions/stuntdouble?logo=python)](https://pypi.org/project/stuntdouble/)
-  [![License](https://img.shields.io/pypi/l/stuntdouble)](https://pypi.org/project/stuntdouble/)
+  [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/intuit/stunt-double/blob/main/LICENSE)
 
   *Mock your AI agent tools without hitting real APIs*
 
@@ -673,7 +673,7 @@ Full documentation with guides, architecture overview, and API reference is avai
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, and release guidelines.
+See [CONTRIBUTING.md](https://github.com/intuit/stunt-double/blob/main/CONTRIBUTING.md) for development setup, testing, and release guidelines.
 
 ---
 
