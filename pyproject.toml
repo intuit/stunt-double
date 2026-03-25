@@ -12,6 +12,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
+license-files = ["LICEN[CS]E*"]
 
 dependencies = [
     "langchain-core>=1.2.5,<2",
