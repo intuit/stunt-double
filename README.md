@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="https://github.com/intuit/stunt-double/blob/main/docs/stuntdouble_logo2.png" alt="StuntDouble Logo" width="400"/>
+  <img src="https://raw.githubusercontent.com/intuit/stunt-double/main/docs/stuntdouble_logo2.png" alt="StuntDouble Logo" width="400"/>
 
   # StuntDouble
 
   **Tool Mocking Framework for AI Agent Testing**
 
-  ![Version](https://shields.io/badge/version-0.1.0-blue)
-  ![Supported Python versions](https://shields.io/badge/python-3.11_|_3.12_|_3.13_|_3.14-green?logo=python)
-  [![PyPI](https://img.shields.io/pypi/v/stuntdouble)](https://pypi.org/project/stuntdouble/)
+  [![PyPI version](https://img.shields.io/pypi/v/stuntdouble)](https://pypi.org/project/stuntdouble/)
+  [![Python versions](https://img.shields.io/pypi/pyversions/stuntdouble?logo=python)](https://pypi.org/project/stuntdouble/)
+  [![License](https://img.shields.io/pypi/l/stuntdouble)](https://pypi.org/project/stuntdouble/)
 
   *Mock your AI agent tools without hitting real APIs*
 
