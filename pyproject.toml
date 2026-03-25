@@ -44,9 +44,9 @@ ignore = ["E501", "N815"]
 known-first-party = ["stuntdouble"]
 
 [project.urls]
-Homepage = "https://github.com/stuntdouble/stuntdouble"
-Documentation = "https://github.com/stuntdouble/stuntdouble/tree/main/docs"
-Source = "https://github.com/stuntdouble/stuntdouble"
+Homepage = "https://github.com/intuit/stunt-double"
+Documentation = "https://intuit.github.io/stunt-double"
+Source = "https://github.com/intuit/stunt-double"
 Issues = "https://github.com/intuit/stunt-double/issues"
 
 [tool.pytest.ini_options]
