@@ -57,6 +57,15 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-fail-under=74 \
             -v
+      - name: Run e2e tests with coverage
+        run: |
+          uv run pytest tests-e2e/ \
+            --color=yes \
+            --cov=src/stuntdouble \
+            --cov-report=term \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=74 \
+            -v
 
       - name: Upload coverage
         if: matrix.python-version == '3.13'
