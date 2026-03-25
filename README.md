@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/stuntdouble_logo2.png" alt="StuntDouble Logo" width="400"/>
+  <img src="https://github.com/intuit/stunt-double/blob/main/docs/stuntdouble_logo2.png" alt="StuntDouble Logo" width="400"/>
 
   # StuntDouble
 
