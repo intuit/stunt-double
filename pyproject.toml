@@ -1,6 +1,6 @@
 [project]
 name = "stuntdouble"
-version = "2.1.0"
+version = "2.1.1"
 description = "Tool mocking framework for AI agent testing"
 requires-python = ">= 3.12"
 license = "MIT"
