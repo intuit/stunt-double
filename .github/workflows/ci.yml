@@ -68,7 +68,7 @@ jobs:
   
   tests-e2e:
     needs: [ lint ]
-    name: Test (Python ${{ matrix.python-version }})
+    name: Test e2e (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
