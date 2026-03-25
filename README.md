@@ -679,4 +679,4 @@ See [CONTRIBUTING.md](https://github.com/intuit/stunt-double/blob/main/CONTRIBUT
 
 ## License
 
-See [LICENSE](LICENSE) file.
+See [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/intuit/stunt-double/blob/main/LICENSE) file.
