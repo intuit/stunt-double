@@ -47,7 +47,7 @@ known-first-party = ["stuntdouble"]
 Homepage = "https://github.com/stuntdouble/stuntdouble"
 Documentation = "https://github.com/stuntdouble/stuntdouble/tree/main/docs"
 Source = "https://github.com/stuntdouble/stuntdouble"
-Issues = "https://github.com/stuntdouble/stuntdouble/issues"
+Issues = "https://github.com/intuit/stunt-double/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
