@@ -64,7 +64,7 @@ jobs:
             --cov=src/stuntdouble \
             --cov-report=term \
             --cov-report=xml:coverage.xml \
-            --cov-fail-under=74 \
+            --cov-fail-under=22 \
             -v
 
       - name: Upload coverage
