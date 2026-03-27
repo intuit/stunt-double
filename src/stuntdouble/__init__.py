@@ -1,5 +1,7 @@
 """StuntDouble — Tool mocking framework for AI agent testing."""
 
+from importlib.metadata import version as _pkg_version
+
 from stuntdouble.builder import MockBuilder
 from stuntdouble.config import (
     extract_scenario_metadata_from_config,
@@ -30,7 +32,7 @@ from stuntdouble.wrapper import (
     mockable_tool_wrapper,
 )
 
-__version__ = "0.1.0"
+__version__ = _pkg_version("stuntdouble")
 
 __all__ = [
     "CallRecord",
