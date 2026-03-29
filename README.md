@@ -8,6 +8,7 @@
   [![PyPI version](https://img.shields.io/pypi/v/stuntdouble)](https://pypi.org/project/stuntdouble/)
   [![Python versions](https://img.shields.io/pypi/pyversions/stuntdouble?logo=python)](https://pypi.org/project/stuntdouble/)
   [![License](https://img.shields.io/pypi/l/stuntdouble)](https://pypi.org/project/stuntdouble/)
+  [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://intuit.github.io/stunt-double/)
 
   *Mock your AI agent tools without hitting real APIs*
 
