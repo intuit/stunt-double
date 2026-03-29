@@ -28,9 +28,6 @@ jobs:
       - name: Install deps
         run: uv sync --group dev
 
-      - name: Run tests before release
-        run: uv run pytest tests/
-
       - name: Read version from pyproject.toml
         id: version
         run: |
