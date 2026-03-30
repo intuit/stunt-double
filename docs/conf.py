@@ -6,10 +6,12 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+from importlib.metadata import version as _pkg_version
+
 project = "StuntDouble"
 copyright = "2025-2026, StuntDouble Contributors"
 author = "Benjamin Benchaya"
-release = "0.1.0"
+release = _pkg_version("stuntdouble")
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
