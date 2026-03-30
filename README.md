@@ -506,10 +506,8 @@ wrapper = create_mockable_tool_wrapper(
 
 ## MCP Tool Mirroring
 
-> **Note:** MCP server auto-discovery requires the `stuntdouble.mcp` client module,
-> which is not yet published. The mirroring infrastructure (registry, strategies,
-> LangChain adapter) is available, but live MCP server connections will raise
-> `ImportError` until the MCP client package is shipped.
+> **Note:** Live MCP server connections (HTTP/SSE) require the optional `aiohttp` dependency.
+> Install with `pip install stuntdouble[mcp]`. Stdio-based servers work out of the box.
 
 Auto-discover and mock tools from MCP servers:
 

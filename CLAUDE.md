@@ -24,8 +24,8 @@ uv run mypy src/                 # Type check
 ## Conventions
 
 - Line length: 120 (ruff)
-- Python: 3.11+
+- Python: 3.12+
 - Build: hatchling
 - Package manager: uv
-- All public API exported from `stuntdouble.__init__`
-- No subpackage public APIs (import from `stuntdouble`, not `stuntdouble.X`)
+- Core mocking API exported from `stuntdouble.__init__`
+- MCP mirroring API exported from `stuntdouble.mirroring`
