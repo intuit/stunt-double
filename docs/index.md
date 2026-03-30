@@ -173,6 +173,7 @@ guides/mcp-mirroring
 guides/matchers-and-resolvers
 guides/mock-builder
 guides/call-recording
+guides/multi-tool-agent-tutorial
 guides/context-aware-mocks
 guides/signature-validation
 ```
