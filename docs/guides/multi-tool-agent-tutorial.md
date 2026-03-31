@@ -10,6 +10,8 @@ This tutorial walks through a complete testing workflow for a LangGraph agent th
 
 If you already know the individual pieces, this guide shows how they fit together in one realistic test.
 
+**Prerequisites:** StuntDouble requires **Python 3.12+**. This tutorial also assumes you already have a working LangGraph agent node and tool setup.
+
 ---
 
 ## What We Are Testing
@@ -92,7 +94,7 @@ wrapper = create_mockable_tool_wrapper(
 )
 
 builder = StateGraph(MessagesState)
-builder.add_node("agent", agent_node)  # your LLM / planner node
+builder.add_node("agent", agent_node)  # Your LLM/planner node; see langgraph-integration.md for a full example.
 builder.add_node("tools", ToolNode(tools, awrap_tool_call=wrapper))
 builder.add_edge(START, "agent")
 builder.add_conditional_edges("agent", tools_condition)
@@ -114,7 +116,7 @@ Why `register_data_driven()` here?
 Now we provide one scenario that mocks all three tools. Each tool can have multiple cases.
 
 ```python
-from stuntdouble import inject_scenario_metadata
+from stuntdouble import inject_scenario_metadata, validate_registry_mocks
 
 
 scenario_metadata = {
@@ -178,11 +180,11 @@ scenario_metadata = {
     },
 }
 
-config = inject_scenario_metadata({}, scenario_metadata)
-
 errors = validate_registry_mocks(tools, scenario_metadata)
 if errors:
     raise ValueError(f"Invalid scenario metadata: {errors}")
+
+config = inject_scenario_metadata({}, scenario_metadata)
 ```
 
 This single scenario demonstrates a few useful patterns:
@@ -261,7 +263,7 @@ def graph_with_mocks(recorder):
     )
 
     builder = StateGraph(MessagesState)
-    builder.add_node("agent", agent_node)
+    builder.add_node("agent", agent_node)  # Your LLM/planner node; see langgraph-integration.md for a full example.
     builder.add_node("tools", ToolNode(tools, awrap_tool_call=wrapper))
     builder.add_edge(START, "agent")
     builder.add_conditional_edges("agent", tools_condition)
@@ -271,46 +273,45 @@ def graph_with_mocks(recorder):
 
 @pytest.mark.asyncio
 async def test_overdue_billing_flow(graph_with_mocks, recorder):
-    config = inject_scenario_metadata(
-        {},
-        {
-            "scenario_id": "pytest-overdue-billing-flow",
-            "mocks": {
-                "get_customer": [
-                    {
-                        "output": {
-                            "id": "{{input.customer_id}}",
-                            "name": "Acme Manufacturing",
-                            "status": "active",
-                        }
+    scenario_metadata = {
+        "scenario_id": "pytest-overdue-billing-flow",
+        "mocks": {
+            "get_customer": [
+                {
+                    "output": {
+                        "id": "{{input.customer_id}}",
+                        "name": "Acme Manufacturing",
+                        "status": "active",
                     }
-                ],
-                "list_bills": [
-                    {
-                        "input": {"status": "overdue"},
-                        "output": {
-                            "bills": [{"id": "BILL-900", "amount": 1200}],
-                            "total_overdue": 1200,
-                        },
+                }
+            ],
+            "list_bills": [
+                {
+                    "input": {"status": "overdue"},
+                    "output": {
+                        "bills": [{"id": "BILL-900", "amount": 1200}],
+                        "total_overdue": 1200,
+                    },
+                }
+            ],
+            "create_invoice": [
+                {
+                    "output": {
+                        "invoice_id": "{{sequence('INV')}}",
+                        "customer_id": "{{input.customer_id}}",
+                        "amount": "{{input.amount}}",
+                        "reason": "{{input.reason}}",
+                        "status": "created",
                     }
-                ],
-                "create_invoice": [
-                    {
-                        "output": {
-                            "invoice_id": "{{sequence('INV')}}",
-                            "customer_id": "{{input.customer_id}}",
-                            "amount": "{{input.amount}}",
-                            "reason": "{{input.reason}}",
-                            "status": "created",
-                        }
-                    }
-                ],
-            },
+                }
+            ],
         },
-    )
+    }
 
-    errors = validate_registry_mocks([get_customer, list_bills, create_invoice], config["configurable"]["scenario_metadata"])
+    errors = validate_registry_mocks([get_customer, list_bills, create_invoice], scenario_metadata)
     assert errors == {}
+
+    config = inject_scenario_metadata({}, scenario_metadata)
 
     await graph_with_mocks.ainvoke(
         {
@@ -406,7 +407,7 @@ def failing_invoice_mock(scenario_metadata):
 registry = MockToolsRegistry()
 registry.register_data_driven("get_customer")
 registry.register_data_driven("list_bills")
-registry.register("create_invoice", mock_fn=failing_invoice_mock)
+registry.register("create_invoice", failing_invoice_mock)
 
 wrapper = create_mockable_tool_wrapper(
     registry,
