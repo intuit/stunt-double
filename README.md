@@ -134,6 +134,18 @@ result = await graph.ainvoke({"messages": [HumanMessage("List my bills")]})
 # --> Uses real list_bills tool
 ```
 
+Mock factories can be defined with either `def` or `async def`. If a factory
+needs to do asynchronous setup before returning the mock callable, the wrapper
+will await it automatically:
+
+```python
+async def async_customer_factory(scenario_metadata, config=None):
+    fixture = await load_fixture(scenario_metadata["fixture_id"])
+    return lambda customer_id: {"id": customer_id, "fixture": fixture}
+
+registry.register("get_customer", mock_fn=async_customer_factory)
+```
+
 ---
 
 ## Data-Driven Mocks
@@ -576,10 +588,10 @@ from stuntdouble import (
 |----------|-------------|
 | `MockToolsRegistry()` | Create a registry for mock functions |
 | `registry.mock(tool_name)` | Start fluent builder chain, returns `MockBuilder` |
-| `registry.register(tool_name, mock_fn, when=None, tool=None)` | Register a mock factory (low-level). Pass `tool=` for signature validation |
+| `registry.register(tool_name, mock_fn, when=None, tool=None)` | Register a sync or async mock factory (low-level). Pass `tool=` for signature validation |
 | `registry.register_data_driven(tool_name, fallback=None, echo_input=False)` | Register a data-driven mock |
-| `registry.resolve(tool_name, scenario_metadata, config=None)` | Resolve the mock callable at runtime |
-| `create_mockable_tool_wrapper(registry, recorder=, tools=, validate_signatures=)` | Create awrap_tool_call wrapper |
+| `registry.resolve(tool_name, scenario_metadata, config=None)` | Resolve the mock callable at runtime. Async factories return an awaitable that the wrapper awaits |
+| `create_mockable_tool_wrapper(registry, recorder=, tools=, validate_signatures=)` | Create awrap_tool_call wrapper with support for sync and async mock factories |
 | `inject_scenario_metadata(config, metadata)` | Create config with scenario_metadata |
 | `CallRecorder()` | Records tool calls for test assertions |
 

@@ -453,6 +453,77 @@ class TestCustomMockFactoryE2E:
         await _invoke(graph, config)
         recorder.assert_called("list_items")
 
+    async def test_async_factory_resolves_through_toolnode(self):
+        registry = MockToolsRegistry()
+        recorder = CallRecorder()
+
+        async def async_customer_factory(scenario_metadata: dict, config: dict = None):
+            return lambda customer_id: {
+                "id": customer_id,
+                "tier": scenario_metadata["customer_tier"],
+            }
+
+        registry.register("get_customer", mock_fn=async_customer_factory)
+
+        graph, config = _run_graph(
+            registry,
+            recorder,
+            [
+                make_tool_call("get_customer", {"customer_id": "C1"}),
+                make_final_response("Done."),
+            ],
+            {"scenario_id": "async-factory-test", "customer_tier": "enterprise"},
+        )
+
+        result = await _invoke(graph, config)
+
+        recorder.assert_called_with("get_customer", customer_id="C1")
+        assert recorder.calls[0].was_mocked is True
+        assert recorder.calls[0].result == {"id": "C1", "tier": "enterprise"}
+        assert result["messages"][-1].content == "Done."
+
+    async def test_sync_and_async_factories_can_share_registry(self):
+        registry = MockToolsRegistry()
+        recorder = CallRecorder()
+
+        registry.register(
+            "get_customer",
+            mock_fn=lambda scenario_metadata, config=None: lambda customer_id: {
+                "id": customer_id,
+                "tier": scenario_metadata["customer_tier"],
+            },
+        )
+
+        async def async_items_factory(scenario_metadata: dict, config: dict = None):
+            return lambda status="": {
+                "items": [{"id": "I1", "status": status}],
+                "source": scenario_metadata["source"],
+            }
+
+        registry.register("list_items", mock_fn=async_items_factory)
+
+        graph, config = _run_graph(
+            registry,
+            recorder,
+            [
+                make_tool_call("get_customer", {"customer_id": "C1"}, call_id="call_customer"),
+                make_tool_call("list_items", {"status": "active"}, call_id="call_items"),
+                make_final_response("Done."),
+            ],
+            {"scenario_id": "mixed-factory-test", "customer_tier": "gold", "source": "async"},
+        )
+
+        result = await _invoke(graph, config)
+
+        assert [call.tool_name for call in recorder.calls] == ["get_customer", "list_items"]
+        assert all(call.was_mocked for call in recorder.calls)
+        assert recorder.calls[0].result == {"id": "C1", "tier": "gold"}
+        assert recorder.calls[1].result == {
+            "items": [{"id": "I1", "status": "active"}],
+            "source": "async",
+        }
+        assert result["messages"][-1].content == "Done."
+
 
 # -- 8. Mock vs Real Toggle ---------------------------------------------------
 

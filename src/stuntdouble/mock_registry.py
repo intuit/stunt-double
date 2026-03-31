@@ -13,6 +13,10 @@ Mock Factory Signatures:
     - Old: mock_fn(scenario_metadata) -> mock_callable
     - New: mock_fn(scenario_metadata, config) -> mock_callable
 
+    Factories may be defined with either `def` or `async def`. Async factories
+    return an awaitable from resolve(), and the LangGraph wrapper awaits that
+    awaitable before invoking the resolved mock callable.
+
     The new signature allows access to RunnableConfig for extracting runtime context
     like user identity from HTTP headers, useful for no-argument tools.
 
@@ -98,8 +102,9 @@ class MockToolsRegistry:
         Args:
             tool_name: Name of the tool to mock (must match tool.name in LangGraph)
             mock_fn: Function that takes scenario_metadata dict and returns a
-                    callable mock function. The mock function should accept the
-                    same parameters as the real tool.
+                    callable mock function. Factories may be sync or async. The
+                    resolved mock function should accept the same parameters as
+                    the real tool.
             when: Optional predicate function that takes scenario_metadata and
                   returns True if mocking should apply for this tool in this
                   scenario. If None, mocking always applies when resolved.
@@ -192,8 +197,9 @@ class MockToolsRegistry:
         Resolution logic:
         1. If tool_name not registered -> returns None
         2. If `when` predicate exists and returns False -> returns None
-        3. Otherwise -> calls mock_fn(scenario_metadata, config) or mock_fn(scenario_metadata)
-           depending on factory signature, and returns the callable
+        3. Otherwise -> calls mock_fn(scenario_metadata, config) or
+           mock_fn(scenario_metadata) depending on factory signature, and
+           returns the resolved callable or awaitable
 
         Args:
             tool_name: Name of the tool to resolve mock for
@@ -202,7 +208,8 @@ class MockToolsRegistry:
                    Passed to mock factories that accept a second parameter.
 
         Returns:
-            A callable mock function if resolved, None if:
+            A callable mock function, or an awaitable that resolves to one,
+            if resolved. Returns None if:
             - Tool not registered
             - `when` predicate returned False
 
