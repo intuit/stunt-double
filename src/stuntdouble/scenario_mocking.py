@@ -1,3 +1,5 @@
+# ABOUTME: Implements data-driven mock factories that read cases directly from scenario metadata.
+# ABOUTME: Provides the generic register_data_driven path used for matcher/resolver-based mocking.
 """
 Data-driven mock factories for scenario_metadata-based mocking.
 

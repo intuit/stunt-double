@@ -1,3 +1,5 @@
+# ABOUTME: Wraps LangGraph tool execution so calls can be routed to mocks at runtime.
+# ABOUTME: Connects scenario metadata, registry resolution, validation, and call recording in one entry point.
 """
 Mockable tool wrapper for conditional mocking based on scenario_metadata.
 

@@ -1,3 +1,5 @@
+# ABOUTME: Exposes the public API for the MCP mirroring subsystem from one package entry point.
+# ABOUTME: Re-exports the main mirroring classes and helpers used to discover and generate tool mocks.
 """
 MCP Tool Mirroring - Auto-discover and mock MCP server tools.
 

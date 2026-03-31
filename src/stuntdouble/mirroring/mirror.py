@@ -1,3 +1,5 @@
+# ABOUTME: Defines the high-level ToolMirror API that orchestrates discovery, generation, and export.
+# ABOUTME: Serves as the main user-facing entry point for turning MCP tools into usable StuntDouble mocks.
 """
 Simplified ToolMirror - Dead simple by default, powerful when needed.
 """

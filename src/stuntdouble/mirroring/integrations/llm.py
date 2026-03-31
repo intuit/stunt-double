@@ -1,3 +1,5 @@
+# ABOUTME: Connects the mirroring system to LangChain-compatible LLM clients for dynamic generation.
+# ABOUTME: Produces richer mock outputs when schema-only generation is not enough.
 """
 LLM-powered mock generation.
 

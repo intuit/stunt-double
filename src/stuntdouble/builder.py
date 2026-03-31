@@ -1,3 +1,5 @@
+# ABOUTME: Defines the fluent MockBuilder API for registering mocks with chained calls.
+# ABOUTME: Turns concise when/returns-style declarations into registry-backed mock factories.
 """
 Fluent mock builder API for concise mock registration.
 

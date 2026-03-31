@@ -1,4 +1,6 @@
-"""StuntDouble — Tool mocking framework for AI agent testing."""
+# ABOUTME: Exposes the public StuntDouble import surface from one top-level package module.
+# ABOUTME: Re-exports the main wrappers, registries, builders, validators, recorders, and helper functions.
+"""StuntDouble - Tool mocking framework for AI agent testing."""
 
 from importlib.metadata import version as _pkg_version
 

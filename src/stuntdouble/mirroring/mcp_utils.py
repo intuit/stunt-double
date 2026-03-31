@@ -1,3 +1,5 @@
+# ABOUTME: Holds shared helper functions used by the MCP client and related mirroring flows.
+# ABOUTME: Keeps lower-level parsing and utility logic out of the higher-level mirroring modules.
 """
 Utility functions for MCP client operations.
 

@@ -1,3 +1,5 @@
+# ABOUTME: Infers domain entities and produces static field values for realistic generated responses.
+# ABOUTME: Encodes reusable heuristics for common business objects like customers, products, and orders.
 """
 Entity type inference and static field generation.
 
