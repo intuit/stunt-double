@@ -1,3 +1,5 @@
+# ABOUTME: Exposes the mock generation package API for presets, strategies, and generator building blocks.
+# ABOUTME: Gives the mirroring subsystem a compact import surface for response generation features.
 """
 Mock generation system with strategy pattern.
 

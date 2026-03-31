@@ -1,3 +1,5 @@
+# ABOUTME: Defines the core data models used throughout MCP discovery and mock mirroring.
+# ABOUTME: Gives the mirroring pipeline typed structures for tools, parameters, strategies, and metadata.
 """
 Data models for MCP Tool Mirror functionality.
 

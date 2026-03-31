@@ -1,3 +1,5 @@
+# ABOUTME: Defines named quality presets for configuring mirroring and mock generation behavior.
+# ABOUTME: Lets callers choose tradeoffs between speed, determinism, and output richness.
 """
 Quality presets for mock generation.
 

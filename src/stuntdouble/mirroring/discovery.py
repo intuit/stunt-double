@@ -1,3 +1,5 @@
+# ABOUTME: Discovers tools exposed by MCP servers and analyzes their schemas for mirroring.
+# ABOUTME: Forms the first step of the mirroring pipeline by turning remote tool metadata into local structures.
 """
 Tool discovery from MCP servers.
 

@@ -1,3 +1,5 @@
+# ABOUTME: Adapts mirrored tool definitions into LangChain-compatible tool objects.
+# ABOUTME: Lets generated MCP mocks plug into LangChain and LangGraph tool execution workflows.
 """
 LangChain integration for mirrored tools.
 

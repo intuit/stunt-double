@@ -1,3 +1,5 @@
+# ABOUTME: Handles reading and writing scenario metadata in LangGraph RunnableConfig objects.
+# ABOUTME: Provides helpers that bridge StuntDouble's config format with runtime tool requests.
 """
 Scenario metadata configuration utilities.
 
