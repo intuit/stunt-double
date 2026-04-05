@@ -175,6 +175,7 @@ guides/mock-builder
 guides/call-recording
 guides/context-aware-mocks
 guides/signature-validation
+guides/multi-tool-agent-tutorial
 ```
 
 ```{toctree}
