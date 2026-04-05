@@ -6,7 +6,7 @@ Types are self-contained with no dependencies on existing StuntDouble models.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any, Protocol, TypedDict, runtime_checkable
 
 
@@ -41,10 +41,13 @@ class ScenarioMetadata(TypedDict, total=False):
 # Supports both old and new signatures:
 # - Old: mock_fn(scenario_metadata) -> mock_callable
 # - New: mock_fn(scenario_metadata, config) -> mock_callable
-# The sig.bind() approach in resolve() handles both at runtime.
+# Factories may be sync or async. Async factories are awaited by the
+# LangGraph wrapper before the resolved mock callable is invoked.
 MockFn = (
     Callable[[dict[str, Any]], Callable[..., Any] | None]
     | Callable[[dict[str, Any], dict[str, Any] | None], Callable[..., Any] | None]
+    | Callable[[dict[str, Any]], Awaitable[Callable[..., Any] | None]]
+    | Callable[[dict[str, Any], dict[str, Any] | None], Awaitable[Callable[..., Any] | None]]
 )
 
 # Type alias for "when" predicate function

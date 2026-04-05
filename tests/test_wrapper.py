@@ -362,6 +362,56 @@ class TestCreateMockableToolWrapper:
 
         assert "async_result" in result.content
 
+    def test_async_factory_is_awaited_before_mock_execution(self):
+        """Test that async mock factories are awaited before calling the resolved mock."""
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.wrapper import create_mockable_tool_wrapper
+
+        registry = MockToolsRegistry()
+
+        async def async_factory(scenario_metadata, config=None):
+            await asyncio.sleep(0)
+            return lambda city: {"city": city, "mode": scenario_metadata["mode"]}
+
+        registry.register("test_tool", mock_fn=async_factory)
+
+        wrapper = create_mockable_tool_wrapper(registry)
+        request = self._create_request(
+            tool_args={"city": "NYC"},
+            scenario_metadata={"mode": "mock"},
+        )
+
+        async def mock_execute(req):
+            raise AssertionError("Execute should not be called")
+
+        result = run_async(wrapper(request, mock_execute))
+
+        assert result.status == "success"
+        assert '"city": "NYC"' in result.content
+        assert '"mode": "mock"' in result.content
+
+    def test_async_factory_error_reraises_in_strict_mode(self):
+        """Test that strict mode re-raises exceptions from async mock factories."""
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.wrapper import create_mockable_tool_wrapper
+
+        registry = MockToolsRegistry()
+
+        async def failing_factory(scenario_metadata, config=None):
+            await asyncio.sleep(0)
+            raise RuntimeError("factory blew up")
+
+        registry.register("test_tool", mock_fn=failing_factory)
+
+        wrapper = create_mockable_tool_wrapper(registry, strict_mock_errors=True)
+        request = self._create_request(scenario_metadata={"mode": "mock"})
+
+        async def mock_execute(req):
+            raise AssertionError("Execute should not be called")
+
+        with pytest.raises(RuntimeError, match="factory blew up"):
+            run_async(wrapper(request, mock_execute))
+
 
 class TestWrapperIntegration:
     """Integration tests for wrapper with registry."""

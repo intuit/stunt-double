@@ -3,10 +3,13 @@ Mockable tool wrapper for conditional mocking based on scenario_metadata.
 
 Provides the create_mockable_tool_wrapper factory function that creates
 a wrapper suitable for use with native ToolNode's awrap_tool_call parameter.
+The wrapper supports both sync and async mock factories, as well as sync and
+async resolved mock callables.
 """
 
 from __future__ import annotations
 
+import inspect
 import json
 import logging
 import time
@@ -52,11 +55,13 @@ def create_mockable_tool_wrapper(
     3. If scenario_metadata present:
        a. Try to resolve mock from registry
        b. If tools provided and validate_signatures=True → validate mock signature
-       c. If mock exists and valid → execute mock and return ToolMessage
+       c. If mock exists and valid → await async factory results if needed,
+          execute mock, and return ToolMessage
        d. If no mock → raise MissingMockError or fallback to real tool
 
     Args:
-        registry: MockToolsRegistry with registered mock factories
+        registry: MockToolsRegistry with registered mock factories. Factories
+            may be sync or async, and may return sync or async mock callables.
         require_mock_when_scenario: If True (default), raise MissingMockError
             when scenario_metadata is present but no mock exists for a tool.
             If False, fall back to executing the real tool.
@@ -227,9 +232,12 @@ def create_mockable_tool_wrapper(
 
             start_time = time.time()
             try:
+                if inspect.isawaitable(mock_callable):
+                    mock_callable = await cast(Awaitable[Callable[..., Any]], mock_callable)
+
                 mock_result = mock_callable(**tool_args)
 
-                if hasattr(mock_result, "__await__"):
+                if inspect.isawaitable(mock_result):
                     mock_result = await mock_result
 
                 content = _format_mock_result(mock_result)
