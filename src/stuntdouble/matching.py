@@ -12,6 +12,11 @@ Supported operators:
 - $contains: String contains substring
 - $regex: Regular expression match
 - $exists: Key existence check
+- $not: Negation of a sub-expression
+- $all: Array contains all specified elements
+- $elemMatch: At least one array element matches all conditions
+- $type: Type checking (str, int, float, bool, list, dict, None)
+- $size: Array/string length check
 """
 
 from __future__ import annotations
@@ -59,6 +64,9 @@ class InputMatcher:
         "$contains": lambda a, b: b in str(a) if a is not None else False,
         "$regex": lambda a, b: bool(re.search(b, str(a))) if a is not None else False,
         "$exists": lambda a, b: (a is not None) == b,
+        "$all": lambda a, b: isinstance(a, list) and isinstance(b, list) and all(item in a for item in b),
+        "$type": lambda a, b: _check_type(a, b),
+        "$size": lambda a, b: hasattr(a, "__len__") and len(a) == b,
     }
 
     def matches(self, pattern: dict[str, Any] | None, actual: dict[str, Any]) -> bool:
@@ -154,6 +162,26 @@ class InputMatcher:
         """
         for op, op_value in operator_dict.items():
             if op.startswith("$"):
+                # $not: negate a nested operator expression
+                if op == "$not":
+                    if not isinstance(op_value, dict):
+                        logger.warning("$not requires a dict operand, treating as no match")
+                        return False
+                    if self._match_operators(actual_value, op_value):
+                        return False
+                    continue
+
+                # $elemMatch: at least one array element matches all conditions
+                if op == "$elemMatch":
+                    if not isinstance(actual_value, list):
+                        return False
+                    if not isinstance(op_value, dict):
+                        logger.warning("$elemMatch requires a dict operand, treating as no match")
+                        return False
+                    if not any(self._match_operators(elem, op_value) for elem in actual_value):
+                        return False
+                    continue
+
                 if op not in self.OPERATORS:
                     logger.warning(f"Unknown operator '{op}', treating as no match")
                     return False
@@ -173,6 +201,28 @@ class InputMatcher:
                     return False
 
         return True
+
+
+_TYPE_MAP: dict[str, type | None] = {
+    "str": str,
+    "int": int,
+    "float": float,
+    "bool": bool,
+    "list": list,
+    "dict": dict,
+    "None": None,
+}
+
+
+def _check_type(actual: Any, expected_type: str) -> bool:
+    """Check if actual value matches the expected type name."""
+    if expected_type not in _TYPE_MAP:
+        logger.warning(f"Unknown type '{expected_type}' for $type operator")
+        return False
+    expected = _TYPE_MAP[expected_type]
+    if expected is None:
+        return actual is None
+    return isinstance(actual, expected)
 
 
 def _compare_numeric(actual: Any, expected: Any, comparator: Any) -> bool:
