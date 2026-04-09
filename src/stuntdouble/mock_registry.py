@@ -1,3 +1,5 @@
+# ABOUTME: Stores mock registrations and resolves the right mock callable for each tool invocation.
+# ABOUTME: Supports plain factories, conditional mocking, and data-driven mock registration on one registry.
 """
 MockToolsRegistry - Mocked tool registration for per-invocation mocking.
 

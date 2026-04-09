@@ -1,3 +1,5 @@
+# ABOUTME: Provides caching utilities for generated mock responses in the mirroring workflow.
+# ABOUTME: Keeps repeated dynamic generations stable and avoids regenerating identical responses.
 """Response caching for dynamic mock generation.
 
 Provides thread-safe in-memory caching of dynamically generated mock responses

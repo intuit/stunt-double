@@ -1,3 +1,5 @@
+# ABOUTME: Centralizes shared typing aliases and TypedDict shapes used across the package.
+# ABOUTME: Keeps the mocking APIs consistent without creating import cycles between implementation modules.
 """
 Shared type definitions for the StuntDouble mocking system.
 

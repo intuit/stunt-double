@@ -1,3 +1,5 @@
+# ABOUTME: Records tool calls and exposes helpers for inspecting and asserting on invocation history.
+# ABOUTME: Powers pytest-style checks for tool order, arguments, results, and mocked-versus-real execution.
 """
 Call recording and verification utilities for mock testing.
 

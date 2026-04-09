@@ -1,3 +1,5 @@
+# ABOUTME: Resolves dynamic placeholders inside mock outputs before results are returned to callers.
+# ABOUTME: Supports timestamps, generated IDs, input echoes, and other runtime-derived values.
 """
 Value resolvers for dynamic mock outputs.
 

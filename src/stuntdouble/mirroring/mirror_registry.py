@@ -1,3 +1,5 @@
+# ABOUTME: Tracks mirrored tool metadata and manages registration of generated mocks into registries.
+# ABOUTME: Bridges mirrored tool definitions with the runtime registries used by LangGraph integrations.
 """
 Registry for managing mirrored tools.
 

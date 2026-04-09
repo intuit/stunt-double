@@ -1,3 +1,5 @@
+# ABOUTME: Coordinates mock generation by routing requests through the selected mirroring strategy.
+# ABOUTME: Provides the shared generator foundation used by static and dynamic response builders.
 """
 Strategy-based mock generator.
 

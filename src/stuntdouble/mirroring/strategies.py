@@ -1,3 +1,5 @@
+# ABOUTME: Declares the strategy interfaces and concrete approaches for generating mock responses.
+# ABOUTME: Lets the mirroring system swap between fast static generation and higher-quality dynamic generation.
 """
 Mock generation strategies.
 

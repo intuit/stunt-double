@@ -1,3 +1,5 @@
+# ABOUTME: Builds response payload shapes for CRUD-style and generic mirrored tool operations.
+# ABOUTME: Encapsulates operation-specific output conventions so generators can stay consistent.
 """
 Response builders for different operation types.
 

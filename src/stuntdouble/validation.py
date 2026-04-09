@@ -1,3 +1,5 @@
+# ABOUTME: Validates mock signatures and scenario mock inputs against the real tool definitions.
+# ABOUTME: Helps catch bad mock configuration before or during graph execution.
 """
 Tool parameter validation utilities.
 

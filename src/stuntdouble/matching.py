@@ -1,3 +1,5 @@
+# ABOUTME: Implements input matching logic for mock cases, including operator-based comparisons.
+# ABOUTME: Lets scenario-driven mocks select responses based on tool arguments such as ranges and patterns.
 """
 Input matchers for enhanced mock pattern matching.
 

@@ -1,3 +1,5 @@
+# ABOUTME: Collects the custom exception types raised by StuntDouble during mocking and assertions.
+# ABOUTME: Gives callers stable error classes for missing mocks, signature mismatches, and recorder failures.
 """
 StuntDouble exceptions.
 """

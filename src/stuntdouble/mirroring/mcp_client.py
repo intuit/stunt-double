@@ -1,3 +1,5 @@
+# ABOUTME: Implements the MCP client used to connect to servers, list tools, and invoke them when needed.
+# ABOUTME: Handles the protocol-level interactions required by the mirroring and discovery features.
 """
 MCP Client for connecting to MCP servers and listing/calling tools.
 
