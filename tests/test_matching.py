@@ -144,6 +144,149 @@ class TestInputMatcherOperators:
         assert matcher.matches(pattern, {"amount": 600}) is False
 
 
+class TestNotOperator:
+    """Test $not negation operator."""
+
+    def test_not_negates_eq(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"status": {"$not": {"$eq": "deleted"}}}, {"status": "active"}) is True
+        assert matcher.matches({"status": {"$not": {"$eq": "deleted"}}}, {"status": "deleted"}) is False
+
+    def test_not_negates_in(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"status": {"$not": {"$in": ["a", "b"]}}}, {"status": "c"}) is True
+        assert matcher.matches({"status": {"$not": {"$in": ["a", "b"]}}}, {"status": "a"}) is False
+
+    def test_not_negates_gt(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"amount": {"$not": {"$gt": 100}}}, {"amount": 50}) is True
+        assert matcher.matches({"amount": {"$not": {"$gt": 100}}}, {"amount": 150}) is False
+
+    def test_not_with_regex(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"id": {"$not": {"$regex": "^CUST-"}}}, {"id": "ORD-123"}) is True
+        assert matcher.matches({"id": {"$not": {"$regex": "^CUST-"}}}, {"id": "CUST-123"}) is False
+
+    def test_not_requires_dict(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$not": "invalid"}}, {"field": "test"}) is False
+
+
+class TestAllOperator:
+    """Test $all operator for array containment."""
+
+    def test_all_matches_when_all_present(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"tags": {"$all": ["a", "b"]}}, {"tags": ["a", "b", "c"]}) is True
+
+    def test_all_fails_when_missing_element(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"tags": {"$all": ["a", "d"]}}, {"tags": ["a", "b", "c"]}) is False
+
+    def test_all_exact_match(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"tags": {"$all": ["x", "y"]}}, {"tags": ["x", "y"]}) is True
+
+    def test_all_empty_pattern(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"tags": {"$all": []}}, {"tags": ["a", "b"]}) is True
+
+    def test_all_non_list_actual(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"tags": {"$all": ["a"]}}, {"tags": "not a list"}) is False
+
+
+class TestElemMatchOperator:
+    """Test $elemMatch operator for array element matching."""
+
+    def test_elemmatch_finds_matching_element(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"scores": {"$elemMatch": {"$gt": 80, "$lt": 90}}}, {"scores": [70, 85, 95]}) is True
+
+    def test_elemmatch_no_matching_element(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"scores": {"$elemMatch": {"$gt": 80, "$lt": 90}}}, {"scores": [70, 75, 95]}) is False
+
+    def test_elemmatch_with_eq(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"items": {"$elemMatch": {"$eq": "target"}}}, {"items": ["a", "target", "b"]}) is True
+        assert matcher.matches({"items": {"$elemMatch": {"$eq": "target"}}}, {"items": ["a", "b", "c"]}) is False
+
+    def test_elemmatch_non_list_actual(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"scores": {"$elemMatch": {"$gt": 5}}}, {"scores": 10}) is False
+
+    def test_elemmatch_requires_dict(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"scores": {"$elemMatch": "invalid"}}, {"scores": [1, 2, 3]}) is False
+
+
+class TestTypeOperator:
+    """Test $type operator for type checking."""
+
+    def test_type_str(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$type": "str"}}, {"field": "hello"}) is True
+        assert matcher.matches({"field": {"$type": "str"}}, {"field": 123}) is False
+
+    def test_type_int(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$type": "int"}}, {"field": 42}) is True
+        assert matcher.matches({"field": {"$type": "int"}}, {"field": 3.14}) is False
+
+    def test_type_float(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$type": "float"}}, {"field": 3.14}) is True
+        assert matcher.matches({"field": {"$type": "float"}}, {"field": 42}) is False
+
+    def test_type_bool(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$type": "bool"}}, {"field": True}) is True
+        assert matcher.matches({"field": {"$type": "bool"}}, {"field": "true"}) is False
+
+    def test_type_list(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$type": "list"}}, {"field": [1, 2]}) is True
+        assert matcher.matches({"field": {"$type": "list"}}, {"field": "not list"}) is False
+
+    def test_type_dict(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$type": "dict"}}, {"field": {"a": 1}}) is True
+        assert matcher.matches({"field": {"$type": "dict"}}, {"field": [1, 2]}) is False
+
+    def test_type_none(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$type": "None"}}, {"field": None}) is True
+        assert matcher.matches({"field": {"$type": "None"}}, {"field": "something"}) is False
+
+    def test_type_unknown(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$type": "unknown_type"}}, {"field": "test"}) is False
+
+
+class TestSizeOperator:
+    """Test $size operator for length checking."""
+
+    def test_size_list(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"items": {"$size": 3}}, {"items": [1, 2, 3]}) is True
+        assert matcher.matches({"items": {"$size": 3}}, {"items": [1, 2]}) is False
+
+    def test_size_string(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"name": {"$size": 5}}, {"name": "hello"}) is True
+        assert matcher.matches({"name": {"$size": 5}}, {"name": "hi"}) is False
+
+    def test_size_empty(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"items": {"$size": 0}}, {"items": []}) is True
+        assert matcher.matches({"items": {"$size": 0}}, {"items": [1]}) is False
+
+    def test_size_non_sized_value(self):
+        matcher = InputMatcher()
+        assert matcher.matches({"field": {"$size": 1}}, {"field": 42}) is False
+
+
 class TestInputMatcherEdgeCases:
     """Test edge cases and error handling."""
 
