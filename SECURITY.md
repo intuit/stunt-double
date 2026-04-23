@@ -6,7 +6,7 @@ If you discover a security vulnerability in StuntDouble, please report it respon
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, please email **stuntdouble@proton.me** with:
+Instead, please [open a private security advisory](https://github.com/intuit/StuntDouble/security/advisories/new) with:
 
 - A description of the vulnerability
 - Steps to reproduce the issue
