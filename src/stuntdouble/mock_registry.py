@@ -28,7 +28,7 @@ from __future__ import annotations
 import inspect
 import logging
 import threading
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
 from stuntdouble.types import MockFn, MockRegistration, WhenPredicate
@@ -190,7 +190,7 @@ class MockToolsRegistry:
         tool_name: str,
         scenario_metadata: dict[str, Any],
         config: dict[str, Any] | None = None,
-    ) -> Callable[..., Any] | None:
+    ) -> Callable[..., Any] | Awaitable[Callable[..., Any] | None] | None:
         """
         Resolve the mock callable for a tool given scenario metadata.
 

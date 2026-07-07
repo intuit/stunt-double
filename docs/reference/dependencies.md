@@ -11,9 +11,9 @@ These are installed automatically with StuntDouble:
 ```toml
 [project]
 dependencies = [
-    "langchain-core>=1.2.5",
-    "pydantic>=2.0.0",
-    "langgraph>=1.0.0",
+    "langchain-core>=1.2.5,<2",
+    "pydantic>=2.0.0,<3",
+    "langgraph>=1.0.0,<2",
 ]
 ```
 
@@ -30,7 +30,7 @@ dependencies = [
 | Type definitions | Tool protocols and interfaces |
 
 **Used by:**
-- `stuntdouble/langgraph/wrapper.py` — `create_mockable_tool_wrapper`, `mockable_tool_wrapper`
+- `stuntdouble/wrapper.py` — `create_mockable_tool_wrapper`, `mockable_tool_wrapper`
 - `stuntdouble/mirroring/` — LangChain tool conversion
 
 ### pydantic
@@ -47,9 +47,9 @@ dependencies = [
 | JSON schema | Converting between formats |
 
 **Used by:**
-- `stuntdouble/langgraph/wrapper.py` — Dynamic schema conversion
+- `stuntdouble/wrapper.py` — Dynamic schema conversion
 - `stuntdouble/types.py` — Type models (ScenarioMetadata, MockRegistration, etc.)
-- `stuntdouble/langgraph/validation.py` — Signature validation
+- `stuntdouble/validation.py` — Signature validation
 
 ### langgraph
 
@@ -65,7 +65,7 @@ dependencies = [
 | Message types | State management compatibility |
 
 **Used by:**
-- `stuntdouble/langgraph/wrapper.py` — `mockable_tool_wrapper`, `create_mockable_tool_wrapper`
+- `stuntdouble/wrapper.py` — `mockable_tool_wrapper`, `create_mockable_tool_wrapper`
 
 ---
 
@@ -76,30 +76,25 @@ These are only needed for development and testing:
 ```toml
 [dependency-groups]
 dev = [
-    "black >=25.9.0",
-    "isort >=7.0.0,<8.0.0",
-    "mypy >=1.18.1,<2.0.0",
-    "pytest-cov>=7.0.0",
-]
-test = [
-    "pytest >=8.4.0",
-    "pytest-cov >=7.0.0,<8.0.0",
-    "pytest-xdist >=3.8.0,<4.0.0",
-    "tox >=4.26.0,<5.0.0",
-    "tox-uv >=1.28.0",
+    "pytest>=9.0.0,<10",
+    "pytest-cov>=7.0.0,<8",
+    "pytest-xdist>=3.8.0,<4",
+    "pytest-asyncio>=1.3.0,<2",
+    "mypy>=1.19.0,<2",
+    "ruff>=0.15.0,<1",
+    "langchain-openai>=1.1.0,<2",
 ]
 ```
 
 | Package | Purpose |
 |---------|---------|
-| `black` | Code formatting |
-| `isort` | Import sorting |
-| `mypy` | Static type checking |
 | `pytest` | Test framework |
 | `pytest-cov` | Coverage reporting |
 | `pytest-xdist` | Parallel test execution |
-| `tox` | Multi-environment testing |
-| `tox-uv` | uv integration for tox |
+| `pytest-asyncio` | Async test support |
+| `mypy` | Static type checking |
+| `ruff` | Linting and formatting |
+| `langchain-openai` | LLM client for mirroring tests |
 
 ---
 
@@ -132,10 +127,8 @@ pip install "stuntdouble[mcp]"
 ### Python Versions
 
 StuntDouble supports:
-- Python 3.11
 - Python 3.12
 - Python 3.13
-- Python 3.14
 
 ### LangChain Ecosystem
 

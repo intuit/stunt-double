@@ -42,7 +42,7 @@ class PresetConfig:
         self,
         name: str,
         description: str,
-        strategy_class: type,
+        strategy_class: type[BaseStrategy],
         requires_llm: bool = False,
     ):
         """
@@ -79,7 +79,9 @@ class PresetConfig:
                     f"Preset '{self.name}' requires an LLM client. "
                     f"Use ToolMirror.with_llm(client) or .enable_llm(client)"
                 )
-            return self.strategy_class(llm_client=llm_client, cache=cache)
+            # requires_llm presets are always configured with a DynamicStrategy
+            # subclass, which accepts llm_client; the base type doesn't declare it.
+            return self.strategy_class(llm_client=llm_client, cache=cache)  # type: ignore[call-arg]
         else:
             return self.strategy_class(cache=cache)
 

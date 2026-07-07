@@ -14,6 +14,8 @@ from typing import Any
 
 from langchain_core.tools import BaseTool
 
+from stuntdouble.types import MockFn
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 def validate_mock_signature(
     tool: BaseTool,
-    mock_fn: Callable[..., Callable[..., Any] | None],
+    mock_fn: MockFn,
     scenario_metadata: dict[str, Any] | None = None,
     config: dict[str, Any] | None = None,
 ) -> tuple[bool, str | None]:
@@ -85,9 +87,9 @@ def validate_mock_signature(
         sig = inspect.signature(mock_fn)
         try:
             sig.bind({}, {})  # Test if function can accept 2 args
-            mock_callable = mock_fn(test_metadata, config)  # New signature
+            mock_callable = mock_fn(test_metadata, config)  # type: ignore[call-arg]  # New signature
         except TypeError:
-            mock_callable = mock_fn(test_metadata)  # Old signature
+            mock_callable = mock_fn(test_metadata)  # type: ignore[call-arg]  # Old signature
 
         if not callable(mock_callable):
             return (

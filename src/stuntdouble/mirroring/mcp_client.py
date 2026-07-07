@@ -9,7 +9,10 @@ Supports both stdio (subprocess) and HTTP transports.
 
 import json
 import logging
+import queue
 import subprocess
+import threading
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -55,6 +58,9 @@ class MCPServerConfig:
                 at initialization and redacted in string representations for security.
                 The Content-Type header is automatically set to application/json and
                 cannot be overridden to ensure JSON-RPC protocol compliance.
+        read_timeout: Maximum seconds to wait for a single JSON-RPC response before
+                giving up. Prevents an unresponsive server from blocking a request
+                indefinitely. Defaults to 30 seconds.
 
     Security Notes:
         - Headers are validated to ensure they are a dictionary with string keys/values
@@ -70,6 +76,7 @@ class MCPServerConfig:
     transport: Literal["stdio", "http"] = "stdio"
     http_url: str | None = None
     headers: dict[str, str] | None = None
+    read_timeout: float = 30.0
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -77,6 +84,8 @@ class MCPServerConfig:
             raise ValueError("command is required for stdio transport")
         if self.transport == "http" and not self.http_url:
             raise ValueError("http_url is required for http transport")
+        if self.read_timeout <= 0:
+            raise ValueError("read_timeout must be positive")
 
         # Validate headers parameter
         if self.headers is not None:
@@ -172,6 +181,14 @@ class MCPClient:
         """
         self.config = config
         self._process: subprocess.Popen | None = None
+        # stdout lines from the subprocess are pumped onto this queue by a reader
+        # thread so reads can honor a timeout instead of blocking forever.
+        self._stdout_queue: queue.Queue[str | None] = queue.Queue()
+        self._stdout_thread: threading.Thread | None = None
+        # stderr is drained continuously into a bounded buffer so a chatty server
+        # cannot fill the OS pipe and deadlock against our stdout read.
+        self._stderr_buffer: deque[str] = deque(maxlen=100)
+        self._stderr_thread: threading.Thread | None = None
         self._http_session: Any = None  # aiohttp.ClientSession when using HTTP
         self._http_message_endpoint: str | None = None  # SSE session endpoint
         self._sse_response_queue: Any = None  # asyncio.Queue for SSE responses
@@ -234,7 +251,53 @@ class MCPClient:
             bufsize=1,
         )
 
+        # Drain both pipes on background daemon threads. Without this, a server
+        # that writes enough to stderr (or stdout, between JSON-RPC responses)
+        # fills the OS pipe buffer and blocks on write() while we block on read()
+        # of the other pipe -> mutual deadlock.
+        self._stdout_thread = threading.Thread(
+            target=self._pump_stdout, name=f"mcp-stdout-{self.config.name}", daemon=True
+        )
+        self._stdout_thread.start()
+        self._stderr_thread = threading.Thread(
+            target=self._pump_stderr, name=f"mcp-stderr-{self.config.name}", daemon=True
+        )
+        self._stderr_thread.start()
+
         logger.debug(f"Started stdio subprocess for {self.config.name}")
+
+    def _pump_stdout(self) -> None:
+        """Read subprocess stdout line by line onto a queue until EOF."""
+        stdout = self._process.stdout if self._process else None
+        if stdout is None:
+            self._stdout_queue.put(None)
+            return
+        try:
+            while True:
+                line = stdout.readline()
+                if not line:  # empty string = EOF
+                    break
+                self._stdout_queue.put(line)
+        except (ValueError, OSError, StopIteration):
+            # Pipe closed underneath us during shutdown; nothing to recover.
+            pass
+        finally:
+            # Sentinel: signals EOF to any reader waiting on the queue.
+            self._stdout_queue.put(None)
+
+    def _pump_stderr(self) -> None:
+        """Drain subprocess stderr into a bounded ring buffer until EOF."""
+        stderr = self._process.stderr if self._process else None
+        if stderr is None:
+            return
+        try:
+            while True:
+                line = stderr.readline()
+                if not line:  # empty string = EOF
+                    break
+                self._stderr_buffer.append(line.rstrip("\n"))
+        except (ValueError, OSError, StopIteration):
+            pass
 
     def _connect_http(self) -> None:
         """Connect to MCP server via HTTP/SSE."""
@@ -275,6 +338,16 @@ class MCPClient:
                 self._process.kill()
             finally:
                 self._process = None
+
+            # Reader threads are daemon threads reading now-closed pipes; join
+            # briefly so they observe EOF and exit rather than lingering.
+            for reader in (self._stdout_thread, self._stderr_thread):
+                if reader is not None and reader.is_alive():
+                    reader.join(timeout=1)
+            self._stdout_thread = None
+            self._stderr_thread = None
+            self._stdout_queue = queue.Queue()
+            self._stderr_buffer = deque(maxlen=100)
 
         if self._sse_task or self._http_session:
             # Close the SSE listener and aiohttp session
@@ -484,19 +557,34 @@ class MCPClient:
         if not self._process or not self._process.stdin:
             raise RuntimeError("Not connected to stdio server")
 
+        import time
+
         try:
             # Send request
             request_str = json.dumps(request) + "\n"
             self._process.stdin.write(request_str)
             self._process.stdin.flush()
 
-            # Read response - skip log lines and find valid JSON-RPC
+            # Read response - skip log lines and find valid JSON-RPC.
+            # Reads come from the reader thread's queue with an overall deadline,
+            # so an unresponsive server cannot block this call indefinitely.
             max_lines = 100  # Safety limit to avoid infinite loops
+            deadline = time.monotonic() + self.config.read_timeout
             for _ in range(max_lines):
-                response_str = self._process.stdout.readline()  # type: ignore[union-attr]
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(f"No JSON-RPC response from server within {self.config.read_timeout}s")
 
-                if not response_str:
-                    raise RuntimeError("No response from server")
+                try:
+                    response_str = self._stdout_queue.get(timeout=remaining)
+                except queue.Empty:
+                    raise TimeoutError(f"No JSON-RPC response from server within {self.config.read_timeout}s")
+
+                # None sentinel = subprocess stdout reached EOF (server exited)
+                if response_str is None:
+                    stderr_tail = "\n".join(self._stderr_buffer)
+                    detail = f" Server stderr:\n{stderr_tail}" if stderr_tail else ""
+                    raise RuntimeError(f"No response from server (stdout closed).{detail}")
 
                 # Skip empty lines
                 response_str = response_str.strip()
@@ -705,7 +793,7 @@ class MCPClient:
 
             # Wait for response from SSE stream
             try:
-                response = await asyncio.wait_for(self._sse_response_queue.get(), timeout=30.0)
+                response: dict[str, Any] = await asyncio.wait_for(self._sse_response_queue.get(), timeout=30.0)
                 return response
             except TimeoutError:
                 raise RuntimeError("Timeout waiting for SSE response")
