@@ -81,7 +81,7 @@ class LLMProvider:
             elif "```" in llm_response:
                 llm_response = llm_response.split("```")[1].split("```")[0].strip()
 
-            mock_response = json.loads(llm_response)
+            mock_response: dict[str, Any] = json.loads(llm_response)
             self._validate_llm_response(mock_response, tool_def)
             return mock_response
         except json.JSONDecodeError as e:
@@ -154,9 +154,10 @@ Generate the JSON response now:"""
                 from langchain_core.messages import HumanMessage
 
                 response = self.llm_client.invoke([HumanMessage(content=prompt)])
-                # LangChain returns AIMessage with .content attribute
+                # LangChain returns AIMessage with .content attribute. Some chat
+                # models return a list of content blocks, so coerce to str.
                 if hasattr(response, "content"):
-                    return response.content
+                    return str(response.content)
                 else:
                     return str(response)
 
@@ -168,9 +169,9 @@ Generate the JSON response now:"""
                 )
                 # Handle different response formats
                 if hasattr(response, "choices"):
-                    return response.choices[0].message.content
+                    return str(response.choices[0].message.content)
                 elif hasattr(response, "content"):
-                    return response.content
+                    return str(response.content)
                 else:
                     return str(response)
 

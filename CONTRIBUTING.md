@@ -13,12 +13,12 @@ Please note that this project is released with a [Code of Conduct](./CODE_OF_CON
 ## Contribution Expectations
 
 #### Adding Functionality or Reporting Bugs
-* Browse [open issues](https://github.com/stuntdouble/stuntdouble/issues) to find something to work on, or open a new issue to report a bug or suggest a feature.
+* Browse [open issues](https://github.com/intuit/StuntDouble/issues) to find something to work on, or open a new issue to report a bug or suggest a feature.
 * Bug reports should include as much detail as possible: logs, stacktraces, Python version, OS, and steps to reproduce.
 
 #### Code Quality Expectations
 - **Tests**: All new code should have corresponding unit tests (pytest)
-- **Coverage**: Ensure that code coverage meets or exceeds 80%
+- **Coverage**: New code should be well-covered; CI enforces a minimum unit-test coverage threshold (see `ci.yml`)
 - **Documentation**: Code should be well-documented. What code is doing should be self-explanatory based on coding conventions. Why code is doing something should be explained:
 	* Python code should have docstrings (Google style)
 	* `pyproject.toml` should have comments for non-obvious settings
@@ -36,9 +36,9 @@ Please note that this project is released with a [Code of Conduct](./CODE_OF_CON
 
 1. **Fork and Clone.** From the GitHub UI, fork the project into your user space. Then clone locally and add the upstream remote:
 	```sh
-	git clone git@github.com:YOUR_USERNAME/stuntdouble.git
-	cd stuntdouble
-	git remote add upstream git@github.com:stuntdouble/stuntdouble.git
+	git clone git@github.com:YOUR_USERNAME/StuntDouble.git
+	cd StuntDouble
+	git remote add upstream git@github.com:intuit/StuntDouble.git
 	```
 
 1. **Create a branch.** Use a descriptive name prefixed with `feature/` or `bugfix/` and the issue number:
@@ -52,7 +52,7 @@ Please note that this project is released with a [Code of Conduct](./CODE_OF_CON
 	Reference the GitHub issue number in the commit message (e.g., "Fixes #123").
 	```
 
-1. **Test.** Bug fixes and features **should come with tests** and coverage should meet or exceed 80%. Make sure all tests pass. Please do not submit patches that fail this check.
+1. **Test.** Bug fixes and features **should come with tests** and must keep coverage above the threshold CI enforces. Make sure all tests pass. Please do not submit patches that fail this check.
 
 1. **Push your changes** to your fork's branch. Use `git rebase` (not `git merge`) to sync your work from time to time:
    ```sh
@@ -75,6 +75,6 @@ By contributing to StuntDouble, you agree that your contributions will be licens
 
 ## Contact Information
 
-* Need to get in contact with the maintainers? The best people to start with are the project [code owners](https://github.com/stuntdouble/stuntdouble/blob/main/CODEOWNERS).
-* Open a [GitHub Discussion](https://github.com/stuntdouble/stuntdouble/discussions) for questions or ideas.
-* File a [GitHub Issue](https://github.com/stuntdouble/stuntdouble/issues) for bugs or feature requests.
+* Need to get in contact with the maintainers? The best people to start with are the project [code owners](https://github.com/intuit/StuntDouble/blob/main/.github/CODEOWNERS).
+* Open a [GitHub Discussion](https://github.com/intuit/StuntDouble/discussions) for questions or ideas.
+* File a [GitHub Issue](https://github.com/intuit/StuntDouble/issues) for bugs or feature requests.

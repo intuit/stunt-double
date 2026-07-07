@@ -25,7 +25,7 @@ registry.mock("create_user").echoes_input("user_id", "email").returns({"status":
 
 ## Using the Default Registry
 
-For quick testing and prototyping, you can use `default_registry.mock()` from `stuntdouble.langgraph` without an explicit registry:
+For quick testing and prototyping, you can use `default_registry.mock()` from `stuntdouble` without an explicit registry:
 
 ```python
 from stuntdouble import default_registry

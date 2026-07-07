@@ -22,6 +22,7 @@ extensions = [
     "sphinx.ext.viewcode",  # Add links to source code
     "sphinx.ext.napoleon",  # Google/NumPy style docstrings
     "sphinx.ext.intersphinx",  # Link to other projects' documentation
+    "sphinx_copybutton",  # Copy-to-clipboard buttons on code blocks
 ]
 
 # Source file suffixes

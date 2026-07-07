@@ -63,6 +63,27 @@ class TestReturnsFn:
         assert fn is not None
         assert fn() == "pong"
 
+    def test_returns_fn_honors_when_input_conditions(self):
+        registry = MockToolsRegistry()
+        registry.mock("calc").when(mode="premium").returns_fn(lambda **kw: {"tier": "gold"})
+
+        fn = registry.resolve("calc", {})
+        assert fn is not None
+        # Matching input: fn fires
+        assert fn(mode="premium") == {"tier": "gold"}
+        # Non-matching input: the .when() condition is enforced
+        with pytest.raises(InputNotMatchedError):
+            fn(mode="basic")
+
+    def test_returns_fn_honors_echoes_input(self):
+        registry = MockToolsRegistry()
+        registry.mock("update").echoes_input("customer_id").returns_fn(lambda **kw: {"updated": True})
+
+        fn = registry.resolve("update", {})
+        assert fn is not None
+        result = fn(customer_id="C1", name="Acme")
+        assert result == {"updated": True, "customer_id": "C1"}
+
 
 class TestEchoesInput:
     def test_echoes_single_field(self):

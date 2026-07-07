@@ -57,3 +57,9 @@ testpaths = ["tests"]
 python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
+
+# aiohttp is an optional dependency (the `mcp` extra) and is not always present
+# in the type-check environment; don't fail the whole check when it's missing.
+[[tool.mypy.overrides]]
+module = "aiohttp.*"
+ignore_missing_imports = true

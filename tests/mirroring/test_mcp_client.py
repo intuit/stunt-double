@@ -102,9 +102,13 @@ class TestMCPClient:
         mock_process = MagicMock()
         mock_process.stdin = MagicMock()
         mock_process.stdout = MagicMock()
-        mock_process.stdout.readline.return_value = (
-            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n"
-        )
+        # side_effect ending in "" so the background reader thread sees EOF and stops
+        mock_process.stdout.readline.side_effect = [
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n",
+            "",
+        ]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(
@@ -156,7 +160,10 @@ class TestMCPClient:
         mock_process.stdout.readline.side_effect = [
             handshake_response,
             list_tools_response,
+            "",
         ]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(
@@ -196,7 +203,10 @@ class TestMCPClient:
         mock_process.stdout.readline.side_effect = [
             handshake_response,
             list_tools_response,
+            "",
         ]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(name="test", command=["python", "-m", "test"])
@@ -205,8 +215,8 @@ class TestMCPClient:
         tools1 = client.list_tools()
         tools2 = client.list_tools()
 
+        # Second call returns the cached list without issuing another request.
         assert tools1 is tools2
-        assert mock_process.stdout.readline.call_count == 2
 
     def test_disconnect(self):
         """Test disconnecting from server."""
@@ -229,7 +239,12 @@ class TestMCPClient:
         mock_process = MagicMock()
         mock_process.stdin = MagicMock()
         mock_process.stdout = MagicMock()
-        mock_process.stdout.readline.return_value = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}) + "\n"
+        mock_process.stdout.readline.side_effect = [
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}) + "\n",
+            "",
+        ]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(name="test", command=["python", "-m", "test"])
@@ -238,6 +253,57 @@ class TestMCPClient:
             assert client._connected is True
 
         assert not client._connected
+
+
+class TestStdioReliability:
+    """Tests for stdio transport hang-prevention (stderr drain + read timeout)."""
+
+    def test_config_rejects_nonpositive_read_timeout(self):
+        """read_timeout must be positive."""
+        with pytest.raises(ValueError, match="read_timeout must be positive"):
+            MCPServerConfig(name="t", command=["python"], read_timeout=0)
+
+    def test_read_timeout_when_server_never_responds(self):
+        """A server that connects but never emits a response times out instead of hanging."""
+        import sys
+        import time
+
+        # Server reads its stdin forever and never writes a response.
+        server = [sys.executable, "-c", "import sys; [line for line in sys.stdin]"]
+        config = MCPServerConfig(name="silent", command=server, read_timeout=0.5)
+        client = MCPClient(config)
+
+        start = time.monotonic()
+        with pytest.raises((TimeoutError, RuntimeError)):
+            client.connect()  # handshake issues a request that never gets a reply
+        elapsed = time.monotonic() - start
+
+        # Must give up promptly, not block forever.
+        assert elapsed < 5.0
+        client.disconnect()
+
+    def test_verbose_stderr_does_not_deadlock(self):
+        """A server that floods stderr (>64KB) then replies must not deadlock the client."""
+        import sys
+
+        # Emit ~256KB to stderr (well past the OS pipe buffer), then a valid
+        # handshake response on stdout. If stderr weren't drained, the server
+        # would block on its stderr write and the handshake would never arrive.
+        script = (
+            "import sys, json;"
+            "sys.stderr.write('x' * 262144 + '\\n'); sys.stderr.flush();"
+            "sys.stdin.readline();"
+            "sys.stdout.write(json.dumps({'jsonrpc':'2.0','id':1,'result':{}}) + '\\n');"
+            "sys.stdout.flush()"
+        )
+        config = MCPServerConfig(name="chatty", command=[sys.executable, "-c", script], read_timeout=5.0)
+        client = MCPClient(config)
+
+        client.connect()  # would hang forever without the stderr drain
+        assert client._connected is True
+        # The flooded stderr was captured into the bounded buffer.
+        assert len(client._stderr_buffer) > 0
+        client.disconnect()
 
 
 class TestMCPClientRegistry:
