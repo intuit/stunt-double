@@ -120,7 +120,7 @@ class LangChainAdapter:
         required = json_schema.get("required", [])
 
         # Build field definitions for Pydantic
-        field_definitions = {}
+        field_definitions: dict[str, Any] = {}
         for prop_name, prop_schema in properties.items():
             # Get type
             prop_type = LangChainAdapter._json_type_to_python_type(prop_schema.get("type", "string"))

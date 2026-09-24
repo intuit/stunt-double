@@ -115,7 +115,7 @@ class InputMatcher:
         if isinstance(expected, dict) and "$exists" in expected:
             exists_value = expected["$exists"]
             key_exists = field in actual and actual[field] is not None
-            return key_exists == exists_value
+            return bool(key_exists == exists_value)
 
         # For non-$exists operators, field must exist
         if field not in actual:
@@ -128,7 +128,7 @@ class InputMatcher:
             return self._match_operators(actual_value, expected)
 
         # Direct value comparison (implicit $eq)
-        return actual_value == expected
+        return bool(actual_value == expected)
 
     def _match_operators(self, actual_value: Any, operator_dict: dict[str, Any]) -> bool:
         """
@@ -198,7 +198,7 @@ def _compare_numeric(actual: Any, expected: Any, comparator: Any) -> bool:
         if not isinstance(actual, int | float) or not isinstance(expected, int | float):
             return False
 
-        return comparator(actual, expected)
+        return bool(comparator(actual, expected))
     except (ValueError, TypeError):
         return False
 

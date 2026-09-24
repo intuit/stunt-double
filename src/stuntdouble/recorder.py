@@ -514,7 +514,6 @@ class CallRecorder:
         return f"CallRecorder(calls={len(self)})"
 
 
-
 __all__ = [
     "CallRecord",
     "CallRecorder",

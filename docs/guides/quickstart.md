@@ -17,7 +17,7 @@ pip install stuntdouble
 poetry add stuntdouble
 ```
 
-**Python compatibility:** 3.11, 3.12, 3.13, 3.14
+**Python compatibility:** 3.12, 3.13
 
 ---
 

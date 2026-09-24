@@ -13,11 +13,14 @@ Example:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .generation.entity import EntityInference, StaticFieldGenerator
 from .generation.responses import ResponseBuilder
 from .models import ToolDefinition
+
+if TYPE_CHECKING:
+    from .cache import ResponseCache
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +38,7 @@ class BaseStrategy(ABC):
     mock responses based on tool definitions and input parameters.
     """
 
-    def __init__(self, cache: Any | None = None):
+    def __init__(self, cache: "ResponseCache | None" = None):
         """
         Initialize strategy with optional caching.
 
@@ -132,7 +135,7 @@ class StaticStrategy(BaseStrategy):
         >>> assert response["customer_id"] == "123"
     """
 
-    def __init__(self, cache: Any | None = None):
+    def __init__(self, cache: "ResponseCache | None" = None):
         """
         Initialize static strategy.
 

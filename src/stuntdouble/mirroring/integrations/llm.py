@@ -9,9 +9,29 @@ import json
 import logging
 from typing import Any
 
+from langchain_core.messages import HumanMessage
+
 from ..models import ToolDefinition
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_response_text(content: Any) -> str:
+    """Extract plain text from LLM response content."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict):
+                text = block.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+        if parts:
+            return "".join(parts)
+    return str(content)
 
 
 class LLMProvider:
@@ -81,7 +101,7 @@ class LLMProvider:
             elif "```" in llm_response:
                 llm_response = llm_response.split("```")[1].split("```")[0].strip()
 
-            mock_response = json.loads(llm_response)
+            mock_response: dict[str, Any] = json.loads(llm_response)
             self._validate_llm_response(mock_response, tool_def)
             return mock_response
         except json.JSONDecodeError as e:
@@ -151,14 +171,10 @@ Generate the JSON response now:"""
         try:
             # LangChain-compatible clients - uses invoke() with LangChain messages
             if hasattr(self.llm_client, "invoke"):
-                from langchain_core.messages import HumanMessage
-
                 response = self.llm_client.invoke([HumanMessage(content=prompt)])
-                # LangChain returns AIMessage with .content attribute
                 if hasattr(response, "content"):
-                    return response.content
-                else:
-                    return str(response)
+                    return _extract_response_text(response.content)
+                return str(response)
 
             # Legacy chat method (for compatibility)
             elif hasattr(self.llm_client, "chat"):
@@ -168,11 +184,10 @@ Generate the JSON response now:"""
                 )
                 # Handle different response formats
                 if hasattr(response, "choices"):
-                    return response.choices[0].message.content
-                elif hasattr(response, "content"):
-                    return response.content
-                else:
-                    return str(response)
+                    return _extract_response_text(response.choices[0].message.content)
+                if hasattr(response, "content"):
+                    return _extract_response_text(response.content)
+                return str(response)
 
             else:
                 raise ValueError(

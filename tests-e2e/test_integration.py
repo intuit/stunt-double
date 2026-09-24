@@ -383,14 +383,13 @@ class TestSignatureValidationE2E:
         def get_customer_factory(scenario_metadata: dict, config: dict = None):
             def mock_impl(customer_id: str) -> dict:
                 return {"id": customer_id}
+
             return mock_impl
 
         registry.register("get_customer", mock_fn=get_customer_factory)
 
         # Should not raise -- get_customer(customer_id: str) matches mock_impl(customer_id: str)
-        wrapper = create_mockable_tool_wrapper(
-            registry, recorder=recorder, tools=E2E_TOOLS, validate_signatures=True
-        )
+        wrapper = create_mockable_tool_wrapper(registry, recorder=recorder, tools=E2E_TOOLS, validate_signatures=True)
         graph = build_e2e_graph(
             [make_tool_call("get_customer", {"customer_id": "C1"}), make_final_response("OK")],
             wrapper,
@@ -488,10 +487,12 @@ class TestCustomMockFactoryE2E:
 
         registry.register(
             "get_customer",
-            mock_fn=lambda scenario_metadata, config=None: lambda customer_id: {
-                "id": customer_id,
-                "tier": scenario_metadata["customer_tier"],
-            },
+            mock_fn=lambda scenario_metadata, config=None: (
+                lambda customer_id: {
+                    "id": customer_id,
+                    "tier": scenario_metadata["customer_tier"],
+                }
+            ),
         )
 
         async def async_items_factory(scenario_metadata: dict, config: dict = None):

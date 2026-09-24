@@ -131,15 +131,41 @@ class MockBuilder:
         Register a mock that calls ``fn`` with the tool's keyword arguments.
 
         This is the terminal method -- it registers the mock on the registry.
+        Any input conditions set via ``.when(**conditions)`` are enforced before
+        ``fn`` is called (a non-matching call raises ``InputNotMatchedError``),
+        and ``.echoes_input(...)`` fields are merged into ``fn``'s result when it
+        is a dict -- matching the behavior of ``.returns()``.
 
         Example:
             >>> registry.mock("calculate_total").returns_fn(
             ...     lambda items, tax_rate: {"total": sum(i["price"] for i in items) * (1 + tax_rate)}
             ... )
         """
+        input_conditions = self._input_conditions
+        echo_fields = self._echo_fields
+        matcher = InputMatcher() if input_conditions else None
+        tool_name = self._tool_name
 
         def mock_fn(scenario_metadata: dict[str, Any]) -> Callable[..., Any]:
-            return fn
+            def mock_callable(**kwargs: Any) -> Any:
+                if matcher and input_conditions:
+                    if not matcher.matches(input_conditions, kwargs):
+                        raise InputNotMatchedError(
+                            tool_name,
+                            message=(
+                                f"Mock input conditions not met for tool '{tool_name}': "
+                                f"expected {input_conditions}, got {kwargs}"
+                            ),
+                        )
+
+                result = fn(**kwargs)
+                if echo_fields and isinstance(result, dict):
+                    for field in echo_fields:
+                        if field in kwargs:
+                            result[field] = kwargs[field]
+                return result
+
+            return mock_callable
 
         self._registry.register(
             self._tool_name,

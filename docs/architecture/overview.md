@@ -46,28 +46,24 @@ This document describes StuntDouble's internal architecture, components, and how
 
 ```
 stuntdouble/
-├── __init__.py          # Top-level public API
+├── __init__.py          # Top-level public API (flat namespace)
 ├── builder.py           # MockBuilder fluent API
-├── exceptions.py        # MockingError, MissingMockError, SignatureMismatchError, MockAssertionError
+├── config.py            # inject_scenario_metadata, get_scenario_metadata, get_configurable_context, extract_scenario_metadata_from_config
+├── exceptions.py        # MissingMockError, SignatureMismatchError, MockAssertionError, InputNotMatchedError
 ├── matching.py          # InputMatcher, matches()
-├── mcp/                 # MCP client implementation
-│   ├── __init__.py        # Re-exports: MCPClient, MCPServerConfig, MCPTool
-│   ├── client.py          # MCP transport and tool execution client
-│   └── utils.py           # MCP config parsing helpers
 ├── mock_registry.py     # MockToolsRegistry
+├── recorder.py          # CallRecorder, CallRecord
 ├── resolving.py         # ValueResolver, ResolverContext, resolve_output(), has_placeholders()
 ├── scenario_mocking.py  # DataDrivenMockFactory, register_data_driven()
 ├── types.py             # MockFn, ScenarioMetadata, WhenPredicate, MockRegistration
-├── langgraph/           # ⭐ LangGraph per-invocation mocking (RECOMMENDED)
-│   ├── __init__.py        # LangGraph integration re-exports
-│   ├── config.py          # inject_scenario_metadata, get_scenario_metadata, get_configurable_context, extract_scenario_metadata_from_config
-│   ├── recorder.py        # CallRecorder, CallRecord
-│   ├── validation.py      # validate_mock_signature, validate_mock_parameters, validate_registry_mocks
-│   └── wrapper.py         # create_mockable_tool_wrapper, default_registry, mockable_tool_wrapper
+├── validation.py        # validate_mock_signature, validate_mock_parameters, validate_registry_mocks
+├── wrapper.py           # ⭐ create_mockable_tool_wrapper, default_registry, mockable_tool_wrapper (LangGraph integration)
 └── mirroring/           # MCP tool mirroring
     ├── __init__.py        # Re-exports: ToolMirror, mirror, mirror_for_agent, QualityPreset, etc.
     ├── cache.py           # ResponseCache
     ├── discovery.py       # MCPToolDiscoverer
+    ├── mcp_client.py      # MCPClient, MCPServerConfig, MCPTool (MCP transport + tool execution)
+    ├── mcp_utils.py       # MCP config parsing helpers
     ├── integrations/      # External adapters
     │   ├── langchain.py     # LangChainAdapter
     │   └── llm.py           # LLM integration
@@ -236,7 +232,7 @@ Factory-based mock storage for per-invocation mocking.
 │                                                                             │
 │   registry.register(                   mock_fn = registry.resolve(         │
 │     "tool_name",                         "tool_name",                       │
-│     factory=...,          ────▶          scenario_metadata                  │
+│     mock_fn=...,          ────▶          scenario_metadata                  │
 │     when=...                           )                                    │
 │   )                                                                         │
 │                                             │                               │

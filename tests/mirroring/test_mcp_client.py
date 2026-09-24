@@ -97,14 +97,85 @@ class TestMCPClient:
         assert client._tools_cache is None
 
     @patch("subprocess.Popen")
+    def test_connect_failure_resets_state_when_cleanup_raises(self, mock_popen):
+        """Connect failures must reset state even if resource cleanup raises."""
+        mock_process = MagicMock()
+        mock_process.stdin = MagicMock()
+        mock_process.stdout = MagicMock()
+        mock_process.stdout.readline.side_effect = [""]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
+        mock_popen.return_value = mock_process
+
+        config = MCPServerConfig(name="test-server", command=["python", "-m", "test"])
+        client = MCPClient(config)
+        client._tools_cache = [Mock()]
+
+        with patch.object(client, "_handshake", side_effect=RuntimeError("handshake failed")):
+            with patch.object(
+                client,
+                "_release_connection_resources",
+                side_effect=RuntimeError("cleanup failed"),
+            ):
+                with pytest.raises(RuntimeError, match="cleanup failed"):
+                    client.connect()
+
+        assert client._connected is False
+        assert client._tools_cache is None
+
+    @patch("subprocess.Popen")
+    def test_connect_handshake_failure_cleans_up_and_allows_retry(self, mock_popen):
+        """Failed handshake must release resources and allow a later connect()."""
+        mock_process = MagicMock()
+        mock_process.stdin = MagicMock()
+        mock_process.stdout = MagicMock()
+        mock_process.stdout.readline.side_effect = [""]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
+        mock_popen.return_value = mock_process
+
+        config = MCPServerConfig(name="test-server", command=["python", "-m", "test"])
+        client = MCPClient(config)
+
+        with patch.object(client, "_handshake", side_effect=RuntimeError("handshake failed")):
+            with pytest.raises(RuntimeError, match="handshake failed"):
+                client.connect()
+
+        assert client._connected is False
+        assert client._process is None
+        mock_process.terminate.assert_called()
+
+        mock_popen.reset_mock()
+        mock_process_retry = MagicMock()
+        mock_process_retry.stdin = MagicMock()
+        mock_process_retry.stdout = MagicMock()
+        mock_process_retry.stdout.readline.side_effect = [
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n",
+            "",
+        ]
+        mock_process_retry.stderr = MagicMock()
+        mock_process_retry.stderr.readline.side_effect = [""]
+        mock_popen.return_value = mock_process_retry
+
+        client.connect()
+
+        assert client._connected is True
+        assert client._process is mock_process_retry
+        mock_popen.assert_called_once()
+
+    @patch("subprocess.Popen")
     def test_connect(self, mock_popen):
         """Test connecting to server."""
         mock_process = MagicMock()
         mock_process.stdin = MagicMock()
         mock_process.stdout = MagicMock()
-        mock_process.stdout.readline.return_value = (
-            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n"
-        )
+        # side_effect ending in "" so the background reader thread sees EOF and stops
+        mock_process.stdout.readline.side_effect = [
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n",
+            "",
+        ]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(
@@ -156,7 +227,10 @@ class TestMCPClient:
         mock_process.stdout.readline.side_effect = [
             handshake_response,
             list_tools_response,
+            "",
         ]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(
@@ -196,7 +270,10 @@ class TestMCPClient:
         mock_process.stdout.readline.side_effect = [
             handshake_response,
             list_tools_response,
+            "",
         ]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(name="test", command=["python", "-m", "test"])
@@ -205,8 +282,8 @@ class TestMCPClient:
         tools1 = client.list_tools()
         tools2 = client.list_tools()
 
+        # Second call returns the cached list without issuing another request.
         assert tools1 is tools2
-        assert mock_process.stdout.readline.call_count == 2
 
     def test_disconnect(self):
         """Test disconnecting from server."""
@@ -229,7 +306,12 @@ class TestMCPClient:
         mock_process = MagicMock()
         mock_process.stdin = MagicMock()
         mock_process.stdout = MagicMock()
-        mock_process.stdout.readline.return_value = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}) + "\n"
+        mock_process.stdout.readline.side_effect = [
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {}}) + "\n",
+            "",
+        ]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
         mock_popen.return_value = mock_process
 
         config = MCPServerConfig(name="test", command=["python", "-m", "test"])
@@ -238,6 +320,110 @@ class TestMCPClient:
             assert client._connected is True
 
         assert not client._connected
+
+
+class TestStdioReliability:
+    """Tests for stdio transport hang-prevention (stderr drain + read timeout)."""
+
+    def test_config_rejects_nonpositive_read_timeout(self):
+        """read_timeout must be positive."""
+        with pytest.raises(ValueError, match="read_timeout must be positive"):
+            MCPServerConfig(name="t", command=["python"], read_timeout=0)
+
+    def test_read_timeout_when_server_never_responds(self):
+        """A server that connects but never emits a response times out instead of hanging."""
+        import sys
+        import time
+
+        # Server reads its stdin forever and never writes a response.
+        server = [sys.executable, "-c", "import sys; [line for line in sys.stdin]"]
+        config = MCPServerConfig(name="silent", command=server, read_timeout=0.5)
+        client = MCPClient(config)
+
+        start = time.monotonic()
+        with pytest.raises((TimeoutError, RuntimeError)):
+            client.connect()  # handshake issues a request that never gets a reply
+        elapsed = time.monotonic() - start
+
+        # Must give up promptly, not block forever.
+        assert elapsed < 5.0
+        assert client._connected is False
+        assert client._process is None
+
+    def test_verbose_stderr_does_not_deadlock(self):
+        """A server that floods stderr (>64KB) then replies must not deadlock the client."""
+        import sys
+
+        # Emit ~256KB to stderr (well past the OS pipe buffer), then a valid
+        # handshake response on stdout. If stderr weren't drained, the server
+        # would block on its stderr write and the handshake would never arrive.
+        script = (
+            "import sys, json;"
+            "sys.stderr.write('x' * 262144 + '\\n'); sys.stderr.flush();"
+            "sys.stdin.readline();"
+            "sys.stdout.write(json.dumps({'jsonrpc':'2.0','id':1,'result':{}}) + '\\n');"
+            "sys.stdout.flush()"
+        )
+        config = MCPServerConfig(name="chatty", command=[sys.executable, "-c", script], read_timeout=5.0)
+        client = MCPClient(config)
+
+        client.connect()  # would hang forever without the stderr drain
+        assert client._connected is True
+        # The flooded stderr was captured into the bounded buffer.
+        assert len(client._stderr_buffer) > 0
+        client.disconnect()
+
+    def test_stdio_skips_notifications_and_stale_responses_before_matching_reply(self):
+        """list_tools must ignore notifications and mismatched IDs on stdout."""
+        import sys
+
+        script = (
+            "import sys, json\n"
+            "for line in sys.stdin:\n"
+            "    req = json.loads(line)\n"
+            "    rid = req['id']\n"
+            "    method = req['method']\n"
+            "    if method == 'initialize':\n"
+            "        resp = {'jsonrpc': '2.0', 'id': rid, 'result': {'protocolVersion': '2024-11-05'}}\n"
+            "        sys.stdout.write(json.dumps(resp) + '\\n')\n"
+            "        sys.stdout.flush()\n"
+            "    elif method == 'tools/list':\n"
+            "        sys.stdout.write(json.dumps({\n"
+            "            'jsonrpc': '2.0',\n"
+            "            'method': 'notifications/message',\n"
+            "            'params': {'level': 'info', 'data': 'progress'},\n"
+            "        }) + '\\n')\n"
+            "        sys.stdout.flush()\n"
+            "        sys.stdout.write(json.dumps({\n"
+            "            'jsonrpc': '2.0',\n"
+            "            'id': 99999,\n"
+            "            'result': {'tools': [{'name': 'stale_tool', 'description': 'stale', 'inputSchema': {}}]},\n"
+            "        }) + '\\n')\n"
+            "        sys.stdout.flush()\n"
+            "        sys.stdout.write('INFO: still working\\n')\n"
+            "        sys.stdout.flush()\n"
+            "        resp = {\n"
+            "            'jsonrpc': '2.0',\n"
+            "            'id': rid,\n"
+            "            'result': {'tools': [{'name': 'expected_tool', 'description': 'ok', 'inputSchema': {}}]},\n"
+            "        }\n"
+            "        sys.stdout.write(json.dumps(resp) + '\\n')\n"
+            "        sys.stdout.flush()\n"
+        )
+        config = MCPServerConfig(
+            name="noisy",
+            command=[sys.executable, "-c", script],
+            read_timeout=5.0,
+        )
+        client = MCPClient(config)
+
+        try:
+            tools = client.list_tools()
+        finally:
+            client.disconnect()
+
+        assert len(tools) == 1
+        assert tools[0].name == "expected_tool"
 
 
 class TestMCPClientRegistry:

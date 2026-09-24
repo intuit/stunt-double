@@ -167,7 +167,7 @@ def current_user_mock(scenario_metadata: dict, config: dict = None):
 
     return lambda: {
         "user_id": user_id,
-        "realm_id": realm_id,
+        "org_id": org_id,
         "display_name": f"Test User ({user_id})"
     }
 

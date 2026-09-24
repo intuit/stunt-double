@@ -24,10 +24,16 @@ jobs:
         run: uv python install 3.13
 
       - name: Install dependencies
-        run: uv sync --all-extras --group dev
+        run: uv sync --all-extras --group dev --frozen
 
-      - name: Check formatting  - lint (ruff)
+      - name: Lint (ruff)
         run: uv run ruff check
+
+      - name: Check formatting (ruff)
+        run: uv run ruff format --check
+
+      - name: Type check (mypy)
+        run: uv run mypy src/
 
   test:
     needs: [ lint ]
@@ -47,7 +53,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --all-extras --group dev
+        run: uv sync --all-extras --group dev --frozen
 
       - name: Run tests with coverage
         run: |
@@ -84,7 +90,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --all-extras --group dev
+        run: uv sync --all-extras --group dev --frozen
 
       - name: Run e2e tests with coverage
         run: |

@@ -26,7 +26,7 @@ jobs:
           enable-cache: true
 
       - name: Install deps
-        run: uv sync --group dev
+        run: uv sync --group dev --frozen
 
       - name: Read version from pyproject.toml
         id: version
