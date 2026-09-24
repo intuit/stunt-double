@@ -373,6 +373,58 @@ class TestStdioReliability:
         assert len(client._stderr_buffer) > 0
         client.disconnect()
 
+    def test_stdio_skips_notifications_and_stale_responses_before_matching_reply(self):
+        """list_tools must ignore notifications and mismatched IDs on stdout."""
+        import sys
+
+        script = (
+            "import sys, json\n"
+            "for line in sys.stdin:\n"
+            "    req = json.loads(line)\n"
+            "    rid = req['id']\n"
+            "    method = req['method']\n"
+            "    if method == 'initialize':\n"
+            "        resp = {'jsonrpc': '2.0', 'id': rid, 'result': {'protocolVersion': '2024-11-05'}}\n"
+            "        sys.stdout.write(json.dumps(resp) + '\\n')\n"
+            "        sys.stdout.flush()\n"
+            "    elif method == 'tools/list':\n"
+            "        sys.stdout.write(json.dumps({\n"
+            "            'jsonrpc': '2.0',\n"
+            "            'method': 'notifications/message',\n"
+            "            'params': {'level': 'info', 'data': 'progress'},\n"
+            "        }) + '\\n')\n"
+            "        sys.stdout.flush()\n"
+            "        sys.stdout.write(json.dumps({\n"
+            "            'jsonrpc': '2.0',\n"
+            "            'id': 99999,\n"
+            "            'result': {'tools': [{'name': 'stale_tool', 'description': 'stale', 'inputSchema': {}}]},\n"
+            "        }) + '\\n')\n"
+            "        sys.stdout.flush()\n"
+            "        sys.stdout.write('INFO: still working\\n')\n"
+            "        sys.stdout.flush()\n"
+            "        resp = {\n"
+            "            'jsonrpc': '2.0',\n"
+            "            'id': rid,\n"
+            "            'result': {'tools': [{'name': 'expected_tool', 'description': 'ok', 'inputSchema': {}}]},\n"
+            "        }\n"
+            "        sys.stdout.write(json.dumps(resp) + '\\n')\n"
+            "        sys.stdout.flush()\n"
+        )
+        config = MCPServerConfig(
+            name="noisy",
+            command=[sys.executable, "-c", script],
+            read_timeout=5.0,
+        )
+        client = MCPClient(config)
+
+        try:
+            tools = client.list_tools()
+        finally:
+            client.disconnect()
+
+        assert len(tools) == 1
+        assert tools[0].name == "expected_tool"
+
 
 class TestMCPClientRegistry:
     """Test MCPClientRegistry class."""

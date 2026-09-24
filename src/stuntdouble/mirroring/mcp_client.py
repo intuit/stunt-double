@@ -578,6 +578,7 @@ class MCPClient:
             # Read response - skip log lines and find valid JSON-RPC.
             # Reads come from the reader thread's queue with an overall deadline,
             # so an unresponsive server cannot block this call indefinitely.
+            request_id = request.get("id")
             max_lines = 100  # Safety limit to avoid infinite loops
             deadline = time.monotonic() + self.config.read_timeout
             for _ in range(max_lines):
@@ -605,15 +606,18 @@ class MCPClient:
                 try:
                     response = json.loads(response_str)
 
-                    # Validate it's a JSON-RPC response (has 'jsonrpc' and 'id' or 'method')
-                    if isinstance(response, dict) and (
-                        "jsonrpc" in response or "result" in response or "error" in response or "method" in response
-                    ):
-                        return response
-                    else:
-                        # Valid JSON but not JSON-RPC, skip it (probably a log line)
-                        logger.debug(f"Skipping non-JSON-RPC line: {response_str[:100]}")
+                    if not isinstance(response, dict):
+                        logger.debug(f"Skipping non-object JSON line: {response_str[:100]}")
                         continue
+
+                    # Return only the JSON-RPC response whose id matches this request.
+                    # Skip notifications (method, no matching id), stale/mismatched ids,
+                    # and unrelated JSON until we see the matching reply.
+                    if response.get("id") == request_id and ("result" in response or "error" in response):
+                        return response
+
+                    logger.debug(f"Skipping unrelated JSON-RPC line: {response_str[:100]}")
+                    continue
 
                 except json.JSONDecodeError:
                     # Not valid JSON, probably a log line - skip it
