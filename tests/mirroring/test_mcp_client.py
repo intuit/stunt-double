@@ -97,6 +97,33 @@ class TestMCPClient:
         assert client._tools_cache is None
 
     @patch("subprocess.Popen")
+    def test_connect_failure_resets_state_when_cleanup_raises(self, mock_popen):
+        """Connect failures must reset state even if resource cleanup raises."""
+        mock_process = MagicMock()
+        mock_process.stdin = MagicMock()
+        mock_process.stdout = MagicMock()
+        mock_process.stdout.readline.side_effect = [""]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
+        mock_popen.return_value = mock_process
+
+        config = MCPServerConfig(name="test-server", command=["python", "-m", "test"])
+        client = MCPClient(config)
+        client._tools_cache = [Mock()]
+
+        with patch.object(client, "_handshake", side_effect=RuntimeError("handshake failed")):
+            with patch.object(
+                client,
+                "_release_connection_resources",
+                side_effect=RuntimeError("cleanup failed"),
+            ):
+                with pytest.raises(RuntimeError, match="cleanup failed"):
+                    client.connect()
+
+        assert client._connected is False
+        assert client._tools_cache is None
+
+    @patch("subprocess.Popen")
     def test_connect_handshake_failure_cleans_up_and_allows_retry(self, mock_popen):
         """Failed handshake must release resources and allow a later connect()."""
         mock_process = MagicMock()

@@ -225,9 +225,11 @@ class MCPClient:
 
         except Exception as e:
             logger.error(f"Failed to connect to MCP server {self.config.name}: {e}")
-            self._release_connection_resources()
-            self._connected = False
-            self._tools_cache = None
+            try:
+                self._release_connection_resources()
+            finally:
+                self._connected = False
+                self._tools_cache = None
             raise
 
     def _connect_stdio(self) -> None:
@@ -392,9 +394,11 @@ class MCPClient:
         if not self._connected:
             return
 
-        self._release_connection_resources()
-        self._connected = False
-        self._tools_cache = None
+        try:
+            self._release_connection_resources()
+        finally:
+            self._connected = False
+            self._tools_cache = None
         logger.info(f"Disconnected from MCP server: {self.config.name}")
 
     def list_tools(self, use_cache: bool = True) -> list[MCPTool]:
