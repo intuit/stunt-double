@@ -225,6 +225,9 @@ class MCPClient:
 
         except Exception as e:
             logger.error(f"Failed to connect to MCP server {self.config.name}: {e}")
+            self._release_connection_resources()
+            self._connected = False
+            self._tools_cache = None
             raise
 
     def _connect_stdio(self) -> None:
@@ -325,11 +328,8 @@ class MCPClient:
         self._event_loop = loop
         loop.run_until_complete(self._establish_sse_connection())
 
-    def disconnect(self) -> None:
-        """Disconnect from the MCP server."""
-        if not self._connected:
-            return
-
+    def _release_connection_resources(self) -> None:
+        """Release transport resources regardless of connection flag."""
         if self._process:
             try:
                 self._process.terminate()
@@ -387,6 +387,12 @@ class MCPClient:
                 self._sse_task = None
                 self._event_loop = None
 
+    def disconnect(self) -> None:
+        """Disconnect from the MCP server."""
+        if not self._connected:
+            return
+
+        self._release_connection_resources()
         self._connected = False
         self._tools_cache = None
         logger.info(f"Disconnected from MCP server: {self.config.name}")

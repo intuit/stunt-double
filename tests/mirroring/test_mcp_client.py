@@ -97,6 +97,46 @@ class TestMCPClient:
         assert client._tools_cache is None
 
     @patch("subprocess.Popen")
+    def test_connect_handshake_failure_cleans_up_and_allows_retry(self, mock_popen):
+        """Failed handshake must release resources and allow a later connect()."""
+        mock_process = MagicMock()
+        mock_process.stdin = MagicMock()
+        mock_process.stdout = MagicMock()
+        mock_process.stdout.readline.side_effect = [""]
+        mock_process.stderr = MagicMock()
+        mock_process.stderr.readline.side_effect = [""]
+        mock_popen.return_value = mock_process
+
+        config = MCPServerConfig(name="test-server", command=["python", "-m", "test"])
+        client = MCPClient(config)
+
+        with patch.object(client, "_handshake", side_effect=RuntimeError("handshake failed")):
+            with pytest.raises(RuntimeError, match="handshake failed"):
+                client.connect()
+
+        assert client._connected is False
+        assert client._process is None
+        mock_process.terminate.assert_called()
+
+        mock_popen.reset_mock()
+        mock_process_retry = MagicMock()
+        mock_process_retry.stdin = MagicMock()
+        mock_process_retry.stdout = MagicMock()
+        mock_process_retry.stdout.readline.side_effect = [
+            json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2024-11-05"}}) + "\n",
+            "",
+        ]
+        mock_process_retry.stderr = MagicMock()
+        mock_process_retry.stderr.readline.side_effect = [""]
+        mock_popen.return_value = mock_process_retry
+
+        client.connect()
+
+        assert client._connected is True
+        assert client._process is mock_process_retry
+        mock_popen.assert_called_once()
+
+    @patch("subprocess.Popen")
     def test_connect(self, mock_popen):
         """Test connecting to server."""
         mock_process = MagicMock()
@@ -280,7 +320,8 @@ class TestStdioReliability:
 
         # Must give up promptly, not block forever.
         assert elapsed < 5.0
-        client.disconnect()
+        assert client._connected is False
+        assert client._process is None
 
     def test_verbose_stderr_does_not_deadlock(self):
         """A server that floods stderr (>64KB) then replies must not deadlock the client."""
