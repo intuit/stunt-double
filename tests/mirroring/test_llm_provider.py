@@ -13,6 +13,7 @@ import json
 from unittest.mock import Mock, patch
 
 import pytest
+from langchain_core.messages import AIMessage
 
 from stuntdouble.mirroring.integrations.llm import LLMProvider
 from stuntdouble.mirroring.models import ToolDefinition
@@ -104,6 +105,19 @@ class TestGenerateWithLLM:
             with pytest.raises(json.JSONDecodeError):
                 self.provider.generate_with_llm(self.tool_def, {"customer_id": "123"})
 
+    def test_generate_with_llm_invoke_structured_text_blocks(self):
+        """Test generation when invoke() returns AIMessage with structured text blocks."""
+        self.mock_client.invoke = Mock(
+            return_value=AIMessage(content=[{"type": "text", "text": '{"id": "123", "name": "Test Customer"}'}])
+        )
+
+        with patch("langchain_core.messages.HumanMessage") as mock_msg:
+            mock_msg.return_value = "mocked_message"
+            result = self.provider.generate_with_llm(self.tool_def, {"customer_id": "123"})
+
+        assert result == {"id": "123", "name": "Test Customer"}
+        self.mock_client.invoke.assert_called_once()
+
 
 class TestCallLLM:
     """Test LLMProvider._call_llm method."""
@@ -134,6 +148,18 @@ class TestCallLLM:
             result = provider._call_llm("test prompt")
 
         assert result == str(mock_response)
+
+    def test_call_llm_with_invoke_structured_text_blocks(self):
+        """Test _call_llm extracts JSON from AIMessage structured text blocks."""
+        mock_client = Mock()
+        mock_client.invoke = Mock(return_value=AIMessage(content=[{"type": "text", "text": '{"id": "123"}'}]))
+        provider = LLMProvider(llm_client=mock_client)
+
+        with patch("langchain_core.messages.HumanMessage") as mock_msg:
+            mock_msg.return_value = "mocked_message"
+            result = provider._call_llm("test prompt")
+
+        assert result == '{"id": "123"}'
 
     def test_call_llm_with_chat_method_choices(self):
         """Test _call_llm with chat() method returning choices format."""
