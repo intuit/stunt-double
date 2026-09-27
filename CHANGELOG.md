@@ -11,6 +11,8 @@ file records notable unreleased changes and the initial release.
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-09-28
+
 ### Fixed
 
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`
