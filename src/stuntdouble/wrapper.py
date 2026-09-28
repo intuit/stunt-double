@@ -65,10 +65,11 @@ def create_mockable_tool_wrapper(
         require_mock_when_scenario: If True (default), raise MissingMockError
             when scenario_metadata is present but no mock exists for a tool.
             If False, fall back to executing the real tool.
-        strict_mock_errors: If True, re-raise exceptions from mock execution
+        strict_mock_errors: If True, re-raise exceptions from mock resolution
+            (a failing factory, as MockFactoryError) and from mock execution
             instead of catching them and returning ToolMessage(status="error").
             Useful in unit tests where you want fast failure on broken mocks.
-            If False (default), mock errors are caught and returned as error
+            If False (default), both are caught and returned as error
             ToolMessages, which is suitable for evaluation batch runs.
         tools: Optional list of BaseTool instances. If provided with
             validate_signatures=True, the wrapper validates that mock function

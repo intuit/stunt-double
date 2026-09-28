@@ -24,7 +24,8 @@ file records notable unreleased changes and the initial release.
   the new `MockFactoryError` (chained from the original exception) instead of returning
   `None`, which made a broken mock surface as `MissingMockError: No mock registered`.
   The wrapper returns `ToolMessage(status="error")` for it, or re-raises with
-  `strict_mock_errors=True`, and records the error on the `CallRecorder`.
+  `strict_mock_errors=True`, and records the error on the `CallRecorder`. In
+  lenient mode a broken factory therefore no longer falls back to the real tool.
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`
   pipe on a background thread, so a server that logs verbosely can no longer
   deadlock the client by filling the OS pipe buffer.
