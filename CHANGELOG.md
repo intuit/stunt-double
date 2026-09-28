@@ -20,6 +20,11 @@ file records notable unreleased changes and the initial release.
 - **`{{input.x}}` / `{{config.x}}` resolving to `None`**: a reference whose value
   is `None`, and `| default(null)` / `| default(none)`, now resolve to `None` instead
   of being left as the literal placeholder with an "Unknown placeholder" warning.
+- **Mock factory errors** are no longer swallowed: `MockToolsRegistry.resolve()` raises
+  the new `MockFactoryError` (chained from the original exception) instead of returning
+  `None`, which made a broken mock surface as `MissingMockError: No mock registered`.
+  The wrapper returns `ToolMessage(status="error")` for it, or re-raises with
+  `strict_mock_errors=True`, and records the error on the `CallRecorder`.
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`
   pipe on a background thread, so a server that logs verbosely can no longer
   deadlock the client by filling the OS pipe buffer.

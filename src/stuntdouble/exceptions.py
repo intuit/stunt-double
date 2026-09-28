@@ -42,6 +42,24 @@ class MissingMockError(MockingError):
         super().__init__(message)
 
 
+class MockFactoryError(MockingError):
+    """
+    Raised when a registered mock factory raises while the mock is being resolved.
+
+    The original exception is chained as ``__cause__``. Without this the failure
+    looked like "no mock registered", which points at the wrong problem.
+
+    Attributes:
+        tool_name: Name of the tool whose factory failed
+        cause: The exception the factory raised
+    """
+
+    def __init__(self, tool_name: str, cause: BaseException):
+        self.tool_name = tool_name
+        self.cause = cause
+        super().__init__(f"Mock factory for tool '{tool_name}' raised {type(cause).__name__}: {cause}")
+
+
 class SignatureMismatchError(MockingError):
     """
     Raised when mock function signature doesn't match tool signature.
@@ -100,6 +118,7 @@ __all__ = [
     "MockNotFoundError",
     "MockRegistryError",
     "MissingMockError",
+    "MockFactoryError",
     "InputNotMatchedError",
     "MockAssertionError",
     "SignatureMismatchError",

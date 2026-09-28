@@ -413,6 +413,47 @@ class TestCreateMockableToolWrapper:
             run_async(wrapper(request, mock_execute))
 
 
+class TestMockFactoryErrors:
+    """A mock factory that raises during resolution (#58)."""
+
+    def _setup(self, **wrapper_kwargs):
+        from stuntdouble import CallRecorder, MockToolsRegistry
+        from stuntdouble.wrapper import create_mockable_tool_wrapper
+
+        registry = MockToolsRegistry()
+
+        def factory(md):
+            return md["mocks"]["t"][0]["output"]  # KeyError: this scenario has no "mocks"
+
+        registry.register("test_tool", mock_fn=factory)
+        recorder = CallRecorder()
+        wrapper = create_mockable_tool_wrapper(registry, recorder=recorder, **wrapper_kwargs)
+        return wrapper, recorder
+
+    def _request(self):
+        return TestCreateMockableToolWrapper()._create_request(scenario_metadata={"scenario_id": "x"})
+
+    async def _execute(self, req):
+        raise AssertionError("the real tool must not run")
+
+    def test_returns_an_error_tool_message(self):
+        wrapper, recorder = self._setup()
+        result = run_async(wrapper(self._request(), self._execute))
+        assert result.status == "error"
+        assert "Mock error" in result.content and "KeyError" in result.content
+        (call,) = recorder.get_calls("test_tool")
+        assert call.error is not None and call.was_mocked
+
+    def test_strict_mode_raises_the_factory_error_not_missing_mock(self):
+        from stuntdouble import MissingMockError, MockFactoryError
+
+        wrapper, _ = self._setup(strict_mock_errors=True, require_mock_when_scenario=True)
+        with pytest.raises(MockFactoryError) as exc_info:
+            run_async(wrapper(self._request(), self._execute))
+        assert not isinstance(exc_info.value, MissingMockError)
+        assert isinstance(exc_info.value.__cause__, KeyError)
+
+
 class TestWrapperIntegration:
     """Integration tests for wrapper with registry."""
 

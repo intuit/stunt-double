@@ -590,7 +590,7 @@ from stuntdouble import (
 | `registry.mock(tool_name)` | Start fluent builder chain, returns `MockBuilder` |
 | `registry.register(tool_name, mock_fn, when=None, tool=None)` | Register a sync or async mock factory (low-level). Pass `tool=` for signature validation |
 | `registry.register_data_driven(tool_name, fallback=None, echo_input=False)` | Register a data-driven mock |
-| `registry.resolve(tool_name, scenario_metadata, config=None)` | Resolve the mock callable at runtime. Async factories return an awaitable that the wrapper awaits |
+| `registry.resolve(tool_name, scenario_metadata, config=None)` | Resolve the mock callable at runtime. Async factories return an awaitable that the wrapper awaits. Raises `MockFactoryError` if the factory itself raises |
 | `create_mockable_tool_wrapper(registry, recorder=, tools=, validate_signatures=)` | Create awrap_tool_call wrapper with support for sync and async mock factories |
 | `inject_scenario_metadata(config, metadata)` | Create config with scenario_metadata |
 | `CallRecorder()` | Records tool calls for test assertions |

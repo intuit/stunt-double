@@ -31,6 +31,7 @@ import threading
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
+from stuntdouble.exceptions import MockFactoryError
 from stuntdouble.types import MockFn, MockRegistration, WhenPredicate
 
 if TYPE_CHECKING:
@@ -211,7 +212,11 @@ class MockToolsRegistry:
             A callable mock function, or an awaitable that resolves to one,
             if resolved. Returns None if:
             - Tool not registered
-            - `when` predicate returned False
+            - `when` predicate returned False (or raised)
+
+        Raises:
+            MockFactoryError: The mock factory raised. The original exception
+                is chained, so a broken mock isn't reported as a missing one.
 
         Example:
             >>> mock_fn = mock_registry.resolve("get_weather", {"mode": "mock"})
@@ -239,7 +244,7 @@ class MockToolsRegistry:
                     logger.debug(f"Mock for '{tool_name}' skipped: when predicate returned False")
                     return None
             except Exception as e:
-                logger.warning(f"Mock for '{tool_name}': when predicate raised {e}, skipping mock")
+                logger.error(f"Mock for '{tool_name}': when predicate raised {e}, skipping mock")
                 return None
 
         # Call mock_fn to create the mock callable
@@ -259,11 +264,7 @@ class MockToolsRegistry:
             logger.debug(f"Resolved mock for '{tool_name}'")
             return mock_callable
         except Exception as e:
-            logger.error(
-                f"Mock factory for '{tool_name}' raised exception: {e}",
-                exc_info=True,
-            )
-            return None
+            raise MockFactoryError(tool_name, e) from e
 
     def get_mock_fn(self, tool_name: str) -> MockFn | None:
         """

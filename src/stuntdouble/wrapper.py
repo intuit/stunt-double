@@ -25,7 +25,7 @@ from langgraph.prebuilt.tool_node import (
 from langgraph.types import Command
 
 from stuntdouble.config import get_scenario_metadata
-from stuntdouble.exceptions import InputNotMatchedError, MissingMockError
+from stuntdouble.exceptions import InputNotMatchedError, MissingMockError, MockFactoryError
 from stuntdouble.mock_registry import MockToolsRegistry
 
 if TYPE_CHECKING:
@@ -205,8 +205,21 @@ def create_mockable_tool_wrapper(
         # Cast RunnableConfig (TypedDict) to plain dict for registry API compatibility
         config: dict[str, Any] | None = cast(dict[str, Any], request.runtime.config) if request.runtime else None
 
-        # Try to resolve mock from registry
-        mock_callable = registry.resolve(tool_name, scenario_metadata, config)
+        # Try to resolve mock from registry. A factory that raises is a broken
+        # mock, not a missing one: handle it like a mock that failed to run.
+        try:
+            mock_callable = registry.resolve(tool_name, scenario_metadata, config)
+        except MockFactoryError as e:
+            _record_call(error=e, was_mocked=True, start_time=time.time())
+            if strict_mock_errors:
+                raise
+            logger.exception(f"Mock factory for tool '{tool_name}' failed (scenario: {scenario_id}): {e}")
+            return ToolMessage(
+                content=f"Mock error: {str(e)}",
+                name=tool_name,
+                tool_call_id=tool_call_id,
+                status="error",
+            )
         no_match_reason: str | None = None
 
         if mock_callable is not None:
