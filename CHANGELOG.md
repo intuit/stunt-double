@@ -17,6 +17,9 @@ file records notable unreleased changes and the initial release.
   `register_data_driven` and `MockBuilder.returns()/returns_fn()` build) no longer
   fail `validate_signatures=True` with "Missing parameters"; extra required
   parameters on such a mock are still reported.
+- **`{{input.x}}` / `{{config.x}}` resolving to `None`**: a reference whose value
+  is `None`, and `| default(null)` / `| default(none)`, now resolve to `None` instead
+  of being left as the literal placeholder with an "Unknown placeholder" warning.
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`
   pipe on a background thread, so a server that logs verbosely can no longer
   deadlock the client by filling the OS pipe buffer.

@@ -35,6 +35,10 @@ INPUT_REF_PATTERN = re.compile(r"^input\.(\w+)(?:\s*\|\s*default\((.+)\))?$")
 CONFIG_REF_PATTERN = re.compile(r"^config\.(\w+)(?:\s*\|\s*default\((.+)\))?$")
 FUNCTION_PATTERN = re.compile(r"^(\w+)\(([^)]*)\)$")
 
+# Returned by the _try_* resolvers when an expression isn't theirs. None can't be
+# used for that: {{input.x}} may legitimately resolve to None.
+_UNRESOLVED: Any = object()
+
 
 @dataclass
 class ResolverContext:
@@ -143,14 +147,14 @@ class ValueResolver:
 
         for resolver in resolvers:
             result = resolver(expr, context)
-            if result is not None:
+            if result is not _UNRESOLVED:
                 return result
 
         # Unknown expression - return as-is with warning
         logger.warning(f"Unknown placeholder expression: {{{{{expr}}}}}")
         return f"{{{{{expr}}}}}"
 
-    def _try_timestamp(self, expr: str, context: ResolverContext) -> Any | None:
+    def _try_timestamp(self, expr: str, context: ResolverContext) -> Any:
         """
         Try to resolve timestamp expressions.
 
@@ -164,7 +168,7 @@ class ValueResolver:
             context: Resolution context
 
         Returns:
-            ISO timestamp string or None if not a timestamp expr
+            ISO timestamp string, or _UNRESOLVED if not a timestamp expr
         """
         base = context.base_time
 
@@ -197,7 +201,7 @@ class ValueResolver:
         if boundary_match:
             return self._resolve_boundary(expr, base).isoformat()
 
-        return None
+        return _UNRESOLVED
 
     def _get_timedelta(self, amount: int, unit: str) -> timedelta:
         """
@@ -267,7 +271,7 @@ class ValueResolver:
             case _:
                 return base
 
-    def _try_input_ref(self, expr: str, context: ResolverContext) -> Any | None:
+    def _try_input_ref(self, expr: str, context: ResolverContext) -> Any:
         """
         Try to resolve input references.
 
@@ -280,11 +284,11 @@ class ValueResolver:
             context: Resolution context
 
         Returns:
-            Input value or None if not an input ref
+            Input value (possibly None), or _UNRESOLVED if not an input ref
         """
         match = INPUT_REF_PATTERN.match(expr)
         if not match:
-            return None
+            return _UNRESOLVED
 
         field_name = match.group(1)
         default_value = match.group(2)
@@ -298,7 +302,7 @@ class ValueResolver:
         logger.debug(f"Input field '{field_name}' not found and no default provided")
         return f"<{field_name}>"
 
-    def _try_config_ref(self, expr: str, context: ResolverContext) -> Any | None:
+    def _try_config_ref(self, expr: str, context: ResolverContext) -> Any:
         """
         Try to resolve config references.
 
@@ -311,11 +315,11 @@ class ValueResolver:
             context: Resolution context
 
         Returns:
-            Config value or None if not a config ref
+            Config value (possibly None), or _UNRESOLVED if not a config ref
         """
         match = CONFIG_REF_PATTERN.match(expr)
         if not match:
-            return None
+            return _UNRESOLVED
 
         field_name = match.group(1)
         default_value = match.group(2)
@@ -329,7 +333,7 @@ class ValueResolver:
         logger.debug(f"Config field '{field_name}' not found and no default provided")
         return f"<{field_name}>"
 
-    def _try_generator(self, expr: str, context: ResolverContext) -> Any | None:
+    def _try_generator(self, expr: str, context: ResolverContext) -> Any:
         """
         Try to resolve generator functions.
 
@@ -345,7 +349,7 @@ class ValueResolver:
             context: Resolution context
 
         Returns:
-            Generated value or None if not a generator
+            Generated value, or _UNRESOLVED if not a generator
         """
         # Simple generators (no args)
         if expr == "uuid":
@@ -354,7 +358,7 @@ class ValueResolver:
         # Function-style generators
         func_match = FUNCTION_PATTERN.match(expr)
         if not func_match:
-            return None
+            return _UNRESOLVED
 
         func_name = func_match.group(1)
         args_str = func_match.group(2)
@@ -392,7 +396,7 @@ class ValueResolver:
                 return "".join(random.choices(chars, k=length))
 
             case _:
-                return None
+                return _UNRESOLVED
 
     def _parse_args(self, args_str: str) -> list[Any]:
         """

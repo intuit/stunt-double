@@ -227,6 +227,46 @@ class TestValueResolverInputRefs:
         assert result["active"] is True
 
 
+class TestValueResolverNoneValues:
+    """References that resolve to None return None, not the placeholder (#57)."""
+
+    def test_input_ref_resolving_to_none(self):
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"note": None})
+        assert resolver.resolve_dynamic_values("{{input.note}}", ctx) is None
+
+    def test_config_ref_resolving_to_none(self):
+        resolver = ValueResolver()
+        ctx = ResolverContext(config_data={"region": None})
+        assert resolver.resolve_dynamic_values("{{config.region}}", ctx) is None
+
+    def test_default_null(self):
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={})
+        assert resolver.resolve_dynamic_values("{{input.note | default(null)}}", ctx) is None
+
+    def test_default_none(self):
+        resolver = ValueResolver()
+        ctx = ResolverContext(config_data={})
+        assert resolver.resolve_dynamic_values("{{config.note | default(none)}}", ctx) is None
+
+    def test_none_inside_a_structure(self):
+        assert resolve_output({"note": "{{input.note}}"}, input_data={"note": None}) == {"note": None}
+
+    def test_none_does_not_log_unknown_placeholder(self, caplog):
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"note": None})
+        with caplog.at_level("WARNING", logger="stuntdouble.resolving"):
+            resolver.resolve_dynamic_values("{{input.note}}", ctx)
+        assert "Unknown placeholder" not in caplog.text
+
+    def test_unknown_expression_is_still_left_as_is(self):
+        resolver = ValueResolver()
+        ctx = ResolverContext()
+        assert resolver.resolve_dynamic_values("{{not_a_thing}}", ctx) == "{{not_a_thing}}"
+        assert resolver.resolve_dynamic_values("{{nope(1)}}", ctx) == "{{nope(1)}}"
+
+
 class TestValueResolverGenerators:
     """Test generator function placeholder resolution."""
 
