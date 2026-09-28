@@ -20,8 +20,10 @@ file records notable unreleased changes and the initial release.
 - **`{{input.x}}` / `{{config.x}}` resolving to `None`**: a reference whose value
   is `None`, and `| default(null)` / `| default(none)`, now resolve to `None` instead
   of being left as the literal placeholder with an "Unknown placeholder" warning.
-- **`{{sequence('X')}}` in data-driven mocks** keeps counting across calls within a
-  run (`X-001`, `X-002`, ...) instead of restarting at `001` on every tool call.
+- **`{{sequence('X')}}` in data-driven mocks**: counters now persist across calls of
+  the same resolved data-driven mock callable (e.g. when calling the factory's result
+  directly), instead of restarting at `001` on every call. Through the tool wrapper
+  each call still resolves a fresh callable, so the ids restart there (see #56).
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`
   pipe on a background thread, so a server that logs verbosely can no longer
   deadlock the client by filling the OS pipe buffer.
