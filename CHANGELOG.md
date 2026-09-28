@@ -13,6 +13,11 @@ file records notable unreleased changes and the initial release.
 
 ### Fixed
 
+- **Operators inside nested patterns**: `InputMatcher` now recurses into nested dict
+  patterns, so operators (`$regex`, `$gt`, `$in`, `$exists`, ...) work at any depth,
+  e.g. `{"filter": {"amount": {"$gt": 100}}}`. Previously a nested operator dict was
+  compared as a literal value and never matched. Nested matching is partial, like the
+  top level: extra keys in the actual value are ignored.
 - **Signature validation and `**kwargs` mocks**: mocks that take `**kwargs` (what
   `register_data_driven` and `MockBuilder.returns()/returns_fn()` build) no longer
   fail `validate_signatures=True` with "Missing parameters"; extra required

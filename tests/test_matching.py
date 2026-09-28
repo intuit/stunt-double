@@ -170,6 +170,88 @@ class TestInputMatcherEdgeCases:
         assert matcher.matches({"amount": {"$gt": 100}}, {"amount": "not a number"}) is False
 
 
+class TestInputMatcherNested:
+    """Test operators inside nested dict patterns (#60)."""
+
+    def test_issue_repro_cases(self):
+        """The four repro cases from the issue."""
+        matcher = InputMatcher()
+        assert matcher.matches({"customer": {"id": "C1"}}, {"customer": {"id": "C1"}}) is True
+        assert matcher.matches({"customer": {"id": {"$regex": "^C"}}}, {"customer": {"id": "C1"}}) is True
+        assert matcher.matches({"customer": {"email": {"$exists": True}}}, {"customer": {"email": "a@b"}}) is True
+        assert matcher.matches({"filter": {"amount": {"$gt": 100}}}, {"filter": {"amount": 150}}) is True
+
+    def test_nested_operator_no_match(self):
+        """Nested operators still reject non-matching values."""
+        matcher = InputMatcher()
+        assert matcher.matches({"customer": {"id": {"$regex": "^C"}}}, {"customer": {"id": "X1"}}) is False
+        assert matcher.matches({"filter": {"amount": {"$gt": 100}}}, {"filter": {"amount": 50}}) is False
+        assert (
+            matcher.matches({"filter": {"status": {"$in": ["open", "paid"]}}}, {"filter": {"status": "void"}}) is False
+        )
+
+    def test_three_level_nesting(self):
+        """Operators work three levels deep."""
+        matcher = InputMatcher()
+        pattern = {"query": {"range": {"amount": {"$gte": 100, "$lt": 500}}}}
+        assert matcher.matches(pattern, {"query": {"range": {"amount": 250}}}) is True
+        assert matcher.matches(pattern, {"query": {"range": {"amount": 600}}}) is False
+        assert matcher.matches(pattern, {"query": {"range": {}}}) is False
+
+    def test_nested_exists_false(self):
+        """$exists: false works on nested keys."""
+        matcher = InputMatcher()
+        pattern = {"customer": {"email": {"$exists": False}}}
+        assert matcher.matches(pattern, {"customer": {"id": "C1"}}) is True
+        assert matcher.matches(pattern, {"customer": {"email": None}}) is True
+        assert matcher.matches(pattern, {"customer": {"email": "a@b"}}) is False
+
+    def test_nested_pattern_against_non_dict_actual(self):
+        """A nested pattern against a non-dict value returns False instead of raising."""
+        matcher = InputMatcher()
+        assert matcher.matches({"customer": {"id": {"$regex": "^C"}}}, {"customer": "C1"}) is False
+        assert matcher.matches({"customer": {"id": "C1"}}, {"customer": None}) is False
+        assert matcher.matches({"customer": {"id": "C1"}}, {"customer": ["C1"]}) is False
+        assert matcher.matches({"a": {"b": {"c": {"$gt": 1}}}}, {"a": {"b": 5}}) is False
+
+    def test_mixed_literal_and_operator_keys(self):
+        """Literal and operator conditions can be mixed inside a nested pattern."""
+        matcher = InputMatcher()
+        pattern = {"customer": {"tier": "premium", "id": {"$regex": "^C"}, "age": {"$gte": 18}}}
+        assert matcher.matches(pattern, {"customer": {"tier": "premium", "id": "C9", "age": 30}}) is True
+        assert matcher.matches(pattern, {"customer": {"tier": "basic", "id": "C9", "age": 30}}) is False
+        assert matcher.matches(pattern, {"customer": {"tier": "premium", "id": "C9", "age": 12}}) is False
+
+    def test_nested_missing_key_fails(self):
+        """A nested key missing from the actual value fails the match."""
+        matcher = InputMatcher()
+        assert matcher.matches({"customer": {"id": {"$regex": "^C"}}}, {"customer": {"name": "Ann"}}) is False
+        assert matcher.matches({"customer": {"id": "C1"}}, {"customer": {}}) is False
+
+    def test_nested_extra_keys_ignored(self):
+        """Nested matching is partial, like the top level."""
+        matcher = InputMatcher()
+        assert (
+            matcher.matches(
+                {"customer": {"id": {"$regex": "^C"}}},
+                {"customer": {"id": "C1", "name": "Ann", "tier": "premium"}},
+            )
+            is True
+        )
+
+    def test_top_level_operators_unchanged(self):
+        """Top-level operator behaviour is unchanged."""
+        matcher = InputMatcher()
+        assert matcher.matches({"amount": {"$gt": 100, "$lt": 200}}, {"amount": 150}) is True
+        assert matcher.matches({"amount": {"$gt": 100}}, {"amount": 50}) is False
+        assert matcher.matches({"email": {"$exists": True}}, {"email": "a@b"}) is True
+        assert matcher.matches({"email": {"$exists": False}}, {}) is True
+
+    def test_nested_via_convenience_function(self):
+        """The module-level matches() also supports nested operators."""
+        assert matches({"filter": {"amount": {"$gt": 100}}}, {"filter": {"amount": 150}}) is True
+
+
 class TestConvenienceFunction:
     """Test the module-level matches() convenience function."""
 

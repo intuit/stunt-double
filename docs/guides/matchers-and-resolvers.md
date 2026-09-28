@@ -82,6 +82,27 @@ matches(pattern, {"amount": 500, "status": "pending"})  # False (status mismatch
 matches(pattern, {"amount": 50, "status": "active"})  # False (amount too low)
 ```
 
+### Nested Patterns
+
+Operators work inside nested dict patterns at any depth, which is useful for tools that take structured arguments (`filter`, `customer`, `date_range`, ...). Keys without a `$` prefix are treated as nested fields:
+
+```python
+# Operator on a nested field
+matches({"filter": {"amount": {"$gt": 100}}}, {"filter": {"amount": 150}})  # True
+
+# Mix literal values and operators at the same level
+pattern = {"customer": {"tier": "premium", "id": {"$regex": "^C"}}}
+matches(pattern, {"customer": {"tier": "premium", "id": "C1"}})  # True
+
+# $exists on a nested key
+matches({"customer": {"email": {"$exists": False}}}, {"customer": {"id": "C1"}})  # True
+
+# A nested pattern against a non-dict value never matches
+matches({"customer": {"id": "C1"}}, {"customer": "C1"})  # False
+```
+
+Nested matching is partial, like the top level: extra keys in the actual value are ignored.
+
 ### Catch-All Patterns
 
 Use `None` or empty dict for catch-all matching:

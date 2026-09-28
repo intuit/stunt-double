@@ -38,6 +38,9 @@ class InputMatcher:
         >>> # Operator match
         >>> matcher.matches({"amount": {"$gt": 1000}}, {"amount": 1500})
         True
+        >>> # Operators inside nested patterns
+        >>> matcher.matches({"filter": {"amount": {"$gt": 100}}}, {"filter": {"amount": 150}})
+        True
         >>> # Multiple conditions
         >>> matcher.matches(
         ...     {"status": "active", "amount": {"$gte": 100}},
@@ -134,7 +137,11 @@ class InputMatcher:
         """
         Match actual value against operator dictionary.
 
-        Supports multiple operators combined with AND logic.
+        Supports multiple operators combined with AND logic. Keys that do not
+        start with ``$`` are treated as nested fields and matched recursively,
+        so operators work inside nested dict patterns at any depth. Nested
+        matching is partial, like the top level: extra keys in the actual
+        value are ignored.
 
         Args:
             actual_value: Value from actual input
@@ -151,6 +158,9 @@ class InputMatcher:
             >>> # Multiple operators (AND)
             >>> matcher._match_operators(150, {"$gt": 100, "$lt": 200})
             True
+            >>> # Nested field with an operator
+            >>> matcher._match_operators({"id": "C1"}, {"id": {"$regex": "^C"}})
+            True
         """
         for op, op_value in operator_dict.items():
             if op.startswith("$"):
@@ -166,10 +176,11 @@ class InputMatcher:
                     logger.warning(f"Operator '{op}' failed for value {actual_value}: {e}")
                     return False
             else:
-                # Non-operator key in expected dict - do nested comparison
+                # Non-operator key: treat it as a nested field and recurse, so
+                # operators (including $exists) work at any depth.
                 if not isinstance(actual_value, dict):
                     return False
-                if op not in actual_value or actual_value[op] != op_value:
+                if not self._match_field(op, op_value, actual_value):
                     return False
 
         return True
