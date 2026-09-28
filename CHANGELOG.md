@@ -11,6 +11,14 @@ file records notable unreleased changes and the initial release.
 
 ## [Unreleased]
 
+### Added
+
+- **Adoption skill** (`skills/stuntdouble-adoption/`): a SKILL.md workflow for
+  AI coding agents that integrates StuntDouble into an existing LangGraph
+  agent — tool discovery, `mocking/` package scaffold, feature-flagged
+  `ToolNode` wiring, scenario JSON samples and a pytest suite with
+  `CallRecorder` assertions — plus a runnable reference implementation.
+
 ### Fixed
 
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`

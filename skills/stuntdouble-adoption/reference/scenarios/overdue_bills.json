@@ -1,0 +1,32 @@
+{
+  "scenario_id": "overdue-bills",
+  "invoice_policy": "reject_large",
+  "max_amount": 5000,
+  "mocks": {
+    "get_customer": [
+      {
+        "output": {"id": "CUST-002", "name": "Late Payers Ltd", "tier": "standard"}
+      }
+    ],
+    "list_bills": [
+      {
+        "input": {"status": {"$in": ["overdue", "late"]}},
+        "output": {
+          "bills": [
+            {"id": "BILL-901", "amount": 3200.0, "status": "overdue", "due_date": "{{now - 21d}}"},
+            {"id": "BILL-902", "amount": 800.0, "status": "overdue", "due_date": "{{now - 5d}}"}
+          ],
+          "total_due": 4000.0,
+          "customer_id": "{{input.customer_id}}"
+        }
+      },
+      {
+        "input": {"status": "paid", "customer_id": {"$regex": "^CUST-"}},
+        "output": {"bills": [], "total_due": 0, "note": "No paid bills on record for {{input.customer_id}}"}
+      },
+      {
+        "output": {"bills": [], "total_due": 0}
+      }
+    ]
+  }
+}
