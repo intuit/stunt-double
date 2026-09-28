@@ -20,6 +20,8 @@ file records notable unreleased changes and the initial release.
 - **`{{input.x}}` / `{{config.x}}` resolving to `None`**: a reference whose value
   is `None`, and `| default(null)` / `| default(none)`, now resolve to `None` instead
   of being left as the literal placeholder with an "Unknown placeholder" warning.
+- **`{{sequence('X')}}` in data-driven mocks** keeps counting across calls within a
+  run (`X-001`, `X-002`, ...) instead of restarting at `001` on every tool call.
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`
   pipe on a background thread, so a server that logs verbosely can no longer
   deadlock the client by filling the OS pipe buffer.

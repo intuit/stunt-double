@@ -145,6 +145,30 @@ class TestDataDrivenMockFactory:
 # ---------------------------------------------------------------------------
 
 
+class TestSequenceAcrossCalls:
+    """{{sequence('X')}} keeps counting across calls of the same run (#56)."""
+
+    MD = {"mocks": {"create_invoice": [{"output": {"id": "{{sequence('INV')}}"}}]}}
+
+    def test_counter_advances_between_calls(self):
+        mock = DataDrivenMockFactory("create_invoice")(self.MD)
+        assert [mock(amount=1)["id"] for _ in range(3)] == ["INV-001", "INV-002", "INV-003"]
+
+    def test_each_run_starts_fresh(self):
+        factory = DataDrivenMockFactory("create_invoice")
+        first = factory(self.MD)
+        first(amount=1)
+        first(amount=1)
+        second = factory(self.MD)
+        assert second(amount=1)["id"] == "INV-001"
+
+    def test_prefixes_count_separately(self):
+        md = {"mocks": {"t": [{"output": {"a": "{{sequence('A')}}", "b": "{{sequence('B')}}"}}]}}
+        mock = DataDrivenMockFactory("t")(md)
+        mock()
+        assert mock() == {"a": "A-002", "b": "B-002"}
+
+
 class TestFallback:
     def test_fallback_when_no_match(self):
         factory = DataDrivenMockFactory("tool", fallback="not found")
