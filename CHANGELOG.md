@@ -11,6 +11,12 @@ file records notable unreleased changes and the initial release.
 
 ## [Unreleased]
 
+### Added
+
+- **Nested placeholder paths**: `{{input.a.b.c}}` and `{{config.a.b.c}}` read nested
+  values, with integer segments indexing lists (`{{input.items.0.sku}}`). A missing
+  segment falls back to `| default(...)` or the `<a.b.c>` marker, like a missing field.
+
 ### Fixed
 
 - **Signature validation and `**kwargs` mocks**: mocks that take `**kwargs` (what

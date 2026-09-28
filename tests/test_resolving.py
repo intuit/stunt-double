@@ -267,6 +267,46 @@ class TestValueResolverNoneValues:
         assert resolver.resolve_dynamic_values("{{nope(1)}}", ctx) == "{{nope(1)}}"
 
 
+class TestValueResolverNestedPaths:
+    """Dotted paths into structured input/config (#61)."""
+
+    def test_nested_input_path(self):
+        assert resolve_output({"cid": "{{input.customer.id}}"}, input_data={"customer": {"id": "C1"}}) == {"cid": "C1"}
+
+    def test_nested_config_path(self):
+        resolver = ValueResolver()
+        ctx = ResolverContext(config_data={"headers": {"x_user_id": "u-7"}})
+        assert resolver.resolve_dynamic_values("{{config.headers.x_user_id}}", ctx) == "u-7"
+
+    def test_integer_segment_indexes_a_list(self):
+        data = {"items": [{"sku": "A"}, {"sku": "B"}]}
+        assert resolve_output("{{input.items.1.sku}}", input_data=data) == "B"
+
+    def test_nested_value_keeps_its_type(self):
+        data = {"order": {"lines": [1, 2], "meta": {"paid": False, "note": None}}}
+        assert resolve_output("{{input.order.lines}}", input_data=data) == [1, 2]
+        assert resolve_output("{{input.order.meta.paid}}", input_data=data) is False
+        assert resolve_output("{{input.order.meta.note}}", input_data=data) is None
+
+    def test_missing_segment_uses_the_default(self):
+        data = {"customer": {"id": "C1"}}
+        assert resolve_output("{{input.customer.name | default('anon')}}", input_data=data) == "anon"
+        assert resolve_output("{{input.items.5.sku | default(0)}}", input_data={"items": []}) == 0
+
+    def test_missing_segment_without_default_gives_the_path_marker(self):
+        data = {"customer": "not-a-dict"}
+        assert resolve_output("{{input.customer.id}}", input_data=data) == "<customer.id>"
+        assert resolve_output("{{config.a.b}}", config_data={}) == "<a.b>"
+
+    def test_single_segment_is_unchanged(self):
+        assert resolve_output("{{input.x}}", input_data={"x": 3}) == 3
+        assert resolve_output("{{input.x}}", input_data={}) == "<x>"
+
+    def test_nested_path_in_string_interpolation(self):
+        data = {"customer": {"id": "C1"}}
+        assert resolve_output("id={{input.customer.id}}!", input_data=data) == "id=C1!"
+
+
 class TestValueResolverGenerators:
     """Test generator function placeholder resolution."""
 
