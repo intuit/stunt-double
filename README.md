@@ -56,6 +56,10 @@ Or with pip:
 pip install stuntdouble
 ```
 
+### Adopting with an AI coding agent
+
+[`skills/stuntdouble-adoption/`](skills/stuntdouble-adoption/) is an agent skill that walks Cursor, Claude Code or any SKILL.md-aware assistant through wiring StuntDouble into an existing LangGraph agent: tool discovery, a `mocking/` package, feature-flagged `ToolNode` integration, JSON scenarios and a passing pytest suite. Copy the directory into your project's skills folder (for example `.cursor/skills/` or `.claude/skills/`) and ask the agent to "add StuntDouble to this agent". A complete runnable result lives in [`skills/stuntdouble-adoption/reference/`](skills/stuntdouble-adoption/reference/).
+
 ---
 
 ## Quick Start
