@@ -293,6 +293,59 @@ class TestValidateMockSignature:
         assert "error" in error.lower()
 
 
+class TestKwargsMocks:
+    """**kwargs mocks accept every tool parameter (#69)."""
+
+    def test_kwargs_only_mock_passes(self):
+        from stuntdouble.validation import validate_mock_signature
+
+        def mock(scenario_metadata: dict):
+            return lambda **kwargs: {"temp": 72}
+
+        assert validate_mock_signature(GetWeatherTool(), mock) == (True, None)
+
+    def test_named_param_plus_kwargs_passes(self):
+        from stuntdouble.validation import validate_mock_signature
+
+        def mock(scenario_metadata: dict):
+            def fn(city: str, **kwargs):
+                return {"temp": 72}
+
+            return fn
+
+        assert validate_mock_signature(GetWeatherTool(), mock) == (True, None)
+
+    def test_kwargs_mock_with_extra_required_param_still_fails(self):
+        from stuntdouble.validation import validate_mock_signature
+
+        def mock(scenario_metadata: dict):
+            def fn(api_key: str, **kwargs):
+                return {}
+
+            return fn
+
+        is_valid, error = validate_mock_signature(GetWeatherTool(), mock)
+        assert is_valid is False
+        assert "api_key" in error
+
+    def test_data_driven_mock_passes(self):
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.validation import validate_mock_signature
+
+        registry = MockToolsRegistry()
+        registry.register_data_driven("get_weather")
+        md = {"mocks": {"get_weather": [{"output": {"temp": 72}}]}}
+        assert validate_mock_signature(GetWeatherTool(), registry.get_mock_fn("get_weather"), md) == (True, None)
+
+    def test_mock_builder_returns_passes(self):
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.validation import validate_mock_signature
+
+        registry = MockToolsRegistry()
+        registry.mock("get_weather").returns({"temp": 72})
+        assert validate_mock_signature(GetWeatherTool(), registry.get_mock_fn("get_weather")) == (True, None)
+
+
 class TestSignatureMismatchError:
     """Tests for SignatureMismatchError exception."""
 

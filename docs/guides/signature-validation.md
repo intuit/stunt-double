@@ -268,8 +268,9 @@ registry = MockToolsRegistry()
 # Registration-time validation (fail fast)
 try:
     registry.mock("get_weather").returns({"temp": 72, "conditions": "sunny"})
-    # Note: .returns() creates a lambda that accepts **kwargs, so signature
-    # validation needs the tool= parameter for manual factories
+    # .returns() and register_data_driven() build **kwargs mocks. Those accept
+    # every tool parameter, so they pass signature validation; only extra
+    # required parameters on the mock would be reported.
 
     # Manual factory with validation
     def weather_mock(md):

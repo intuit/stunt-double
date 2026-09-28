@@ -104,7 +104,9 @@ def validate_mock_signature(
         mock_params = _get_callable_parameter_info(mock_callable)
 
         # Compare parameters
-        return _compare_signatures(tool.name, tool_params, mock_params)
+        return _compare_signatures(
+            tool.name, tool_params, mock_params, mock_accepts_kwargs=_accepts_var_keyword(mock_callable)
+        )
 
     except Exception as e:
         return False, f"Error during signature validation: {e}"
@@ -195,13 +197,27 @@ def _get_callable_parameter_info(func: Callable) -> dict[str, dict[str, Any]]:
     return params
 
 
+def _accepts_var_keyword(func: Callable) -> bool:
+    """True if the callable takes **kwargs."""
+    try:
+        sig = inspect.signature(func)
+    except (ValueError, TypeError):
+        return False
+    return any(p.kind is inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+
+
 def _compare_signatures(
     tool_name: str,
     tool_params: dict[str, dict[str, Any]],
     mock_params: dict[str, dict[str, Any]],
+    mock_accepts_kwargs: bool = False,
 ) -> tuple[bool, str | None]:
     """
     Compare tool and mock parameter signatures for exact match.
+
+    A mock that takes **kwargs accepts every tool parameter, so none of them
+    count as missing (data-driven and MockBuilder mocks are built that way).
+    Extra required parameters on the mock are still reported.
 
     Returns:
         Tuple of (is_valid, error_message or None)
@@ -212,7 +228,7 @@ def _compare_signatures(
     errors: list[str] = []
 
     # Check for missing parameters in mock
-    missing = tool_param_names - mock_param_names
+    missing = set() if mock_accepts_kwargs else tool_param_names - mock_param_names
     if missing:
         errors.append(f"Missing parameters in mock: {', '.join(sorted(missing))}")
 

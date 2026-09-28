@@ -13,6 +13,10 @@ file records notable unreleased changes and the initial release.
 
 ### Fixed
 
+- **Signature validation and `**kwargs` mocks**: mocks that take `**kwargs` (what
+  `register_data_driven` and `MockBuilder.returns()/returns_fn()` build) no longer
+  fail `validate_signatures=True` with "Missing parameters"; extra required
+  parameters on such a mock are still reported.
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`
   pipe on a background thread, so a server that logs verbosely can no longer
   deadlock the client by filling the OS pipe buffer.
