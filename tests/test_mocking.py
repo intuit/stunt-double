@@ -156,9 +156,9 @@ class TestMockToolsRegistry:
 
         assert set(registered) == {"tool_a", "tool_b"}
 
-    def test_mocked_tool_exception_returns_none(self):
-        """Test that mocked tool exceptions result in None resolution."""
-        from stuntdouble import MockToolsRegistry
+    def test_factory_exception_raises_mock_factory_error(self):
+        """A factory that raises is a broken mock, not a missing one (#58)."""
+        from stuntdouble import MockFactoryError, MockToolsRegistry
 
         registry = MockToolsRegistry()
 
@@ -167,8 +167,10 @@ class TestMockToolsRegistry:
 
         registry.register("bad_tool", mock_fn=bad_factory)
 
-        mock_fn = registry.resolve("bad_tool", {})
-        assert mock_fn is None
+        with pytest.raises(MockFactoryError, match="bad_tool.*RuntimeError: Mocked tool error") as exc_info:
+            registry.resolve("bad_tool", {})
+        assert exc_info.value.tool_name == "bad_tool"
+        assert isinstance(exc_info.value.__cause__, RuntimeError)
 
     def test_when_predicate_exception_returns_none(self):
         """Test that when predicate exceptions result in None resolution."""

@@ -25,7 +25,7 @@ from langgraph.prebuilt.tool_node import (
 from langgraph.types import Command
 
 from stuntdouble.config import get_scenario_metadata
-from stuntdouble.exceptions import InputNotMatchedError, MissingMockError
+from stuntdouble.exceptions import InputNotMatchedError, MissingMockError, MockFactoryError
 from stuntdouble.mock_registry import MockToolsRegistry
 
 if TYPE_CHECKING:
@@ -65,10 +65,11 @@ def create_mockable_tool_wrapper(
         require_mock_when_scenario: If True (default), raise MissingMockError
             when scenario_metadata is present but no mock exists for a tool.
             If False, fall back to executing the real tool.
-        strict_mock_errors: If True, re-raise exceptions from mock execution
+        strict_mock_errors: If True, re-raise exceptions from mock resolution
+            (a failing factory, as MockFactoryError) and from mock execution
             instead of catching them and returning ToolMessage(status="error").
             Useful in unit tests where you want fast failure on broken mocks.
-            If False (default), mock errors are caught and returned as error
+            If False (default), both are caught and returned as error
             ToolMessages, which is suitable for evaluation batch runs.
         tools: Optional list of BaseTool instances. If provided with
             validate_signatures=True, the wrapper validates that mock function
@@ -205,8 +206,21 @@ def create_mockable_tool_wrapper(
         # Cast RunnableConfig (TypedDict) to plain dict for registry API compatibility
         config: dict[str, Any] | None = cast(dict[str, Any], request.runtime.config) if request.runtime else None
 
-        # Try to resolve mock from registry
-        mock_callable = registry.resolve(tool_name, scenario_metadata, config)
+        # Try to resolve mock from registry. A factory that raises is a broken
+        # mock, not a missing one: handle it like a mock that failed to run.
+        try:
+            mock_callable = registry.resolve(tool_name, scenario_metadata, config)
+        except MockFactoryError as e:
+            _record_call(error=e, was_mocked=True, start_time=time.time())
+            if strict_mock_errors:
+                raise
+            logger.exception(f"Mock factory for tool '{tool_name}' failed (scenario: {scenario_id}): {e}")
+            return ToolMessage(
+                content=f"Mock error: {str(e)}",
+                name=tool_name,
+                tool_call_id=tool_call_id,
+                status="error",
+            )
         no_match_reason: str | None = None
 
         if mock_callable is not None:

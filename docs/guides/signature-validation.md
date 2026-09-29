@@ -161,16 +161,16 @@ This is especially useful for data-driven mocks where cases are supplied at runt
 
 ## Strict Mock Errors
 
-By default, exceptions raised during mock execution are caught and returned as `ToolMessage(status="error")`, allowing evaluation batch runs to continue collecting results. For unit tests where broken mocks should fail fast, enable `strict_mock_errors`:
+By default, exceptions raised while resolving a mock (a factory that fails, surfaced as `MockFactoryError`) or while executing it are caught and returned as `ToolMessage(status="error")`, allowing evaluation batch runs to continue collecting results. For unit tests where broken mocks should fail fast, enable `strict_mock_errors`:
 
 ```python
 wrapper = create_mockable_tool_wrapper(
     registry,
-    strict_mock_errors=True,   # Re-raise mock execution errors
+    strict_mock_errors=True,   # Re-raise mock resolution and execution errors
 )
 ```
 
-| Mode | `strict_mock_errors` | Behavior on mock exception |
+| Mode | `strict_mock_errors` | Behavior on a mock resolution or execution exception |
 |------|---------------------|---------------------------|
 | **Lenient** (default) | `False` | Returns `ToolMessage(status="error")`, agent continues |
 | **Strict** | `True` | Re-raises the exception, test fails immediately |
