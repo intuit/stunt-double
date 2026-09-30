@@ -425,6 +425,36 @@ class TestValueResolverStringInterpolation:
 
         assert result == "Customer ID: 123 (active)"
 
+    def test_two_placeholders_with_separator_and_no_surrounding_text(self):
+        """A bare string of two placeholders joined only by a separator must
+        still interpolate, not be treated as one unmatched expression."""
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"a": 1, "b": 2})
+
+        result = resolver.resolve_dynamic_values("{{input.a}}-{{input.b}}", ctx)
+
+        assert result == "1-2"
+
+    def test_two_adjacent_placeholders_no_separator(self):
+        """Adjacent placeholders with nothing between them."""
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"a": 1, "b": 2})
+
+        result = resolver.resolve_dynamic_values("{{input.a}}{{input.b}}", ctx)
+
+        assert result == "12"
+
+    def test_single_placeholder_still_preserves_type(self):
+        """A lone placeholder must still return the resolved value's own
+        type (e.g. int, not str) rather than falling into interpolation."""
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"a": 1})
+
+        result = resolver.resolve_dynamic_values("{{input.a}}", ctx)
+
+        assert result == 1
+        assert isinstance(result, int)
+
 
 class TestHasPlaceholders:
     """Test has_placeholders detection function."""

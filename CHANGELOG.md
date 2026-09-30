@@ -13,6 +13,15 @@ file records notable unreleased changes and the initial release.
 
 ### Fixed
 
+- **String values with two or more placeholders** (e.g. `"{{input.a}}-{{input.b}}"`)
+  now interpolate correctly instead of being logged as one unresolved expression and
+  returned unchanged. The "entire string is a single placeholder" fast path used
+  `fullmatch` with a lazy `.+?`, which still had to span the whole string, so it
+  swallowed everything between the outer `{{` and `}}` (including a nested `}}-{{`)
+  as one bogus expression. That fast path is now only taken when the string contains
+  exactly one `{{`; strings with more fall through to the existing interpolation path,
+  which already handles multiple placeholders correctly. A single placeholder still
+  resolves with its own type preserved (e.g. `int`, not `str`).
 - **Operators inside nested patterns**: `InputMatcher` now recurses into nested dict
   patterns, so operators (`$regex`, `$gt`, `$in`, `$exists`, ...) work at any depth,
   e.g. `{"filter": {"amount": {"$gt": 100}}}`. Previously a nested operator dict was

@@ -112,9 +112,14 @@ class ValueResolver:
         Returns:
             Resolved value (may be non-string if entire value was placeholder)
         """
-        # Check if entire string is a single placeholder
+        # Check if entire string is a single placeholder. Guard on there being
+        # exactly one "{{" first: fullmatch's lazy ".+?" still has to span the
+        # whole string, so with two+ placeholders (e.g. "{{a}}-{{b}}") it
+        # swallows everything between the outer braces as one bogus expression
+        # instead of falling through to the interpolation path below, which
+        # already handles multiple placeholders correctly.
         match = PLACEHOLDER_PATTERN.fullmatch(value)
-        if match:
+        if match and value.count("{{") == 1:
             expr = match.group(1).strip()
             return self._resolve_expression(expr, context)
 
