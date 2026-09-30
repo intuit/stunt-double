@@ -224,6 +224,7 @@ Use `{{placeholder}}` syntax for dynamic values in outputs.
 | Placeholder | Description |
 |-------------|-------------|
 | `{{input.field}}` | Value from tool input |
+| `{{input.a.b.c}}` | Nested value from tool input; integer segments index lists (`{{input.items.0.sku}}`) |
 | `{{input.field \| default(value)}}` | With default if missing |
 
 ### Config Reference Placeholders
@@ -231,6 +232,7 @@ Use `{{placeholder}}` syntax for dynamic values in outputs.
 | Placeholder | Description |
 |-------------|-------------|
 | `{{config.field}}` | Value from merged `RunnableConfig.configurable` data |
+| `{{config.a.b.c}}` | Nested value from the same data |
 | `{{config.field \| default(value)}}` | With default if missing |
 
 `{{config.*}}` placeholders resolve from the merged configurable data passed to the data-driven mock. If both `configurable.field` and `configurable.config_data.field` exist, `config_data` takes precedence.
