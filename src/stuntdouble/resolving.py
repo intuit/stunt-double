@@ -112,9 +112,12 @@ class ValueResolver:
         Returns:
             Resolved value (may be non-string if entire value was placeholder)
         """
-        # Check if entire string is a single placeholder
+        # Check if entire string is a single placeholder. fullmatch on the
+        # lazy {{(.+?)}} pattern can still span multiple placeholders
+        # (e.g. "{{a}}-{{b}}" matches as one expression "a}}-{{b"), so only
+        # take this type-preserving path when the string contains one "{{".
         match = PLACEHOLDER_PATTERN.fullmatch(value)
-        if match:
+        if match and value.count("{{") == 1:
             expr = match.group(1).strip()
             return self._resolve_expression(expr, context)
 

@@ -13,6 +13,9 @@ file records notable unreleased changes and the initial release.
 
 ### Fixed
 
+- **Multiple placeholders in one string** now interpolate independently, so
+  values such as `{{input.a}}-{{input.b}}` resolve correctly instead of being
+  treated as one unknown placeholder expression.
 - **Operators inside nested patterns**: `InputMatcher` now recurses into nested dict
   patterns, so operators (`$regex`, `$gt`, `$in`, `$exists`, ...) work at any depth,
   e.g. `{"filter": {"amount": {"$gt": 100}}}`. Previously a nested operator dict was

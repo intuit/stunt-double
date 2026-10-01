@@ -425,6 +425,43 @@ class TestValueResolverStringInterpolation:
 
         assert result == "Customer ID: 123 (active)"
 
+    def test_adjacent_placeholders_without_surrounding_text(self):
+        """Two placeholders with only a separator must still interpolate."""
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"a": 1, "b": 2})
+
+        result = resolver.resolve_dynamic_values("{{input.a}}-{{input.b}}", ctx)
+
+        assert result == "1-2"
+
+    def test_adjacent_placeholders_no_separator(self):
+        """Two placeholders with no separator interpolate as concatenated strings."""
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"a": 1, "b": 2})
+
+        result = resolver.resolve_dynamic_values("{{input.a}}{{input.b}}", ctx)
+
+        assert result == "12"
+
+    def test_single_placeholder_preserves_type(self):
+        """A string that is exactly one placeholder keeps the raw value type."""
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"a": 1})
+
+        result = resolver.resolve_dynamic_values("{{input.a}}", ctx)
+
+        assert result == 1
+        assert isinstance(result, int)
+
+    def test_placeholder_joined_with_now(self):
+        """Multiple placeholders including generators interpolate, not fullmatch."""
+        resolver = ValueResolver()
+        ctx = ResolverContext(input_data={"a": 1}, base_time=datetime(2025, 1, 1, 12, 0, 0))
+
+        result = resolver.resolve_dynamic_values("{{input.a}}@{{now}}", ctx)
+
+        assert result == "1@2025-01-01T12:00:00"
+
 
 class TestHasPlaceholders:
     """Test has_placeholders detection function."""
