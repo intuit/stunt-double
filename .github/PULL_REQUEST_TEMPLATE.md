@@ -5,6 +5,7 @@
 - [ ] I'm requesting to **pull a topic/feature/bugfix branch**.
 - [ ] I checked that my code additions will pass code linting checks and unit tests.
 - [ ] I updated unit and integration tests (if applicable).
+- [ ] I added an `[Unreleased]` changelog entry for a user-visible change, or confirmed the change is exempt.
 - [ ] I'm ready to notify the team of this contribution.
 
 ### Description
