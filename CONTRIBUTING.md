@@ -24,6 +24,10 @@ Please note that this project is released with a [Code of Conduct](./CODE_OF_CON
 	* `pyproject.toml` should have comments for non-obvious settings
 	* Unit tests should have clear names and docstrings
 	* Integration tests should document their scenarios
+- **Changelog**: User-visible features, fixes, deprecations, and behavior changes
+  must add a concise entry under the appropriate heading in `[Unreleased]` in
+  [`CHANGELOG.md`](./CHANGELOG.md). Documentation-only changes, tests, internal
+  refactors, and CI/tooling changes that do not affect users are exempt.
 - **Code Style**: We follow PEP 8 conventions. Use `ruff` for formatting and linting. Run `uv run ruff check .` and `uv run ruff format --check .` to check compliance
 
 #### Review SLAs
