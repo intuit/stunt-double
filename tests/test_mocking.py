@@ -172,6 +172,22 @@ class TestMockToolsRegistry:
         assert exc_info.value.tool_name == "bad_tool"
         assert isinstance(exc_info.value.__cause__, RuntimeError)
 
+    def test_two_arg_factory_type_error_cause_preserved(self):
+        """TypeError inside a 2-arg factory must not be masked by arity retry (#79)."""
+        from stuntdouble import MockFactoryError, MockToolsRegistry
+
+        def two_arg(md, config):
+            raise TypeError("my real bug")
+
+        registry = MockToolsRegistry()
+        registry.register("t", two_arg)
+
+        with pytest.raises(MockFactoryError) as exc_info:
+            registry.resolve("t", {})
+
+        assert isinstance(exc_info.value.__cause__, TypeError)
+        assert str(exc_info.value.__cause__) == "my real bug"
+
     def test_when_predicate_exception_returns_none(self):
         """Test that when predicate exceptions result in None resolution."""
         from stuntdouble import MockToolsRegistry

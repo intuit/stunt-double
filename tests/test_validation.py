@@ -127,6 +127,22 @@ class TestValidateMockSignature:
         assert is_valid is True
         assert error is None
 
+    def test_two_arg_factory_type_error_message_preserved(self):
+        """TypeError inside a 2-arg factory must be reported directly, not as missing arity (#79)."""
+        from stuntdouble.validation import validate_mock_signature
+
+        tool = GetWeatherTool()
+
+        def two_arg_factory(scenario_metadata, config):
+            raise TypeError("internal factory type error")
+
+        is_valid, error = validate_mock_signature(tool, two_arg_factory)
+
+        assert is_valid is False
+        assert error is not None
+        assert "internal factory type error" in error
+        assert "missing 1 required positional argument" not in error
+
     def test_missing_required_parameter_fails(self):
         """Test that missing required parameter fails validation."""
         from stuntdouble.validation import validate_mock_signature

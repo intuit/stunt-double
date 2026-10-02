@@ -87,8 +87,13 @@ def validate_mock_signature(
         sig = inspect.signature(mock_fn)
         try:
             sig.bind({}, {})  # Test if function can accept 2 args
-            mock_callable = mock_fn(test_metadata, config)  # type: ignore[call-arg]  # New signature
+            takes_config = True
         except TypeError:
+            takes_config = False
+
+        if takes_config:
+            mock_callable = mock_fn(test_metadata, config)  # type: ignore[call-arg]  # New signature
+        else:
             mock_callable = mock_fn(test_metadata)  # type: ignore[call-arg]  # Old signature
 
         if not callable(mock_callable):
