@@ -34,6 +34,13 @@ file records notable unreleased changes and the initial release.
   The wrapper returns `ToolMessage(status="error")` for it, or re-raises with
   `strict_mock_errors=True`, and records the error on the `CallRecorder`. In
   lenient mode a broken factory therefore no longer falls back to the real tool.
+- **Async mock factories and `MockFactoryError`**: awaiting an async mock factory in the
+  tool wrapper now catches exceptions and wraps them in `MockFactoryError`, matching sync
+  factories (#79).
+- **Arity detection in mock factories**: `MockToolsRegistry.resolve()` and
+  `validate_mock_signature` now evaluate `sig.bind()` before invoking the factory.
+  Internal `TypeError` exceptions raised inside 2-argument factory functions are
+  preserved rather than triggering a fallback to 1-argument invocation (#79).
 - **`{{sequence('X')}}` in data-driven mocks**: counters now persist across calls of
   the same resolved data-driven mock callable (e.g. when calling the factory's result
   directly), instead of restarting at `001` on every call. Through the tool wrapper

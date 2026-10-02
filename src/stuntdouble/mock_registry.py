@@ -255,10 +255,13 @@ class MockToolsRegistry:
             sig = inspect.signature(mock_fn)
             try:
                 sig.bind({}, {})  # Test if function can accept 2 args
-                # Function CAN accept 2 args - use new signature
-                mock_callable = mock_fn(scenario_metadata, config)  # type: ignore[call-arg]
+                takes_config = True
             except TypeError:
-                # Function cannot accept 2 args - use old signature
+                takes_config = False
+
+            if takes_config:
+                mock_callable = mock_fn(scenario_metadata, config)  # type: ignore[call-arg]
+            else:
                 mock_callable = mock_fn(scenario_metadata)  # type: ignore[call-arg]
 
             logger.debug(f"Resolved mock for '{tool_name}'")
