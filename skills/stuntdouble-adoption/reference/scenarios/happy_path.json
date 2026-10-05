@@ -1,0 +1,21 @@
+{
+  "scenario_id": "happy-path",
+  "mocks": {
+    "get_customer": [
+      {
+        "output": {"id": "CUST-001", "name": "Acme Corp", "tier": "enterprise"}
+      }
+    ],
+    "list_bills": [
+      {
+        "output": {
+          "bills": [
+            {"id": "{{sequence('BILL')}}", "amount": 1200.0, "status": "paid", "paid_at": "{{now - 10d}}"},
+            {"id": "{{sequence('BILL')}}", "amount": 450.0, "status": "paid", "paid_at": "{{now - 3d}}"}
+          ],
+          "total_due": 0
+        }
+      }
+    ]
+  }
+}
