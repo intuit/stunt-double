@@ -210,6 +210,11 @@ def create_mockable_tool_wrapper(
         # mock, not a missing one: handle it like a mock that failed to run.
         try:
             mock_callable = registry.resolve(tool_name, scenario_metadata, config)
+            if inspect.isawaitable(mock_callable):
+                try:
+                    mock_callable = await cast(Awaitable[Callable[..., Any]], mock_callable)
+                except Exception as e:
+                    raise MockFactoryError(tool_name, e) from e
         except MockFactoryError as e:
             _record_call(error=e, was_mocked=True, start_time=time.time())
             if strict_mock_errors:
@@ -246,9 +251,6 @@ def create_mockable_tool_wrapper(
 
             start_time = time.time()
             try:
-                if inspect.isawaitable(mock_callable):
-                    mock_callable = await cast(Awaitable[Callable[..., Any]], mock_callable)
-
                 mock_result = mock_callable(**tool_args)
 
                 if inspect.isawaitable(mock_result):
