@@ -369,7 +369,12 @@ class TestStdioReliability:
 
         client.connect()  # would hang forever without the stderr drain
         assert client._connected is True
-        # The flooded stderr was captured into the bounded buffer.
+        # The stderr pump is a separate daemon thread; wait for it to
+        # append before asserting on the buffer (avoids a race with connect()).
+        import time
+        deadline = time.monotonic() + 2.0
+        while not client._stderr_buffer and time.monotonic() < deadline:
+            time.sleep(0.01)
         assert len(client._stderr_buffer) > 0
         client.disconnect()
 
