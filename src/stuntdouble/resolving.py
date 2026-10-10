@@ -6,7 +6,7 @@ based on timestamps, input references, and generator functions.
 
 Supported placeholders:
 - Timestamps: {{now}}, {{now + 7d}}, {{start_of_month}}, etc.
-- Input refs: {{input.field_name}}, {{input.field | default(value)}}
+- Input refs: {{input.field_name}}, {{input.a.b.0.c}}, {{input.field | default(value)}}
 - Generators: {{uuid}}, {{random_int(min, max)}}, {{sequence('prefix')}}
 """
 
@@ -31,13 +31,29 @@ TIMESTAMP_RELATIVE_PATTERN = re.compile(r"^(now|today)\s*([+-])\s*(\d+)\s*([hdwm
 TIMESTAMP_BOUNDARY_PATTERN = re.compile(
     r"^(start_of_day|end_of_day|start_of_week|end_of_week|start_of_month|end_of_month|start_of_year|end_of_year)$"
 )
-INPUT_REF_PATTERN = re.compile(r"^input\.(\w+)(?:\s*\|\s*default\((.+)\))?$")
-CONFIG_REF_PATTERN = re.compile(r"^config\.(\w+)(?:\s*\|\s*default\((.+)\))?$")
+INPUT_REF_PATTERN = re.compile(r"^input\.(\w+(?:\.\w+)*)(?:\s*\|\s*default\((.+)\))?$")
+CONFIG_REF_PATTERN = re.compile(r"^config\.(\w+(?:\.\w+)*)(?:\s*\|\s*default\((.+)\))?$")
 FUNCTION_PATTERN = re.compile(r"^(\w+)\(([^)]*)\)$")
 
 # Returned by the _try_* resolvers when an expression isn't theirs. None can't be
 # used for that: {{input.x}} may legitimately resolve to None.
 _UNRESOLVED: Any = object()
+
+
+def _lookup_path(data: Any, path: str) -> Any:
+    """Follow a dotted path through dicts (and lists, for integer segments).
+
+    Returns _UNRESOLVED when any segment is missing.
+    """
+    value = data
+    for segment in path.split("."):
+        if isinstance(value, dict) and segment in value:
+            value = value[segment]
+        elif isinstance(value, (list, tuple)) and segment.isdecimal() and int(segment) < len(value):
+            value = value[int(segment)]
+        else:
+            return _UNRESOLVED
+    return value
 
 
 @dataclass
@@ -280,6 +296,7 @@ class ValueResolver:
 
         Supports:
         - input.field_name
+        - input.a.b.c (nested dicts; integer segments index lists)
         - input.field_name | default(value)
 
         Args:
@@ -293,17 +310,7 @@ class ValueResolver:
         if not match:
             return _UNRESOLVED
 
-        field_name = match.group(1)
-        default_value = match.group(2)
-
-        if field_name in context.input_data:
-            return context.input_data[field_name]
-
-        if default_value is not None:
-            return self._parse_literal(default_value)
-
-        logger.debug(f"Input field '{field_name}' not found and no default provided")
-        return f"<{field_name}>"
+        return self._resolve_ref("Input", match, context.input_data)
 
     def _try_config_ref(self, expr: str, context: ResolverContext) -> Any:
         """
@@ -311,6 +318,7 @@ class ValueResolver:
 
         Supports:
         - config.field_name
+        - config.a.b.c (nested dicts; integer segments index lists)
         - config.field_name | default(value)
 
         Args:
@@ -324,17 +332,25 @@ class ValueResolver:
         if not match:
             return _UNRESOLVED
 
-        field_name = match.group(1)
+        return self._resolve_ref("Config", match, context.config_data)
+
+    def _resolve_ref(self, kind: str, match: re.Match[str], data: dict[str, Any]) -> Any:
+        """Look up an input/config ref, falling back to its default or a <path> marker."""
+        path = match.group(1)
         default_value = match.group(2)
 
-        if field_name in context.config_data:
-            return context.config_data[field_name]
+        if path in data:  # single segment, the common case
+            return data[path]
+        if "." in path:
+            value = _lookup_path(data, path)
+            if value is not _UNRESOLVED:
+                return value
 
         if default_value is not None:
             return self._parse_literal(default_value)
 
-        logger.debug(f"Config field '{field_name}' not found and no default provided")
-        return f"<{field_name}>"
+        logger.debug(f"{kind} field '{path}' not found and no default provided")
+        return f"<{path}>"
 
     def _try_generator(self, expr: str, context: ResolverContext) -> Any:
         """

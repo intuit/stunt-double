@@ -213,6 +213,7 @@ resolve_output({"id": "{{uuid}}"}, input_data={"customer_id": "123"})
 | Placeholder | Description | Example |
 |-------------|-------------|---------|
 | `{{input.field_name}}` | Value from tool input | `{{input.customer_id}}` |
+| `{{input.a.b}}` | Nested value; integer segments index lists | `{{input.items.0.sku}}` |
 | `{{input.field \| default(value)}}` | With default if missing | `{{input.email \| default('n/a')}}` |
 
 ```python
@@ -220,7 +221,13 @@ ctx = ResolverContext(input_data={"customer_id": "CUST-123", "amount": 500})
 
 resolver.resolve_dynamic_values("Customer: {{input.customer_id}}", ctx)  # "Customer: CUST-123"
 resolver.resolve_dynamic_values("{{input.email | default('none')}}", ctx)  # "none" (field missing)
+
+ctx = ResolverContext(input_data={"customer": {"id": "C1"}, "items": [{"sku": "A"}]})
+resolver.resolve_dynamic_values("{{input.customer.id}}", ctx)  # "C1"
+resolver.resolve_dynamic_values("{{input.items.0.sku}}", ctx)  # "A"
 ```
+
+A missing segment anywhere in the path is treated like a missing field: the default is used if there is one, otherwise the result is `<customer.id>`.
 
 ### Generator Placeholders
 
