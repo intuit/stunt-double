@@ -366,6 +366,7 @@ Use `{{placeholder}}` syntax for dynamic values in outputs:
 | `{{now - Nd}}` | N days ago | `{{now - 30d}}` |
 | `{{today}}` | Current date only | `2025-01-04` |
 | `{{input.field}}` | Reference input value | Echoes input |
+| `{{input.a.b}}` | Nested input value; integer segments index lists | `{{input.items.0.sku}}` |
 | `{{config.field}}` | Reference RunnableConfig value | From configurable |
 | `{{uuid}}` | Random UUID | `a1b2c3d4-e5f6-...` |
 | `{{random_int(min, max)}}` | Random integer | `42` |

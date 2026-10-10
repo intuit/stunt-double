@@ -661,6 +661,7 @@ Outputs can include dynamic placeholders for timestamps, UUIDs, and input refere
 | `{{now - Nd}}` | N days ago | `{{now - 30d}}` → 30 days ago |
 | `{{today}}` | Current date only | `2026-02-12` |
 | `{{input.field}}` | Reference input value | Echoes input |
+| `{{input.a.b}}` | Nested input value; integer segments index lists | `{{input.items.0.sku}}` |
 | `{{uuid}}` | Random UUID | `a1b2c3d4-e5f6-...` |
 | `{{random_int(min, max)}}` | Random integer | `42` |
 | `{{sequence('prefix')}}` | Incrementing ID | `prefix-001`, `prefix-002` |

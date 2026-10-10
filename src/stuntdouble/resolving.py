@@ -49,7 +49,7 @@ def _lookup_path(data: Any, path: str) -> Any:
     for segment in path.split("."):
         if isinstance(value, dict) and segment in value:
             value = value[segment]
-        elif isinstance(value, (list, tuple)) and segment.isdigit() and int(segment) < len(value):
+        elif isinstance(value, (list, tuple)) and segment.isdecimal() and int(segment) < len(value):
             value = value[int(segment)]
         else:
             return _UNRESOLVED

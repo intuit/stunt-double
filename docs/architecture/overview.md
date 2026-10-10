@@ -153,6 +153,7 @@ Resolves dynamic placeholders in mock outputs.
 | | `{{now - 30d}}` | 30 days ago |
 | | `{{start_of_month}}` | First day of month |
 | **Input Refs** | `{{input.field}}` | Value from input |
+| | `{{input.a.b}}` | Nested value (`{{input.items.0.sku}}`) |
 | | `{{input.field \| default(x)}}` | With default |
 | **Generators** | `{{uuid}}` | Random UUID |
 | | `{{random_int(1, 100)}}` | Random integer |

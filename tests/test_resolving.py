@@ -298,6 +298,12 @@ class TestValueResolverNestedPaths:
         assert resolve_output("{{input.customer.id}}", input_data=data) == "<customer.id>"
         assert resolve_output("{{config.a.b}}", config_data={}) == "<a.b>"
 
+    def test_digit_that_int_rejects_is_a_missing_segment(self):
+        # '²'.isdigit() is True but int('²') raises; the resolver must not raise on bad input
+        data = {"items": [{"sku": "A"}, {"sku": "B"}, {"sku": "C"}]}
+        assert resolve_output("{{input.items.².sku}}", input_data=data) == "<items.².sku>"
+        assert resolve_output("{{input.items.².sku | default('none')}}", input_data=data) == "none"
+
     def test_single_segment_is_unchanged(self):
         assert resolve_output("{{input.x}}", input_data={"x": 3}) == 3
         assert resolve_output("{{input.x}}", input_data={}) == "<x>"
