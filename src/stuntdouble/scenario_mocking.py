@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import copy
 import logging
-from collections.abc import Callable
+import threading
+from collections import OrderedDict
+from collections.abc import Callable, Hashable
 from typing import Any
 
 from stuntdouble.exceptions import InputNotMatchedError
@@ -26,6 +28,27 @@ from stuntdouble.matching import InputMatcher
 from stuntdouble.resolving import ResolverContext, ValueResolver
 
 logger = logging.getLogger(__name__)
+
+
+_MAX_TRACKED_RUNS = 1024
+
+
+def _run_key(config: dict[str, Any] | None) -> Hashable | None:
+    """Identify the run a tool call belongs to from RunnableConfig.
+
+    Uses configurable.thread_id (plus checkpoint_ns for subgraphs), falling back
+    to a top-level run_id. Returns None when no identifier is present.
+    """
+    if not config:
+        return None
+    configurable = config.get("configurable") or {}
+    thread_id = configurable.get("thread_id")
+    if thread_id is not None:
+        return ("thread", str(thread_id), str(configurable.get("checkpoint_ns", "")))
+    run_id = config.get("run_id")
+    if run_id is not None:
+        return ("run", str(run_id))
+    return None
 
 
 def _extract_config_data(config: dict[str, Any] | None) -> dict[str, Any]:
@@ -92,6 +115,41 @@ class DataDrivenMockFactory:
         self.echo_input = echo_input
         self._matcher = InputMatcher()
         self._resolver = ValueResolver()
+        # resolve() invokes __call__ on every tool call, so {{sequence('X')}} counters
+        # are kept per run (keyed by thread_id / run_id from config) to keep counting
+        # across calls in one run while separate runs start fresh.
+        self._run_counters: OrderedDict[Hashable, dict[str, int]] = OrderedDict()
+        self._run_counters_lock = threading.Lock()
+
+    def _counters_for_run(self, config: dict[str, Any] | None) -> dict[str, int]:
+        """Return the sequence counter dict for the run identified by config.
+
+        Without a run identifier each call gets a fresh dict, which matches a
+        direct ``factory(scenario)`` call being a new run.
+        """
+        run_key = _run_key(config)
+        if run_key is None:
+            return {}
+        with self._run_counters_lock:
+            counters = self._run_counters.get(run_key)
+            if counters is None:
+                counters = {}
+                self._run_counters[run_key] = counters
+                while len(self._run_counters) > _MAX_TRACKED_RUNS:
+                    self._run_counters.popitem(last=False)
+            else:
+                self._run_counters.move_to_end(run_key)
+            return counters
+
+    def reset_sequences(self, config: dict[str, Any] | None = None) -> None:
+        """Forget sequence state for one run, or for every run when config is None."""
+        with self._run_counters_lock:
+            if config is None:
+                self._run_counters.clear()
+            else:
+                run_key = _run_key(config)
+                if run_key is not None:
+                    self._run_counters.pop(run_key, None)
 
     def __call__(
         self,
@@ -125,9 +183,7 @@ class DataDrivenMockFactory:
         echo_input = self.echo_input
         tool_name = self.tool_name
         config_data = _extract_config_data(config)
-        # One counter dict per resolved mock (i.e. per run), shared by all its
-        # calls, so {{sequence('X')}} gives X-001, X-002, ... across calls.
-        sequence_counters: dict[str, int] = {}
+        sequence_counters = self._counters_for_run(config)
 
         def mock_callable(**kwargs: Any) -> Any:
             context = ResolverContext(input_data=kwargs, config_data=config_data, sequence_counters=sequence_counters)
