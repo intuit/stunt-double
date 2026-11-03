@@ -5,12 +5,15 @@ Manages the lifecycle of mirrored tools: metadata tracking, persistence,
 and registration into LangGraph MockToolsRegistry for ToolNode awrap_tool_call.
 """
 
+import copy
 import json
 import logging
 from collections.abc import Callable
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from .models import (
     MirrorInfo,
@@ -124,6 +127,8 @@ class MirroredToolRegistry:
             generator: Optional MockGenerator for dynamic generation
             enable_dynamic: Whether to use dynamic parameter-aware generation
         """
+        metadata.tool_definition = copy.deepcopy(asdict(tool_def))
+
         # Use instance generator if not provided
         if generator is None:
             generator = self.generator
@@ -187,6 +192,13 @@ class MirroredToolRegistry:
         except Exception as e:
             logger.error(f"Failed to register {tool_def.name}: {e}")
             raise
+
+    def get_tool_definition(self, tool_name: str) -> ToolDefinition | None:
+        """Return an independent copy of the original schema and provenance."""
+        metadata = self._metadata_cache.get(tool_name)
+        if metadata is None or metadata.tool_definition is None:
+            return None
+        return ToolDefinition(**copy.deepcopy(metadata.tool_definition))
 
     @property
     def langgraph_registry(self) -> "MockToolsRegistry | None":
@@ -260,6 +272,9 @@ class MirroredToolRegistry:
             True if unregistered, False if not found
         """
         if tool_name not in self._metadata_cache:
+            self._mock_functions.pop(tool_name, None)
+            if self._langgraph_registry is not None:
+                self._langgraph_registry.unregister(tool_name)
             logger.warning(f"Tool {tool_name} not found in registry")
             return False
 
@@ -295,14 +310,11 @@ class MirroredToolRegistry:
         if self.storage_dir is None:
             return
 
-        # Create server directory
-        server_dir = self.storage_dir / metadata.server_name
-        server_dir.mkdir(exist_ok=True)
-
         # Save metadata file
         metadata_file = self._get_metadata_file(metadata.server_name, metadata.tool_name)
         if metadata_file is None:
             return
+        metadata_file.parent.mkdir(exist_ok=True)
 
         with open(metadata_file, "w") as f:
             json.dump(metadata.to_dict(), f, indent=2)
@@ -337,7 +349,11 @@ class MirroredToolRegistry:
         """Get path to metadata file for a tool (None if storage_dir is None)."""
         if self.storage_dir is None:
             return None
-        return self.storage_dir / server_name / f"{tool_name}.json"
+        # Catalog names come from remote data, not filesystem paths.
+        directory = quote(server_name, safe="")
+        if directory in ("", ".", ".."):
+            directory = "_" + directory.replace(".", "%2E")
+        return self.storage_dir / directory / f"{quote(tool_name, safe='')}.json"
 
     def get_server_list(self) -> list[str]:
         """Get list of unique server names with mirrored tools."""
@@ -370,7 +386,9 @@ class MirroredToolRegistry:
 
             # Remove server directory from disk (only if persistence is enabled)
             if self.storage_dir is not None:
-                server_dir = self.storage_dir / server_name
+                metadata_file = self._get_metadata_file(server_name, "_")
+                assert metadata_file is not None
+                server_dir = metadata_file.parent
                 if server_dir.exists():
                     shutil.rmtree(server_dir)
 

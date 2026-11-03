@@ -280,6 +280,7 @@ class MirrorMetadata:
     updated_at: datetime = field(default_factory=datetime.now)
     schema_version: str = ""
     custom_data_set: bool = False
+    tool_definition: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -292,6 +293,7 @@ class MirrorMetadata:
             "updated_at": self.updated_at.isoformat(),
             "schema_version": self.schema_version,
             "custom_data_set": self.custom_data_set,
+            "tool_definition": self.tool_definition,
         }
 
     @classmethod
@@ -306,6 +308,7 @@ class MirrorMetadata:
             updated_at=datetime.fromisoformat(data["updated_at"]),
             schema_version=data.get("schema_version", ""),
             custom_data_set=data.get("custom_data_set", False),
+            tool_definition=data.get("tool_definition"),
         )
 
 

@@ -13,12 +13,26 @@ file records notable unreleased changes and the initial release.
 
 ### Added
 
+- **Streamable HTTP mirroring**: select `transport="streamable-http"` with an exact
+  MCP endpoint URL and authentication headers. The optional MCP SDK handles JSON/SSE
+  responses and sessions; discovery follows pagination. Existing transports retain
+  their defaults.
+- **Registry catalog discovery**: `ToolMirror.mirror(registry_url=...)` imports stored,
+  caller-filtered tool definitions without contacting backend servers. Explicit
+  `tool_name_map` mappings resolve multi-server naming collisions. Catalog entries
+  with empty input schemas are rejected before registration, with guidance to use
+  direct MCP discovery or a registry release that preserves stored schemas.
+
 - **Nested placeholder paths**: `{{input.a.b.c}}` and `{{config.a.b.c}}` read nested
   values, with integer segments indexing lists (`{{input.items.0.sku}}`). A missing
   segment falls back to `| default(...)` or the `<a.b.c>` marker, like a missing field.
 
 ### Fixed
 
+- Mirrored tool definitions retain descriptions, raw input schemas and source metadata
+  through persistence and `to_langchain_tools()`. The latter advertises the original
+  JSON Schema instead of reconstructing empty arguments; raw schemas do not add
+  runtime argument validation.
 - **Multiple placeholders in one string** now interpolate independently, so
   values such as `{{input.a}}-{{input.b}}` resolve correctly instead of being
   treated as one unknown placeholder expression.

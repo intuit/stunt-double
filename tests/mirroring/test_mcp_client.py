@@ -365,13 +365,15 @@ class TestStdioReliability:
             "sys.stdout.flush()"
         )
         config = MCPServerConfig(name="chatty", command=[sys.executable, "-c", script], read_timeout=5.0)
-        client = MCPClient(config)
-
-        client.connect()  # would hang forever without the stderr drain
-        assert client._connected is True
-        # The flooded stderr was captured into the bounded buffer.
-        assert len(client._stderr_buffer) > 0
-        client.disconnect()
+        with MCPClient(config) as client:  # would time out without the stderr drain
+            assert client._connected is True
+            # Stdout and stderr readers run independently. The handshake can
+            # finish before the stderr thread appends the line it already read.
+            # This fixture exits after replying, so EOF provides a bounded join.
+            assert client._stderr_thread is not None
+            client._stderr_thread.join(timeout=config.read_timeout)
+            assert not client._stderr_thread.is_alive()
+            assert len(client._stderr_buffer) > 0
 
     def test_stdio_skips_notifications_and_stale_responses_before_matching_reply(self):
         """list_tools must ignore notifications and mismatched IDs on stdout."""

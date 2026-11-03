@@ -9,12 +9,13 @@ Supports both stdio (subprocess) and HTTP transports.
 
 import json
 import logging
+import math
 import queue
 import subprocess
 import threading
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ class MCPServerConfig:
         command: Command to execute (e.g., ["python", "-m", "server"]) - required for stdio
         args: Additional arguments for the command
         env: Environment variables (None = inherit parent, {} = empty env, dict = custom vars)
-        transport: Transport type - "stdio" (subprocess) or "http" (HTTP/SSE)
+        transport: "stdio", "http" (legacy HTTP/SSE), or "streamable-http" (MCP SDK).
         http_url: HTTP URL for the server (required if transport="http")
         headers: Custom HTTP headers for authentication (HTTP transport only).
                 Must be a dict with string keys and values. Headers are validated
@@ -73,7 +74,7 @@ class MCPServerConfig:
     command: list[str] = field(default_factory=list)
     args: list[str] = field(default_factory=list)
     env: dict[str, str] | None = None
-    transport: Literal["stdio", "http"] = "stdio"
+    transport: Literal["stdio", "http", "streamable-http"] = "stdio"
     http_url: str | None = None
     headers: dict[str, str] | None = None
     read_timeout: float = 30.0
@@ -82,9 +83,15 @@ class MCPServerConfig:
         """Validate configuration after initialization."""
         if self.transport == "stdio" and not self.command:
             raise ValueError("command is required for stdio transport")
-        if self.transport == "http" and not self.http_url:
+        if self.transport not in ("stdio", "http", "streamable-http"):
+            raise ValueError("Unsupported transport")
+        if self.transport in ("http", "streamable-http") and not self.http_url:
             raise ValueError("http_url is required for http transport")
-        if self.read_timeout <= 0:
+        if self.transport == "streamable-http":
+            from .catalog import validate_http_url
+
+            validate_http_url(self.http_url or "")
+        if not math.isfinite(self.read_timeout) or self.read_timeout <= 0:
             raise ValueError("read_timeout must be positive")
 
         # Validate headers parameter
@@ -194,6 +201,7 @@ class MCPClient:
         self._sse_response_queue: Any = None  # asyncio.Queue for SSE responses
         self._sse_task: Any = None  # Background task for SSE listener
         self._event_loop: Any = None  # Event loop for HTTP transport (must be reused)
+        self._streamable_client: Any = None
         self._connected = False
         self._tools_cache: list[MCPTool] | None = None
 
@@ -214,6 +222,13 @@ class MCPClient:
                 self._connect_stdio()
             elif self.config.transport == "http":
                 self._connect_http()
+            elif self.config.transport == "streamable-http":
+                from .streamable_http import StreamableHTTPClient
+
+                self._streamable_client = StreamableHTTPClient(
+                    self.config.http_url or "", self.config.headers, self.config.read_timeout
+                )
+                self._streamable_client.connect()
             else:
                 raise ValueError(f"Unsupported transport: {self.config.transport}")
 
@@ -221,7 +236,8 @@ class MCPClient:
             logger.info(f"Connected to MCP server: {self.config.name}")
 
             # Perform handshake
-            self._handshake()
+            if self.config.transport != "streamable-http":
+                self._handshake()
 
         except Exception as e:
             logger.error(f"Failed to connect to MCP server {self.config.name}: {e}")
@@ -332,6 +348,9 @@ class MCPClient:
 
     def _release_connection_resources(self) -> None:
         """Release transport resources regardless of connection flag."""
+        if self._streamable_client is not None:
+            client, self._streamable_client = self._streamable_client, None
+            client.close()
         if self._process:
             try:
                 self._process.terminate()
@@ -432,12 +451,22 @@ class MCPClient:
                 "params": {},
             }
 
-            response = self._send_request(request)
-
-            if "error" in response:
-                raise RuntimeError(f"Server error: {response['error']}")
-
-            tools_data = response.get("result", {}).get("tools", [])
+            tools_data = []
+            cursors: set[str] = set()
+            while True:
+                response = self._send_request(request)
+                if "error" in response:
+                    raise RuntimeError(f"Server error: {response['error']}")
+                result = response.get("result", {})
+                tools_data.extend(result.get("tools", []))
+                cursor = result.get("nextCursor")
+                if cursor is None:
+                    break
+                if not isinstance(cursor, str) or cursor in cursors or len(cursors) >= 1000:
+                    raise RuntimeError("Invalid or excessive tools/list pagination")
+                cursors.add(cursor)
+                request["params"] = {"cursor": cursor}
+                request["id"] = self._generate_id()
 
             tools = []
             for tool_data in tools_data:
@@ -555,6 +584,8 @@ class MCPClient:
             This method is resilient to servers that output logs to stdout (stdio).
             It will skip non-JSON lines and only process valid JSON-RPC responses.
         """
+        if self.config.transport == "streamable-http":
+            return cast(dict[str, Any], self._streamable_client.request(request["method"], request.get("params", {})))
         if self.config.transport == "stdio":
             return self._send_request_stdio(request)
         elif self.config.transport == "http":
