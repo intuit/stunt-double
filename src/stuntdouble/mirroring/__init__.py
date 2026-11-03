@@ -38,6 +38,7 @@ Custom configuration:
 # ============================================================================
 
 from .cache import ResponseCache
+from .catalog import RegistryCatalogDiscoverer
 from .discovery import MCPToolDiscoverer
 from .generation.base import MockGenerator
 from .generation.presets import (
@@ -117,6 +118,7 @@ __all__ = [
     "ResponseCache",
     # Discovery
     "MCPToolDiscoverer",
+    "RegistryCatalogDiscoverer",
     # Generation
     "MockGenerator",
     "QualityPreset",

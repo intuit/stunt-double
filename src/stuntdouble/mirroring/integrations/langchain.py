@@ -8,6 +8,7 @@ StructuredTool instances for use with LangChain agents.
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from ..models import ToolDefinition
@@ -33,6 +34,8 @@ class LangChainAdapter:
     def to_langchain_tools(
         tool_definitions: list[ToolDefinition],
         mock_registry: MirroredToolRegistry,
+        *,
+        preserve_json_schema: bool = False,
     ) -> list[Any]:
         """
         Convert mirrored tools to LangChain StructuredTool format.
@@ -43,6 +46,9 @@ class LangChainAdapter:
         Args:
             tool_definitions: List of tool definitions to convert
             mock_registry: MirroredToolRegistry that holds mock callables
+            preserve_json_schema: Pass raw schemas to LangChain without lossy conversion.
+                This preserves $refs and nested constraints for model binding, but
+                dictionary schemas do not perform runtime argument validation.
 
         Returns:
             List of LangChain StructuredTool instances with mocked implementations
@@ -70,12 +76,17 @@ class LangChainAdapter:
                 logger.warning(f"Tool {tool_def.name} discovered but not mocked, skipping")
                 continue
 
+            # LangChain accepts raw JSON Schema. Avoid the lossy shallow conversion
+            # of nested objects, $refs, unions and constraints to Pydantic fields.
+            # A dict advertises the contract; it does not perform runtime validation.
             args_schema = None
-            if tool_def.input_schema:
+            if preserve_json_schema:
+                args_schema = deepcopy(tool_def.input_schema)
+            elif tool_def.input_schema:
                 try:
                     args_schema = LangChainAdapter._json_schema_to_pydantic(tool_def.input_schema, tool_def.name)
                 except Exception as e:
-                    logger.debug(f"Could not convert schema to Pydantic for {tool_def.name}: {e}")
+                    logger.warning("Could not convert schema for %s: %s", tool_def.name, e)
 
             if args_schema:
                 lc_tool = StructuredTool(

@@ -2,14 +2,16 @@
 Simplified ToolMirror - Dead simple by default, powerful when needed.
 """
 
+import hashlib
+import json
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from .discovery import MCPToolDiscoverer
 from .generation.base import MockGenerator
 from .integrations.langchain import LangChainAdapter
 from .mirror_registry import MirroredToolRegistry
-from .models import MirrorInfo, MockStrategy
+from .models import MirrorInfo, MockStrategy, ToolDefinition
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +145,7 @@ class ToolMirror:
             generator=self.generator,
             langgraph_registry=langgraph_registry,
         )
+        self._catalog_context: str | None = None
 
         # Clear any stale mirrored tools from previous sessions
         self.registry.clear()
@@ -165,6 +168,10 @@ class ToolMirror:
         tools: list[str] | None = None,
         http_url: str | None = None,
         headers: dict[str, str] | None = None,
+        transport: Literal["stdio", "http", "streamable-http"] | None = None,
+        read_timeout: float = 30.0,
+        registry_url: str | None = None,
+        tool_name_map: dict[tuple[str, str], str] | None = None,
     ) -> dict[str, Any]:
         """
         Mirror tools from an MCP server.
@@ -178,12 +185,19 @@ class ToolMirror:
             tools: Optional list of specific tools to mirror (None = all tools)
             http_url: HTTP URL for remote MCP server (alternative to server_command)
             headers: Optional custom HTTP headers for authentication (HTTP transport only)
+            transport: Explicit MCP transport. HTTP URLs default to legacy "http".
+            read_timeout: Positive, finite response timeout in seconds.
+            registry_url: Registry base URL for stored REST catalog discovery; mutually
+                exclusive with MCP connection options. Does not contact backends.
+            tool_name_map: Catalog-only mapping from (server_path, original tool name)
+                to a unique callable name. Tool filters use the mapped names.
 
         Returns:
             Dict with:
                 - mirrored_count: Number of tools mirrored
                 - tools: List of tool names
                 - server_name: Name of the server
+              Catalog discovery returns "servers" (a list) instead of "server_name".
 
         Examples:
             >>> # Mirror from stdio server
@@ -210,6 +224,13 @@ class ToolMirror:
         except ImportError:
             raise ImportError("MCP client module not available. Install with: pip install stuntdouble[mcp]")
 
+        if registry_url is not None:
+            if server_command is not None or http_url is not None or transport is not None or server_name is not None:
+                raise ValueError("registry_url cannot be combined with MCP server connection options")
+            return self._mirror_catalog(registry_url, headers, read_timeout, tools, tool_name_map)
+        if tool_name_map is not None:
+            raise ValueError("tool_name_map requires registry_url")
+
         # Validate input - either server_command or http_url must be provided
         if not server_command and not http_url:
             raise ValueError(
@@ -224,6 +245,11 @@ class ToolMirror:
             http_url = server_command
             server_command = None
 
+        if transport not in (None, "stdio", "http", "streamable-http"):
+            raise ValueError("Unsupported transport")
+        if (http_url and transport == "stdio") or (not http_url and transport in ("http", "streamable-http")):
+            raise ValueError("HTTP transports require http_url; stdio requires a command")
+
         # Auto-detect server name if not provided
         if server_name is None:
             if http_url:
@@ -237,8 +263,9 @@ class ToolMirror:
             # HTTP transport
             config_kwargs: dict[str, Any] = {
                 "name": server_name,
-                "transport": "http",
+                "transport": transport or "http",
                 "http_url": http_url,
+                "read_timeout": read_timeout,
             }
             # Allow command to be passed optionally for HTTP transport
             if server_command:
@@ -256,6 +283,7 @@ class ToolMirror:
                 name=server_name,
                 command=cmd_list,
                 transport="stdio",
+                read_timeout=read_timeout,
             )
 
         try:
@@ -289,6 +317,9 @@ class ToolMirror:
             if not tool_definitions:
                 raise ValueError(f"None of the requested tools found: {tools}\nAvailable tools: {available_names}")
 
+        if transport == "streamable-http":
+            self._check_names(tool_definitions)
+
         # Mirror each tool
         mirrored = []
         for tool_def in tool_definitions:
@@ -296,6 +327,8 @@ class ToolMirror:
                 self._mirror_tool(tool_def, server_config)
                 mirrored.append(tool_def.name)
             except Exception as e:
+                if transport == "streamable-http":
+                    raise
                 logger.error(f"Failed to mirror {tool_def.name}: {e}")
 
         result = {
@@ -347,7 +380,10 @@ class ToolMirror:
 
         tool_defs = []
         for name in available:
-            if info := self.get_mirror_info(name):
+            definition = self.registry.get_tool_definition(name)
+            if definition is not None:
+                tool_defs.append(definition)
+            elif info := self.get_mirror_info(name):
                 tool_defs.append(
                     ToolDefinition(
                         name=name,
@@ -357,7 +393,7 @@ class ToolMirror:
                     )
                 )
 
-        return LangChainAdapter.to_langchain_tools(tool_defs, self.registry)
+        return LangChainAdapter.to_langchain_tools(tool_defs, self.registry, preserve_json_schema=True)
 
     # ============================================================================
     # FLUENT CONFIGURATION - For users who want more control
@@ -735,6 +771,56 @@ class ToolMirror:
     # INTERNAL METHODS
     # ============================================================================
 
+    def _check_names(self, definitions: list[ToolDefinition]) -> None:
+        names = [t.name for t in definitions]
+        existing = set(self.registry.list_mock_functions())
+        if self.langgraph_registry is not None:
+            existing.update(self.langgraph_registry.list_registered())
+        if len(names) != len(set(names)) or existing.intersection(names):
+            raise ValueError("Duplicate or already registered tool name; use explicit unique names or unregister first")
+
+    def _mirror_catalog(
+        self,
+        registry_url: str,
+        headers: dict[str, str] | None,
+        read_timeout: float,
+        tools: list[str] | None,
+        tool_name_map: dict[tuple[str, str], str] | None,
+    ) -> dict[str, Any]:
+        from .catalog import RegistryCatalogDiscoverer
+
+        # Mirroring is additive. Reusing a populated instance for a different
+        # caller would retain tools that caller may not be authorized to see.
+        # Only a digest is held in memory; credentials never enter saved metadata.
+        context = hashlib.sha256(json.dumps([registry_url, headers], sort_keys=True).encode()).hexdigest()
+        if self._catalog_context is not None and context != self._catalog_context:
+            raise ValueError("Catalog credentials or registry changed; use a fresh ToolMirror for each caller")
+        definitions = RegistryCatalogDiscoverer().discover(
+            registry_url, headers=headers, read_timeout=read_timeout, tool_name_map=tool_name_map
+        )
+        if tools is not None:
+            missing = set(tools) - {t.name for t in definitions}
+            if missing:
+                raise ValueError(f"Requested tools are absent from catalog: {sorted(missing)}")
+            definitions = [t for t in definitions if t.name in tools]
+        self._check_names(definitions)
+        registered = []
+        try:
+            for definition in definitions:
+                self._mirror_tool(definition, None)
+                registered.append(definition.name)
+        except Exception:
+            # All names were preflighted, so rollback cannot remove pre-existing tools.
+            for definition in definitions:
+                self.registry.unregister_mirror(definition.name)
+            raise
+        self._catalog_context = context
+        return {
+            "mirrored_count": len(registered),
+            "tools": registered,
+            "servers": sorted({t.server_name for t in definitions}),
+        }
+
     def _mirror_tool(self, tool_def, server_config) -> None:
         """Internal: Mirror a single tool."""
         logger.debug(f"Mirroring tool: {tool_def.name}")
@@ -752,7 +838,7 @@ class ToolMirror:
         mock_impl = self.generator.generate_mock(tool_def, analysis, strategy)
 
         # Update metadata
-        mock_impl.metadata.server_command = server_config.command
+        mock_impl.metadata.server_command = server_config.command if server_config is not None else []
         mock_impl.metadata.schema_version = MCPToolDiscoverer.compute_schema_version(tool_def.input_schema)
 
         # Register

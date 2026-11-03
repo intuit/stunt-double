@@ -102,6 +102,69 @@ async def _invoke(graph, config, user_message="test"):
     )
 
 
+async def test_catalog_discovery_to_local_langgraph_mock(monkeypatch):
+    """Import a remote catalog and answer an agent tool call without a live backend."""
+    httpx = pytest.importorskip("httpx")
+    from stuntdouble.mirroring import ToolMirror
+
+    schema = {
+        "type": "object",
+        "properties": {"customer_id": {"type": "string", "minLength": 1}},
+        "required": ["customer_id"],
+        "additionalProperties": False,
+    }
+    requests = []
+
+    def respond(request):
+        requests.append((request.method, str(request.url), request.headers.get("Authorization")))
+        assert request.method == "GET"
+        assert str(request.url) == "https://registry.example/api/tool-catalog"
+        return httpx.Response(
+            200,
+            json={
+                "tools": [
+                    {
+                        "tool_name": "get_customer",
+                        "server_path": "/customers",
+                        "description": "Look up a customer by ID",
+                        "input_schema": schema,
+                    }
+                ]
+            },
+        )
+
+    original_client = httpx.Client
+    monkeypatch.setattr(
+        httpx, "Client", lambda **kwargs: original_client(transport=httpx.MockTransport(respond), **kwargs)
+    )
+    mirror = ToolMirror.for_langgraph(quality="fast")
+    result = mirror.mirror(
+        registry_url="https://registry.example",
+        headers={"Authorization": "Bearer synthetic-test-token"},
+    )
+    assert result["mirrored_count"] == 1
+    mirror.customize("get_customer", {"id": "C1", "name": "Catalog customer"})
+    tools = mirror.to_langchain_tools()
+    assert tools[0].args_schema == schema
+    recorder = CallRecorder()
+    graph = build_e2e_graph(
+        [
+            make_tool_call("get_customer", {"customer_id": "C1"}),
+            make_final_response("Customer loaded."),
+        ],
+        create_mockable_tool_wrapper(mirror.langgraph_registry, recorder=recorder),
+        tools=tools,
+    )
+    config = inject_scenario_metadata({}, {"scenario_id": "catalog-discovery-e2e"})
+
+    output = await _invoke(graph, config)
+
+    assert output["messages"][-1].content == "Customer loaded."
+    assert recorder.calls[0].was_mocked is True
+    assert recorder.calls[0].result == {"id": "C1", "name": "Catalog customer"}
+    assert requests == [("GET", "https://registry.example/api/tool-catalog", "Bearer synthetic-test-token")]
+
+
 # -- 1. Fluent Builder -------------------------------------------------------
 
 
