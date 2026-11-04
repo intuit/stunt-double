@@ -17,6 +17,11 @@ file records notable unreleased changes and the initial release.
   values, with integer segments indexing lists (`{{input.items.0.sku}}`). A missing
   segment falls back to `| default(...)` or the `<a.b.c>` marker, like a missing field.
 
+- **`ToolMessage` and `Command` from mocks**: mocks can return a `ToolMessage` or
+  `Command` directly instead of having it stringified. A returned `ToolMessage` gets a
+  missing `tool_call_id` or `name` filled in. A `(content, artifact)` tuple builds a `ToolMessage` with an
+  artifact for tools declared with `response_format="content_and_artifact"`.
+
 ### Fixed
 
 - **Multiple placeholders in one string** now interpolate independently, so
