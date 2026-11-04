@@ -14,6 +14,7 @@ import json
 import logging
 import time
 from collections.abc import Awaitable, Callable
+from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
 
 from langchain_core.messages import ToolMessage
@@ -331,7 +332,7 @@ def _build_tool_response(result: Any, tool_name: str, tool_call_id: str | None, 
         ToolMessage or Command to return from the wrapper
     """
     if isinstance(result, Command):
-        return result
+        return _fill_command_messages(result, tool_name, tool_call_id)
     if isinstance(result, ToolMessage):
         return _fill_tool_message(result, tool_name, tool_call_id)
 
@@ -360,6 +361,31 @@ def _fill_tool_message(message: ToolMessage, tool_name: str, tool_call_id: str |
     if not message.tool_call_id and tool_call_id:
         update["tool_call_id"] = tool_call_id
     return message.model_copy(update=update)
+
+
+def _fill_command_messages(command: Command, tool_name: str, tool_call_id: str | None) -> Command:
+    """Fill in missing fields on the ToolMessages inside a Command's update.
+
+    Mocks only receive the tool's arguments, so they can't know the tool_call_id that a real
+    tool gets through InjectedToolCallId. ToolNode doesn't validate a wrapper's result, so an
+    unmatched ToolMessage would otherwise go unnoticed until the next model call.
+    """
+
+    def fill(messages: Any) -> Any:
+        if isinstance(messages, ToolMessage):
+            return _fill_tool_message(messages, tool_name, tool_call_id)
+        if isinstance(messages, list):
+            return [
+                _fill_tool_message(m, tool_name, tool_call_id) if isinstance(m, ToolMessage) else m for m in messages
+            ]
+        return messages
+
+    update = command.update
+    if isinstance(update, dict) and "messages" in update:
+        return replace(command, update={**update, "messages": fill(update["messages"])})
+    if isinstance(update, list):
+        return replace(command, update=fill(update))
+    return command
 
 
 def _format_mock_result(result: Any) -> str:

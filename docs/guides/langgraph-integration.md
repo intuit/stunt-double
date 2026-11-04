@@ -294,9 +294,14 @@ A mock can return what the real tool returns, for tools that do more than produc
 from langchain_core.messages import ToolMessage
 from langgraph.types import Command
 
-# Update graph state
+# Update graph state, like a tool using InjectedToolCallId
 def set_plan_mock(scenario_metadata):
-    return lambda plan: Command(update={"plan": plan})
+    return lambda plan: Command(
+        update={
+            "plan": plan,
+            "messages": [ToolMessage(content="Plan saved", tool_call_id="")],
+        }
+    )
 
 # Return an error result without raising
 def lookup_mock(scenario_metadata):
@@ -309,12 +314,12 @@ def search_mock(scenario_metadata):
 
 | Mock returns | Wrapper returns |
 |--------------|---------------|
-| `Command` | Returned as is |
+| `Command` | Returned as is, with missing `tool_call_id` and `name` filled in on the `ToolMessage`s in its `update` |
 | `ToolMessage` | Returned as is, with a missing `tool_call_id` or `name` filled in and its `status` kept |
 | `(content, artifact)` | A `ToolMessage` with `artifact` set, when the tool declares `response_format="content_and_artifact"` |
 | Anything else | A successful `ToolMessage` with the value as its content |
 
-Mocks only receive the tool's arguments, so they can't see the ID of the tool call. For a returned `ToolMessage`, pass `tool_call_id=""` and the wrapper fills it in. A `Command` is returned unchanged, including any `ToolMessage` in its `update`.
+Mocks only receive the tool's arguments, so they can't see the ID of the tool call. Pass `tool_call_id=""` and the wrapper fills it in. For a `Command`, this covers `ToolMessage` objects under the `"messages"` key of a dict update (one message or a list) and in a list update. Messages written as dicts, and an `update` given as `(key, value)` pairs, are returned unchanged.
 
 ### Troubleshooting
 
