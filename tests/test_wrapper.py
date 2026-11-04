@@ -573,6 +573,46 @@ class TestMockResponseTypes:
         assert result.update == {"flag": "on"}
         assert result.goto == "next"
 
+    def test_command_tool_messages_get_the_tool_call_id(self):
+        from langchain_core.messages import AIMessage, ToolMessage
+        from langgraph.types import Command
+
+        ai_message = AIMessage(content="kept")
+        original = ToolMessage(content="ok", tool_call_id="")
+
+        result = self._run(Command(update={"flag": "on", "messages": [ai_message, original]}))
+
+        assert result.update["flag"] == "on"
+        assert result.update["messages"][0] is ai_message
+        assert result.update["messages"][1].tool_call_id == "call-123"
+        assert result.update["messages"][1].name == "test_tool"
+        assert original.tool_call_id == ""
+
+    def test_command_list_update_tool_messages_get_the_tool_call_id(self):
+        from langchain_core.messages import ToolMessage
+        from langgraph.types import Command
+
+        result = self._run(Command(update=[ToolMessage(content="ok", tool_call_id="")]))
+
+        assert result.update[0].tool_call_id == "call-123"
+
+    def test_command_with_a_single_tool_message_gets_the_tool_call_id(self):
+        from langchain_core.messages import ToolMessage
+        from langgraph.types import Command
+
+        result = self._run(Command(update={"messages": ToolMessage(content="ok", tool_call_id="")}))
+
+        assert result.update["messages"].tool_call_id == "call-123"
+
+    def test_command_messages_that_are_not_tool_messages_are_left_alone(self):
+        from langgraph.types import Command
+
+        raw = {"role": "tool", "content": "ok", "tool_call_id": ""}
+
+        result = self._run(Command(update={"messages": [raw]}))
+
+        assert result.update["messages"] == [raw]
+
     def test_empty_tool_call_id_is_not_replaced_when_the_call_has_none(self):
         from langchain_core.messages import ToolMessage
 
@@ -591,10 +631,10 @@ class TestMockResponseTypes:
         assert self._run(command) is command
 
     def test_command_mock_updates_graph_state_through_tool_node(self):
-        """A real graph: the Command's state update is applied."""
+        """A real graph: the state update applies and the ToolMessage answers the model's call."""
         from typing import Annotated
 
-        from langchain_core.messages import AIMessage
+        from langchain_core.messages import AIMessage, ToolMessage
         from langchain_core.tools import InjectedToolCallId, tool
         from langgraph.graph import END, START, MessagesState, StateGraph
         from langgraph.prebuilt import ToolNode
@@ -614,7 +654,11 @@ class TestMockResponseTypes:
         registry = MockToolsRegistry()
         registry.register(
             "set_flag",
-            mock_fn=lambda md: lambda **kw: Command(update={"flag": kw["value"]}),
+            mock_fn=lambda md: (
+                lambda **kw: Command(
+                    update={"flag": kw["value"], "messages": [ToolMessage(content="done", tool_call_id="")]}
+                )
+            ),
         )
         builder = StateGraph(State)
         builder.add_node("tools", ToolNode([set_flag], awrap_tool_call=create_mockable_tool_wrapper(registry)))
@@ -631,6 +675,7 @@ class TestMockResponseTypes:
         )
 
         assert result["flag"] == "on"
+        assert result["messages"][-1].tool_call_id == "call-1"
 
     def test_content_and_artifact_tuple_builds_a_tool_message(self):
         tool = MagicMock()

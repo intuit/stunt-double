@@ -23,8 +23,9 @@ file records notable unreleased changes and the initial release.
   `{{now_utc}}`, and `base_time=` and `rng=` on `resolve_output`.
 
 - **`ToolMessage` and `Command` from mocks**: mocks can return a `ToolMessage` or
-  `Command` directly instead of having it stringified. A returned `ToolMessage` gets a
-  missing `tool_call_id` or `name` filled in. A `(content, artifact)` tuple builds a `ToolMessage` with an
+  `Command` directly instead of having it stringified. A returned `ToolMessage`, or one
+  in a returned `Command`'s update, gets a missing `tool_call_id` or `name` filled in. A
+  `(content, artifact)` tuple builds a `ToolMessage` with an
   artifact for tools declared with `response_format="content_and_artifact"`.
 
 ### Fixed
