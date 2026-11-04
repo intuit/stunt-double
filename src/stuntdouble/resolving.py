@@ -49,11 +49,22 @@ def _lookup_path(data: Any, path: str) -> Any:
     for segment in path.split("."):
         if isinstance(value, dict) and segment in value:
             value = value[segment]
-        elif isinstance(value, (list, tuple)) and segment.isdecimal() and int(segment) < len(value):
-            value = value[int(segment)]
+        elif isinstance(value, (list, tuple)) and (index := _parse_index(segment, len(value))) is not None:
+            value = value[index]
         else:
             return _UNRESOLVED
     return value
+
+
+def _parse_index(segment: str, length: int) -> int | None:
+    """Return segment as an index into a sequence of the given length, or None if it isn't one."""
+    if not segment.isdecimal():
+        return None
+    try:
+        index = int(segment)
+    except ValueError:  # longer than sys.get_int_max_str_digits()
+        return None
+    return index if index < length else None
 
 
 @dataclass
