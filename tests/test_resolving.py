@@ -3,7 +3,10 @@ Unit tests for ValueResolver placeholder resolution.
 """
 
 import re
+import sys
 from datetime import datetime
+
+import pytest
 
 from stuntdouble.resolving import (
     ResolverContext,
@@ -303,6 +306,25 @@ class TestValueResolverNestedPaths:
         data = {"items": [{"sku": "A"}, {"sku": "B"}, {"sku": "C"}]}
         assert resolve_output("{{input.items.².sku}}", input_data=data) == "<items.².sku>"
         assert resolve_output("{{input.items.².sku | default('none')}}", input_data=data) == "none"
+
+    @pytest.mark.parametrize("sequence", [["A"], ("A",)], ids=["list", "tuple"])
+    def test_index_too_long_for_int_is_a_missing_segment(self, sequence):
+        # int() raises past sys.get_int_max_str_digits(). With the limit disabled (0) it converts
+        # instead and the index is simply out of range, so the expected result is the same.
+        index = "9" * (max(sys.get_int_max_str_digits(), 4300) + 1)
+        data = {"items": sequence}
+
+        assert resolve_output("{{input.items." + index + "}}", input_data=data) == f"<items.{index}>"
+        assert resolve_output("{{input.items." + index + " | default('none')}}", input_data=data) == "none"
+        assert resolve_output("{{config.items." + index + "}}", config_data=data) == f"<items.{index}>"
+        assert resolve_output("{{config.items." + index + " | default('none')}}", config_data=data) == "none"
+
+    @pytest.mark.parametrize("sequence", [["A", "B"], ("A", "B")], ids=["list", "tuple"])
+    def test_valid_indices_still_resolve(self, sequence):
+        assert resolve_output("{{input.items.0}}", input_data={"items": sequence}) == "A"
+        assert resolve_output("{{config.items.1}}", config_data={"items": sequence}) == "B"
+        # '١' is ARABIC-INDIC DIGIT ONE, a decimal digit int() accepts
+        assert resolve_output("{{input.items.١}}", input_data={"items": sequence}) == "B"
 
     def test_single_segment_is_unchanged(self):
         assert resolve_output("{{input.x}}", input_data={"x": 3}) == 3
