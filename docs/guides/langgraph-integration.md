@@ -286,6 +286,41 @@ from stuntdouble import (
 | `validate_mock_signature(tool, mock_fn, scenario_metadata, config)` | Validate mock function signature matches tool |
 | `validate_registry_mocks(tools, scenario_metadata)` | Validate `scenario_metadata["mocks"]` against tool parameters |
 
+### Returning ToolMessage or Command from a Mock
+
+A mock can return what the real tool returns, for tools that do more than produce text. Plain values keep working as before.
+
+```python
+from langchain_core.messages import ToolMessage
+from langgraph.types import Command
+
+# Update graph state, like a tool using InjectedToolCallId
+def set_plan_mock(scenario_metadata):
+    return lambda plan: Command(
+        update={
+            "plan": plan,
+            "messages": [ToolMessage(content="Plan saved", tool_call_id="")],
+        }
+    )
+
+# Return an error result without raising
+def lookup_mock(scenario_metadata):
+    return lambda query: ToolMessage(content="Rate limited", tool_call_id="", status="error")
+
+# Tool declared with response_format="content_and_artifact"
+def search_mock(scenario_metadata):
+    return lambda query: ("2 results", {"rows": [1, 2]})
+```
+
+| Mock returns | Wrapper returns |
+|--------------|---------------|
+| `Command` | Returned as is, with missing `tool_call_id` and `name` filled in on the `ToolMessage`s in its `update` |
+| `ToolMessage` | Returned as is, with a missing `tool_call_id` or `name` filled in and its `status` kept |
+| `(content, artifact)` | A `ToolMessage` with `artifact` set, when the tool declares `response_format="content_and_artifact"` |
+| Anything else | A successful `ToolMessage` with the value as its content |
+
+Mocks only receive the tool's arguments, so they can't see the ID of the tool call. Pass `tool_call_id=""` and the wrapper fills it in. For a `Command`, this covers `ToolMessage` objects under the `"messages"` key of a dict update (one message or a list) and in a list update. Messages written as dicts, and an `update` given as `(key, value)` pairs, are returned unchanged.
+
 ### Troubleshooting
 
 #### Mocks Not Working
