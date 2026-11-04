@@ -500,6 +500,175 @@ class TestAsyncMockFactoryErrors:
         assert isinstance(exc_info.value.__cause__, KeyError)
 
 
+class TestMockResponseTypes:
+    """Mocks can return what a real tool returns instead of being stringified (#64)."""
+
+    def _run(self, mock_result, tool=None, recorder=None):
+        """Run a mock that returns mock_result through the wrapper."""
+        from langgraph.prebuilt.tool_node import ToolCallRequest
+
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.wrapper import create_mockable_tool_wrapper
+
+        registry = MockToolsRegistry()
+        registry.register("test_tool", mock_fn=lambda md: lambda **kw: mock_result)
+        wrapper = create_mockable_tool_wrapper(registry, recorder=recorder)
+
+        request = ToolCallRequest(
+            tool_call={"name": "test_tool", "args": {}, "id": "call-123"},
+            tool=tool or MagicMock(),
+            state={},
+            runtime=create_mock_tool_runtime({"configurable": {"scenario_metadata": {"mode": "mock"}}}),
+        )
+
+        async def mock_execute(req):
+            raise AssertionError("Execute should not be called")
+
+        return run_async(wrapper(request, mock_execute))
+
+    def test_tool_message_is_not_stringified(self):
+        from langchain_core.messages import ToolMessage
+
+        result = self._run(ToolMessage(content="hello", tool_call_id=""))
+
+        assert isinstance(result, ToolMessage)
+        assert result.content == "hello"
+
+    def test_tool_message_missing_fields_are_filled_in(self):
+        from langchain_core.messages import ToolMessage
+
+        result = self._run(ToolMessage(content="hello", tool_call_id=""))
+
+        assert result.name == "test_tool"
+        assert result.tool_call_id == "call-123"
+
+    def test_tool_message_fields_set_by_the_mock_are_kept(self):
+        from langchain_core.messages import ToolMessage
+
+        result = self._run(
+            ToolMessage(content="boom", name="custom", tool_call_id="fixed", status="error", artifact={"raw": 1})
+        )
+
+        assert result.name == "custom"
+        assert result.tool_call_id == "fixed"
+        assert result.status == "error"
+        assert result.artifact == {"raw": 1}
+
+    def test_shared_tool_message_is_not_mutated(self):
+        from langchain_core.messages import ToolMessage
+
+        shared = ToolMessage(content="hello", tool_call_id="")
+
+        self._run(shared)
+
+        assert shared.tool_call_id == ""
+        assert shared.name is None
+
+    def test_command_passes_through_with_its_other_fields(self):
+        from langgraph.types import Command
+
+        result = self._run(Command(update={"flag": "on"}, goto="next"))
+
+        assert isinstance(result, Command)
+        assert result.update == {"flag": "on"}
+        assert result.goto == "next"
+
+    def test_empty_tool_call_id_is_not_replaced_when_the_call_has_none(self):
+        from langchain_core.messages import ToolMessage
+
+        from stuntdouble.wrapper import _build_tool_response
+
+        message = _build_tool_response(ToolMessage(content="ok", tool_call_id=""), "test_tool", None, None)
+
+        assert message.tool_call_id == ""
+        assert message.name == "test_tool"
+
+    def test_command_without_messages_is_unchanged(self):
+        from langgraph.types import Command
+
+        command = Command(update={"flag": "on"})
+
+        assert self._run(command) is command
+
+    def test_command_mock_updates_graph_state_through_tool_node(self):
+        """A real graph: the Command's state update is applied."""
+        from typing import Annotated
+
+        from langchain_core.messages import AIMessage
+        from langchain_core.tools import InjectedToolCallId, tool
+        from langgraph.graph import END, START, MessagesState, StateGraph
+        from langgraph.prebuilt import ToolNode
+        from langgraph.types import Command
+
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.wrapper import create_mockable_tool_wrapper
+
+        @tool
+        def set_flag(value: str, tool_call_id: Annotated[str, InjectedToolCallId]) -> Command:
+            """Real tool, must not run."""
+            raise AssertionError("Real tool should not be called")
+
+        class State(MessagesState):
+            flag: str
+
+        registry = MockToolsRegistry()
+        registry.register(
+            "set_flag",
+            mock_fn=lambda md: lambda **kw: Command(update={"flag": kw["value"]}),
+        )
+        builder = StateGraph(State)
+        builder.add_node("tools", ToolNode([set_flag], awrap_tool_call=create_mockable_tool_wrapper(registry)))
+        builder.add_edge(START, "tools")
+        builder.add_edge("tools", END)
+        graph = builder.compile()
+
+        model_call = AIMessage(content="", tool_calls=[{"name": "set_flag", "args": {"value": "on"}, "id": "call-1"}])
+        result = run_async(
+            graph.ainvoke(
+                {"messages": [model_call]},
+                config={"configurable": {"scenario_metadata": {"mode": "mock"}}},
+            )
+        )
+
+        assert result["flag"] == "on"
+
+    def test_content_and_artifact_tuple_builds_a_tool_message(self):
+        tool = MagicMock()
+        tool.response_format = "content_and_artifact"
+
+        result = self._run(({"summary": "ok"}, {"rows": [1, 2]}), tool=tool)
+
+        assert result.content == '{"summary": "ok"}'
+        assert result.artifact == {"rows": [1, 2]}
+        assert result.status == "success"
+
+    @pytest.mark.parametrize(
+        "response_format,value",
+        [("content", ("a", "b")), ("content_and_artifact", ("a", "b", "c"))],
+        ids=["tool-without-artifacts", "wrong-length"],
+    )
+    def test_other_tuples_keep_the_existing_formatting(self, response_format, value):
+        tool = MagicMock()
+        tool.response_format = response_format
+
+        result = self._run(value, tool=tool)
+
+        assert result.content == str(value)
+        assert result.artifact is None
+
+    def test_recorder_stores_the_mocks_raw_result(self):
+        from langgraph.types import Command
+
+        from stuntdouble import CallRecorder
+
+        recorder = CallRecorder()
+        command = Command(update={"flag": "on"})
+
+        self._run(command, recorder=recorder)
+
+        assert recorder.get_calls("test_tool")[0].result is command
+
+
 class TestWrapperIntegration:
     """Integration tests for wrapper with registry."""
 

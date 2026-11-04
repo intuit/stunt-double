@@ -22,6 +22,11 @@ file records notable unreleased changes and the initial release.
   narrowed by `invocation_id`), and `reset_run_state()` replays them. Also adds
   `{{now_utc}}`, and `base_time=` and `rng=` on `resolve_output`.
 
+- **`ToolMessage` and `Command` from mocks**: mocks can return a `ToolMessage` or
+  `Command` directly instead of having it stringified. A returned `ToolMessage` gets a
+  missing `tool_call_id` or `name` filled in. A `(content, artifact)` tuple builds a `ToolMessage` with an
+  artifact for tools declared with `response_format="content_and_artifact"`.
+
 ### Fixed
 
 - **Oversized list indices in placeholders**: a numeric path segment longer than

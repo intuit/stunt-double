@@ -256,17 +256,10 @@ def create_mockable_tool_wrapper(
                 if inspect.isawaitable(mock_result):
                     mock_result = await mock_result
 
-                content = _format_mock_result(mock_result)
-
-                tool_message = ToolMessage(
-                    content=content,
-                    name=tool_name,
-                    tool_call_id=tool_call_id,
-                    status="success",
-                )
+                tool_response = _build_tool_response(mock_result, tool_name, tool_call_id, request.tool)
 
                 _record_call(result=mock_result, was_mocked=True, start_time=start_time)
-                return tool_message
+                return tool_response
 
             except InputNotMatchedError as e:
                 no_match_reason = str(e)
@@ -318,6 +311,55 @@ def create_mockable_tool_wrapper(
                 raise
 
     return mockable_tool_wrapper
+
+
+def _build_tool_response(result: Any, tool_name: str, tool_call_id: str | None, tool: Any) -> ToolMessage | Command:
+    """
+    Convert a mock's return value into what the real tool path would return.
+
+    ToolMessage and Command results pass through. A (content, artifact) tuple becomes a
+    ToolMessage with an artifact when the tool declares response_format="content_and_artifact".
+    Anything else is formatted as the content of a successful ToolMessage.
+
+    Args:
+        result: Raw result from mock function
+        tool_name: Name of the tool being mocked
+        tool_call_id: ID of the current tool call
+        tool: The tool being mocked, if known
+
+    Returns:
+        ToolMessage or Command to return from the wrapper
+    """
+    if isinstance(result, Command):
+        return result
+    if isinstance(result, ToolMessage):
+        return _fill_tool_message(result, tool_name, tool_call_id)
+
+    artifact = None
+    is_pair = isinstance(result, tuple) and len(result) == 2
+    if is_pair and getattr(tool, "response_format", None) == "content_and_artifact":
+        result, artifact = result
+
+    return ToolMessage(
+        content=_format_mock_result(result),
+        name=tool_name,
+        tool_call_id=tool_call_id,
+        artifact=artifact,
+        status="success",
+    )
+
+
+def _fill_tool_message(message: ToolMessage, tool_name: str, tool_call_id: str | None) -> ToolMessage:
+    """Return a copy of message with a missing name or tool_call_id filled in.
+
+    A copy, because a mock may hand back the same message on every call.
+    """
+    update: dict[str, str | None] = {}
+    if not message.name:
+        update["name"] = tool_name
+    if not message.tool_call_id and tool_call_id:
+        update["tool_call_id"] = tool_call_id
+    return message.model_copy(update=update)
 
 
 def _format_mock_result(result: Any) -> str:
