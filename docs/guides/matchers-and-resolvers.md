@@ -187,6 +187,7 @@ resolve_output({"id": "{{uuid}}"}, input_data={"customer_id": "123"})
 |-------------|-------------|----------------|
 | `{{now}}` | Current datetime (ISO format) | `2025-01-05T10:30:00` |
 | `{{today}}` | Current date | `2025-01-05` |
+| `{{now_utc}}` | Current datetime as timezone-aware UTC (offsets work too: `{{now_utc + 7d}}`) | `2025-01-05T10:30:00+00:00` |
 | `{{now + 7d}}` | 7 days from now | `2025-01-12T10:30:00` |
 | `{{now - 30d}}` | 30 days ago | `2024-12-06T10:30:00` |
 | `{{today + 1w}}` | 1 week from today | `2025-01-12` |
@@ -289,6 +290,57 @@ scenario_metadata = {
 ```
 
 ---
+
+## Reproducible Outputs
+
+By default `{{now}}`, `{{uuid}}` and the `random_*` placeholders change on every call. To get the same values on every run, for example to snapshot mock outputs, set either or both of these keys in `scenario_metadata["stuntdouble"]`. Neither changes anything until you set it.
+
+```python
+config = {
+    "configurable": {
+        "thread_id": "eval-run-1",
+        "scenario_metadata": {
+            "stuntdouble": {"base_time": "2026-01-15T10:00:00Z", "seed": 42},
+            "mocks": {
+                "create_invoice": [
+                    {"output": {"id": "{{uuid}}", "created": "{{now}}", "due": "{{now + 30d}}"}}
+                ]
+            },
+        },
+    }
+}
+```
+
+### Fixed Clock
+
+`base_time` is an ISO 8601 string or a `datetime`. It is converted to UTC, and a value without a timezone is read as UTC, so the output doesn't depend on the machine. All timestamp placeholders use it on every call, so `{{now}}` doesn't move during a run.
+
+Without `base_time`, `{{now}}` keeps returning naive local time. Use `{{now_utc}}` for an aware UTC timestamp.
+
+### Seeded Values
+
+`seed` is an int or a string. It drives `{{uuid}}`, `{{random_int}}`, `{{random_float}}`, `{{choice}}` and `{{random_string}}` from a private generator, and never touches Python's global `random` state. Each tool has its own stream, which advances with each call.
+
+The same seed and the same tool-call order give the same values. `{{sequence}}` counters aren't part of the stream. These keys apply to data-driven mocks; a hand-written mock can pass `base_time=` and `rng=` to `resolve_output`.
+
+### Which Run a Stream Belongs To
+
+| Identifier | Role |
+|---|---|
+| `scenario_id` | Names the mocks. It does not scope streams, because concurrent runs can share it. |
+| `configurable["thread_id"]` | The conversation, and the default run. |
+| `configurable["invocation_id"]` | Optional. Separates invocations that share a thread. It can also be used without a `thread_id`. |
+
+- **Fresh run:** a new `thread_id` or `invocation_id` starts each tool's stream from the beginning, so runs with the same seed and call order match, and concurrent runs sharing a registry never consume each other's values.
+- **Repeated thread:** invoking the same `thread_id` again continues the stream, because a thread is one conversation. To replay it, pass a new `invocation_id` or reset the run.
+- **Reset:** `registry.reset_run_state(config)` forgets one run for every data-driven tool, and `registry.reset_run_state()` forgets all runs. `DataDrivenMockFactory.reset_run_state` does the same for one tool.
+- **No identifier:** a seeded scenario with neither identifier fails, because its values could be neither repeated nor isolated. A graph compiled without a checkpointer often has no `thread_id`, so pass an `invocation_id`. The wrapper reports this like any mock factory error: an error `ToolMessage`, or a `MockFactoryError` with `strict_mock_errors=True`.
+- **Direct calls:** `factory(scenario)` without a config treats the returned callable as the run. It advances across calls, and resolving again restarts it. For `resolve_output`, pass the same `random.Random` instance to `rng=` across calls.
+- **Retention:** each tool keeps about 1,024 streams. Past that it drops streams idle for an hour, and it never drops a more recently used one, so the limit can be exceeded while many runs are active.
+
+### Parallel Tool Calls
+
+Parallel calls to different tools can't change each other's values, whatever order they run in. Parallel calls to the same tool share a stream, so each gets the values matching the order it executes in. Repeat the order to repeat the values.
 
 ## Combining Matchers and Resolvers
 
