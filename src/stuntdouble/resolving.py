@@ -5,7 +5,7 @@ Provides placeholder resolution for mock outputs, enabling dynamic values
 based on timestamps, input references, and generator functions.
 
 Supported placeholders:
-- Timestamps: {{now}}, {{now + 7d}}, {{start_of_month}}, etc.
+- Timestamps: {{now}}, {{now_utc}}, {{now + 7d}}, {{start_of_month}}, etc.
 - Input refs: {{input.field_name}}, {{input.a.b.0.c}}, {{input.field | default(value)}}
 - Generators: {{uuid}}, {{random_int(min, max)}}, {{sequence('prefix')}}
 """
@@ -20,14 +20,14 @@ import re
 import string
 import uuid as uuid_module
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Regex patterns for placeholder detection
 PLACEHOLDER_PATTERN = re.compile(r"\{\{(.+?)\}\}")
-TIMESTAMP_RELATIVE_PATTERN = re.compile(r"^(now|today)\s*([+-])\s*(\d+)\s*([hdwmMy])$")
+TIMESTAMP_RELATIVE_PATTERN = re.compile(r"^(now_utc|now|today)\s*([+-])\s*(\d+)\s*([hdwmMy])$")
 TIMESTAMP_BOUNDARY_PATTERN = re.compile(
     r"^(start_of_day|end_of_day|start_of_week|end_of_week|start_of_month|end_of_month|start_of_year|end_of_year)$"
 )
@@ -66,12 +66,15 @@ class ResolverContext:
         config_data: Values from RunnableConfig (for {{config.*}} refs)
         base_time: Base time for timestamp calculations (default: now)
         sequence_counters: Mutable dict tracking sequence counters
+        rng: Private generator for {{uuid}} and the random_* placeholders. None
+            (the default) uses Python's global random state and uuid4.
     """
 
     input_data: dict[str, Any] = field(default_factory=dict)
     config_data: dict[str, Any] = field(default_factory=dict)
     base_time: datetime = field(default_factory=datetime.now)
     sequence_counters: dict[str, int] = field(default_factory=dict)
+    rng: random.Random | None = None
 
 
 class ValueResolver:
@@ -179,6 +182,7 @@ class ValueResolver:
 
         Supports:
         - now, today
+        - now_utc (timezone-aware UTC; a naive base_time is read as local time)
         - now +/- Nd, Nw, Nh, Nm, NM, Ny
         - start_of_day, end_of_day, start_of_month, etc.
 
@@ -196,6 +200,8 @@ class ValueResolver:
             return base.isoformat()
         if expr == "today":
             return base.date().isoformat()
+        if expr == "now_utc":
+            return base.astimezone(UTC).isoformat()
 
         # Relative timestamps: now + 7d, now - 30d, today + 1w
         rel_match = TIMESTAMP_RELATIVE_PATTERN.match(expr)
@@ -209,7 +215,7 @@ class ValueResolver:
                 amount = -amount
 
             delta = self._get_timedelta(amount, unit)
-            result = base + delta
+            result = (base.astimezone(UTC) if base_type == "now_utc" else base) + delta
 
             if base_type == "today":
                 return result.date().isoformat()
@@ -370,8 +376,13 @@ class ValueResolver:
         Returns:
             Generated value, or _UNRESOLVED if not a generator
         """
+        # The random module exposes the same methods as a Random instance
+        rng: Any = context.rng if context.rng is not None else random
+
         # Simple generators (no args)
         if expr == "uuid":
+            if context.rng is not None:
+                return str(uuid_module.UUID(int=context.rng.getrandbits(128), version=4))
             return str(uuid_module.uuid4())
 
         # Function-style generators
@@ -386,19 +397,19 @@ class ValueResolver:
         match func_name:
             case "random_int":
                 if len(args) >= 2:
-                    return random.randint(int(args[0]), int(args[1]))
+                    return rng.randint(int(args[0]), int(args[1]))
                 logger.warning("random_int requires 2 arguments")
-                return random.randint(0, 100)
+                return rng.randint(0, 100)
 
             case "random_float":
                 if len(args) >= 2:
-                    return round(random.uniform(float(args[0]), float(args[1])), 2)
+                    return round(rng.uniform(float(args[0]), float(args[1])), 2)
                 logger.warning("random_float requires 2 arguments")
-                return round(random.uniform(0, 100), 2)
+                return round(rng.uniform(0, 100), 2)
 
             case "choice":
                 if args:
-                    return random.choice(args)
+                    return rng.choice(args)
                 logger.warning("choice requires at least 1 argument")
                 return None
 
@@ -412,7 +423,7 @@ class ValueResolver:
             case "random_string":
                 length = int(args[0]) if args else 8
                 chars = string.ascii_letters + string.digits
-                return "".join(random.choices(chars, k=length))
+                return "".join(rng.choices(chars, k=length))
 
             case _:
                 return _UNRESOLVED
@@ -483,6 +494,9 @@ def resolve_output(
     input_data: dict[str, Any] | None = None,
     config_data: dict[str, Any] | None = None,
     sequence_counters: dict[str, int] | None = None,
+    *,
+    base_time: datetime | None = None,
+    rng: random.Random | None = None,
 ) -> Any:
     """
     Convenience function to resolve placeholders in mock output.
@@ -492,6 +506,10 @@ def resolve_output(
         input_data: Input parameters for {{input.*}} references
         config_data: RunnableConfig values for {{config.*}} references
         sequence_counters: Optional shared sequence state
+        base_time: Fixed time for timestamp placeholders (default: now)
+        rng: Private generator for {{uuid}} and random_* placeholders. Reuse one
+            instance across calls to keep advancing its stream; pass a new one
+            with the same seed to replay it.
 
     Returns:
         Resolved output with all placeholders replaced
@@ -501,6 +519,8 @@ def resolve_output(
         input_data=input_data or {},
         config_data=config_data or {},
         sequence_counters=sequence_counters if sequence_counters is not None else {},
+        base_time=base_time if base_time is not None else datetime.now(),
+        rng=rng,
     )
     # Deep copy to avoid mutating original
     return resolver.resolve_dynamic_values(copy.deepcopy(output), context)
