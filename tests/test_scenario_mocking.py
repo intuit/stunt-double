@@ -154,13 +154,32 @@ class TestSequenceAcrossCalls:
         mock = DataDrivenMockFactory("create_invoice")(self.MD)
         assert [mock(amount=1)["id"] for _ in range(3)] == ["INV-001", "INV-002", "INV-003"]
 
-    def test_each_run_starts_fresh(self):
+    def test_counter_persists_across_factory_rebindings(self):
+        """Same as resolve(): repeated factory(md, config) shares run counters."""
         factory = DataDrivenMockFactory("create_invoice")
-        first = factory(self.MD)
-        first(amount=1)
-        first(amount=1)
-        second = factory(self.MD)
-        assert second(amount=1)["id"] == "INV-001"
+        config = {"configurable": {"thread_id": "run-1"}}
+        mock1 = factory(self.MD, config)
+        assert mock1(amount=1)["id"] == "INV-001"
+        mock2 = factory(self.MD, config)
+        assert mock2(amount=1)["id"] == "INV-002"
+
+    def test_each_run_starts_fresh(self):
+        """Same factory: a new thread_id starts sequence at 001 again."""
+        factory = DataDrivenMockFactory("create_invoice")
+        run_a = {"configurable": {"thread_id": "run-a"}}
+        mock_a = factory(self.MD, run_a)
+        assert mock_a(amount=1)["id"] == "INV-001"
+        assert mock_a(amount=1)["id"] == "INV-002"
+        run_b = {"configurable": {"thread_id": "run-b"}}
+        mock_b = factory(self.MD, run_b)
+        assert mock_b(amount=1)["id"] == "INV-001"
+
+    def test_reset_sequences_clears_one_run(self):
+        factory = DataDrivenMockFactory("create_invoice")
+        config = {"configurable": {"thread_id": "run-1"}}
+        assert factory(self.MD, config)(amount=1)["id"] == "INV-001"
+        factory.reset_sequences(config)
+        assert factory(self.MD, config)(amount=1)["id"] == "INV-001"
 
     def test_prefixes_count_separately(self):
         md = {"mocks": {"t": [{"output": {"a": "{{sequence('A')}}", "b": "{{sequence('B')}}"}}]}}

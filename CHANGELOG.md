@@ -47,10 +47,11 @@ file records notable unreleased changes and the initial release.
   `validate_mock_signature` now evaluate `sig.bind()` before invoking the factory.
   Internal `TypeError` exceptions raised inside 2-argument factory functions are
   preserved rather than triggering a fallback to 1-argument invocation (#79).
-- **`{{sequence('X')}}` in data-driven mocks**: counters now persist across calls of
-  the same resolved data-driven mock callable (e.g. when calling the factory's result
-  directly), instead of restarting at `001` on every call. Through the tool wrapper
-  each call still resolves a fresh callable, so the ids restart there (see #56).
+- **`{{sequence('X')}}` in data-driven mocks**: counters now persist across tool calls
+  within a run (keyed by `configurable.thread_id`, or `run_id`), including through
+  `create_mockable_tool_wrapper`, instead of restarting at `001` on every call. Separate
+  runs on the same registry count independently, and `DataDrivenMockFactory.reset_sequences()`
+  clears stored run state (#81).
 - **stdio transport hangs**: the MCP client now drains the subprocess `stderr`
   pipe on a background thread, so a server that logs verbosely can no longer
   deadlock the client by filling the OS pipe buffer.
