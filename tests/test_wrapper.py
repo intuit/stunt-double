@@ -688,6 +688,77 @@ class TestMockResponseTypes:
         assert result.status == "success"
 
     @pytest.mark.parametrize(
+        "content",
+        [
+            [
+                {"type": "text", "text": "Two results"},
+                {"type": "image_url", "image_url": {"url": "https://x.test/a.png"}},
+            ],
+            ["Two results", {"type": "text", "text": "more"}],
+            [],
+        ],
+        ids=["text-and-image", "strings-and-blocks", "empty"],
+    )
+    def test_content_and_artifact_tuple_keeps_content_blocks(self, content):
+        tool = MagicMock()
+        tool.response_format = "content_and_artifact"
+
+        result = self._run((content, {"rows": [1, 2]}), tool=tool)
+
+        assert result.content == content
+        assert result.artifact == {"rows": [1, 2]}
+
+    def test_content_and_artifact_tuple_formats_a_list_that_is_not_content_blocks(self):
+        tool = MagicMock()
+        tool.response_format = "content_and_artifact"
+
+        result = self._run(([{"id": 1}, {"type": "unknown"}], None), tool=tool)
+
+        assert result.content == '[{"id": 1}, {"type": "unknown"}]'
+
+    def test_content_and_artifact_mock_matches_the_real_tool_through_tool_node(self):
+        """A real graph: the mocked ToolMessage has the same content blocks and artifact as the real tool's."""
+        from langchain_core.messages import AIMessage
+        from langchain_core.tools import tool
+        from langgraph.graph import END, START, MessagesState, StateGraph
+        from langgraph.prebuilt import ToolNode
+
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.wrapper import create_mockable_tool_wrapper
+
+        content = [
+            {"type": "text", "text": "Two results"},
+            {"type": "image_url", "image_url": {"url": "https://example.test/fixture.png"}},
+        ]
+        artifact = {"rows": [1, 2]}
+
+        @tool(response_format="content_and_artifact")
+        def search(query: str) -> tuple[list, dict]:
+            """Search."""
+            return content, artifact
+
+        registry = MockToolsRegistry()
+        registry.register("search", mock_fn=lambda md: lambda **kw: (content, artifact))
+        builder = StateGraph(MessagesState)
+        builder.add_node("tools", ToolNode([search], awrap_tool_call=create_mockable_tool_wrapper(registry)))
+        builder.add_edge(START, "tools")
+        builder.add_edge("tools", END)
+        graph = builder.compile()
+
+        def call(configurable):
+            model_call = AIMessage(content="", tool_calls=[{"name": "search", "args": {"query": "q"}, "id": "call-1"}])
+            result = run_async(graph.ainvoke({"messages": [model_call]}, config={"configurable": configurable}))
+            return result["messages"][-1]
+
+        real = call({})
+        mocked = call({"scenario_metadata": {"mode": "mock"}})
+
+        assert real.content == content
+        assert mocked.content == real.content
+        assert mocked.artifact == real.artifact == artifact
+        assert mocked.tool_call_id == real.tool_call_id == "call-1"
+
+    @pytest.mark.parametrize(
         "response_format,value",
         [("content", ("a", "b")), ("content_and_artifact", ("a", "b", "c"))],
         ids=["tool-without-artifacts", "wrong-length"],

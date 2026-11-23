@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from langchain_core.messages import ToolMessage
 from langchain_core.tools import BaseTool
+from langchain_core.tools.base import TOOL_MESSAGE_BLOCK_TYPES
 from langgraph.prebuilt.tool_node import (
     AsyncToolCallWrapper,
     ToolCallRequest,
@@ -319,7 +320,8 @@ def _build_tool_response(result: Any, tool_name: str, tool_call_id: str | None, 
     Convert a mock's return value into what the real tool path would return.
 
     ToolMessage and Command results pass through. A (content, artifact) tuple becomes a
-    ToolMessage with an artifact when the tool declares response_format="content_and_artifact".
+    ToolMessage with an artifact when the tool declares response_format="content_and_artifact";
+    its content is kept as is when it is a list of content blocks, as the real tool keeps it.
     Anything else is formatted as the content of a successful ToolMessage.
 
     Args:
@@ -337,16 +339,32 @@ def _build_tool_response(result: Any, tool_name: str, tool_call_id: str | None, 
         return _fill_tool_message(result, tool_name, tool_call_id)
 
     artifact = None
+    content: str | list[Any]
     is_pair = isinstance(result, tuple) and len(result) == 2
     if is_pair and getattr(tool, "response_format", None) == "content_and_artifact":
         result, artifact = result
+        content = result if _is_content_blocks(result) else _format_mock_result(result)
+    else:
+        content = _format_mock_result(result)
 
     return ToolMessage(
-        content=_format_mock_result(result),
+        content=content,
         name=tool_name,
         tool_call_id=tool_call_id,
         artifact=artifact,
         status="success",
+    )
+
+
+def _is_content_blocks(content: Any) -> bool:
+    """Whether content is a list a real tool would keep as message content blocks.
+
+    Matches the check langchain_core applies to a tool's output: every item is a string or a
+    dict whose "type" is a tool message block type, such as "text" or "image_url".
+    """
+    return isinstance(content, list) and all(
+        isinstance(block, str) or (isinstance(block, dict) and block.get("type") in TOOL_MESSAGE_BLOCK_TYPES)
+        for block in content
     )
 
 

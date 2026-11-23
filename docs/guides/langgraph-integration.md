@@ -316,7 +316,7 @@ def search_mock(scenario_metadata):
 |--------------|---------------|
 | `Command` | Returned as is, with missing `tool_call_id` and `name` filled in on the `ToolMessage`s in its `update` |
 | `ToolMessage` | Returned as is, with a missing `tool_call_id` or `name` filled in and its `status` kept |
-| `(content, artifact)` | A `ToolMessage` with `artifact` set, when the tool declares `response_format="content_and_artifact"` |
+| `(content, artifact)` | A `ToolMessage` with `artifact` set, when the tool declares `response_format="content_and_artifact"`. A list of content blocks (such as `{"type": "text", ...}` or `{"type": "image_url", ...}`) is kept as the content, as the real tool keeps it |
 | Anything else | A successful `ToolMessage` with the value as its content |
 
 Mocks only receive the tool's arguments, so they can't see the ID of the tool call. Pass `tool_call_id=""` and the wrapper fills it in. For a `Command`, this covers `ToolMessage` objects under the `"messages"` key of a dict update (one message or a list) and in a list update. Messages written as dicts, and an `update` given as `(key, value)` pairs, are returned unchanged.
