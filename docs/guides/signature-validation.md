@@ -32,7 +32,7 @@ StuntDouble can validate that your mock functions have the same parameter signat
 │                            /                    \                            │
 │                          Yes                     No                          │
 │                           │                       │                          │
-│               validate_mock_signature()      Execute mock                    │
+│               validate_mock_callable()       Execute mock                    │
 │                           │                                                  │
 │                     Valid? ──No──► Raise SignatureMismatchError             │
 │                       │                                                      │
@@ -221,6 +221,20 @@ def mock_fn(city: str, units: str = "celsius", extra: str): ...
 def mock_fn(city: str, units: str): ...
 ```
 
+### Async Factories
+
+An async factory's mock only exists once the factory is awaited, so it is checked then:
+
+- **Registration** (`tool=`): the factory isn't awaited when you register it. Its mock is
+  checked when `registry.resolve()` is awaited, which the wrapper does on each tool call,
+  and a mismatch raises `SignatureMismatchError` there.
+- **Wrapper** (`tools=`): the wrapper checks the mock it awaited, the same as for a sync
+  factory.
+
+`validate_mock_signature()` can't await the factory, so for an async factory it returns
+`(False, ...)` saying so. To check one yourself, await it and pass its mock to
+`validate_mock_callable(tool, mock)`.
+
 ---
 
 ## MCP Tool Support
@@ -331,6 +345,7 @@ def test_valid_mock_signature():
 ```python
 from stuntdouble import (
     validate_mock_signature,    # Validate mock function signature matches tool
+    validate_mock_callable,     # Validate a resolved mock (e.g. an awaited async factory's)
     validate_mock_parameters,   # Validate mock inputs match tool schema
     validate_registry_mocks,    # Validate scenario_metadata mocks against tools
     SignatureMismatchError,     # Raised when mock signature doesn't match tool
@@ -340,6 +355,7 @@ from stuntdouble import (
 | Function | Description |
 |----------|-------------|
 | `validate_mock_signature(tool, mock_fn, scenario_metadata, config)` | Validate that a mock function's parameters match the real tool's signature |
+| `validate_mock_callable(tool, mock_callable)` | Validate a mock a factory already returned, such as an awaited async factory's |
 | `validate_mock_parameters(tool, cases)` | Validate that mock input patterns match the tool's input schema |
 | `validate_registry_mocks(tools, scenario_metadata)` | Validate all runtime mock cases against the provided tools |
 | `SignatureMismatchError` | Exception raised when validation fails |

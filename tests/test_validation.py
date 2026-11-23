@@ -572,6 +572,186 @@ class TestWrapperWithSignatureValidation:
         assert "72" in result.content
 
 
+class TestAsyncFactoryValidation:
+    """Async mock factories with signature validation (#97)."""
+
+    @staticmethod
+    def _factory(is_async: bool, matches: bool):
+        def good(city: str, units: str = "celsius"):
+            return f"mocked {city} {units}"
+
+        def bad(city: str):  # Missing 'units'
+            return f"mocked {city}"
+
+        mock = good if matches else bad
+        if is_async:
+
+            async def async_factory(scenario_metadata):
+                return mock
+
+            return async_factory
+        return lambda scenario_metadata: mock
+
+    @staticmethod
+    def _coroutine_warnings(fn):
+        """Run fn and return the 'never awaited' warnings it causes."""
+        import gc
+        import warnings
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            fn()
+            gc.collect()
+        return [w for w in caught if "never awaited" in str(w.message)]
+
+    @staticmethod
+    def _run_graph(registry, **wrapper_kwargs):
+        """Call get_weather once through a real ToolNode graph with scenario metadata."""
+        import asyncio
+
+        from langchain_core.messages import AIMessage
+        from langgraph.graph import END, START, MessagesState, StateGraph
+        from langgraph.prebuilt import ToolNode
+
+        from stuntdouble.wrapper import create_mockable_tool_wrapper
+
+        builder = StateGraph(MessagesState)
+        builder.add_node(
+            "tools",
+            ToolNode([GetWeatherTool()], awrap_tool_call=create_mockable_tool_wrapper(registry, **wrapper_kwargs)),
+        )
+        builder.add_edge(START, "tools")
+        builder.add_edge("tools", END)
+        model_call = AIMessage(content="", tool_calls=[{"name": "get_weather", "args": {"city": "NYC"}, "id": "c1"}])
+        result = asyncio.run(
+            builder.compile().ainvoke(
+                {"messages": [model_call]},
+                config={"configurable": {"scenario_metadata": {"mode": "mock"}}},
+            )
+        )
+        return result["messages"][-1].content
+
+    def test_register_accepts_a_matching_async_factory(self):
+        from stuntdouble import MockToolsRegistry
+
+        registry = MockToolsRegistry()
+
+        warnings = self._coroutine_warnings(
+            lambda: registry.register("get_weather", mock_fn=self._factory(True, True), tool=GetWeatherTool())
+        )
+
+        assert warnings == []
+        assert self._run_graph(registry) == "mocked NYC celsius"
+
+    def test_register_checks_an_async_factory_when_it_is_resolved(self):
+        import asyncio
+
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.exceptions import SignatureMismatchError
+
+        registry = MockToolsRegistry()
+        registry.register("get_weather", mock_fn=self._factory(True, False), tool=GetWeatherTool())
+
+        with pytest.raises(SignatureMismatchError, match="Missing parameters in mock: units"):
+            asyncio.run(registry.resolve("get_weather", {}))
+        with pytest.raises(SignatureMismatchError, match="Missing parameters in mock: units"):
+            self._run_graph(registry)
+
+    def test_resolve_returns_none_when_a_checked_async_factory_does(self):
+        import asyncio
+
+        from stuntdouble import MockToolsRegistry
+
+        async def no_mock(scenario_metadata):
+            return None
+
+        registry = MockToolsRegistry()
+        registry.register("get_weather", mock_fn=no_mock, tool=GetWeatherTool())
+
+        assert asyncio.run(registry.resolve("get_weather", {})) is None
+
+    def test_reregistering_drops_the_check_on_resolve(self):
+        import asyncio
+
+        from stuntdouble import MockToolsRegistry
+
+        registry = MockToolsRegistry()
+        registry.register("get_weather", mock_fn=self._factory(True, False), tool=GetWeatherTool())
+        registry.register("get_weather", mock_fn=self._factory(True, False))
+
+        assert callable(asyncio.run(registry.resolve("get_weather", {})))
+
+    @pytest.mark.parametrize("is_async", [True, False], ids=["async", "sync"])
+    @pytest.mark.parametrize("matches", [True, False], ids=["matching", "mismatched"])
+    def test_wrapper_validates_the_resolved_mock(self, is_async, matches):
+        from stuntdouble import MockToolsRegistry
+        from stuntdouble.exceptions import SignatureMismatchError
+
+        registry = MockToolsRegistry()
+        registry.register("get_weather", mock_fn=self._factory(is_async, matches))
+
+        def run():
+            if matches:
+                assert self._run_graph(registry, tools=[GetWeatherTool()]) == "mocked NYC celsius"
+            else:
+                with pytest.raises(SignatureMismatchError, match="Missing parameters in mock: units"):
+                    self._run_graph(registry, tools=[GetWeatherTool()])
+
+        assert self._coroutine_warnings(run) == []
+
+    def test_wrapper_skips_async_validation_when_disabled(self):
+        from stuntdouble import MockToolsRegistry
+
+        registry = MockToolsRegistry()
+        registry.register("get_weather", mock_fn=self._factory(True, False))
+
+        assert self._run_graph(registry, tools=[GetWeatherTool()], validate_signatures=False) == "mocked NYC"
+
+    @pytest.mark.parametrize("is_async", [True, False], ids=["async", "sync"])
+    def test_wrapper_calls_the_factory_once_per_tool_call(self, is_async):
+        from stuntdouble import MockToolsRegistry
+
+        calls = []
+        factory = self._factory(is_async, True)
+
+        def counting_factory(scenario_metadata):
+            calls.append(scenario_metadata)
+            return factory(scenario_metadata)
+
+        registry = MockToolsRegistry()
+        registry.register("get_weather", mock_fn=counting_factory)
+
+        self._run_graph(registry, tools=[GetWeatherTool()])
+
+        assert len(calls) == 1
+
+    def test_validate_mock_signature_explains_an_async_factory(self):
+        from stuntdouble import validate_mock_signature
+
+        result = []
+        warnings = self._coroutine_warnings(
+            lambda: result.append(validate_mock_signature(GetWeatherTool(), self._factory(True, True)))
+        )
+
+        assert warnings == []
+        is_valid, error = result[0]
+        assert not is_valid
+        assert "async" in error
+
+    @pytest.mark.parametrize("matches", [True, False])
+    def test_validate_mock_callable(self, matches):
+        import asyncio
+
+        from stuntdouble import validate_mock_callable
+
+        mock = asyncio.run(self._factory(True, matches)({}))
+
+        is_valid, error = validate_mock_callable(GetWeatherTool(), mock)
+
+        assert is_valid is matches
+        assert (error is None) is matches
+
+
 # =============================================================================
 # Tests for validate_mock_parameters
 # =============================================================================

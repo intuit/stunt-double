@@ -25,7 +25,7 @@ from langgraph.prebuilt.tool_node import (
 from langgraph.types import Command
 
 from stuntdouble.config import get_scenario_metadata
-from stuntdouble.exceptions import InputNotMatchedError, MissingMockError, MockFactoryError
+from stuntdouble.exceptions import InputNotMatchedError, MissingMockError, MockFactoryError, SignatureMismatchError
 from stuntdouble.mock_registry import MockToolsRegistry
 
 if TYPE_CHECKING:
@@ -213,6 +213,9 @@ def create_mockable_tool_wrapper(
             if inspect.isawaitable(mock_callable):
                 try:
                     mock_callable = await cast(Awaitable[Callable[..., Any]], mock_callable)
+                except SignatureMismatchError:
+                    # From the check of an async factory registered with tool=
+                    raise
                 except Exception as e:
                     raise MockFactoryError(tool_name, e) from e
         except MockFactoryError as e:
@@ -229,23 +232,19 @@ def create_mockable_tool_wrapper(
         no_match_reason: str | None = None
 
         if mock_callable is not None:
-            # Runtime signature validation if tools are provided
+            # Runtime signature validation if tools are provided. Check the mock resolved above
+            # rather than calling the factory again: an async factory's mock is only known once awaited.
             if validate_signatures and tool_name in tools_by_name:
-                from stuntdouble.validation import validate_mock_signature
+                from stuntdouble.validation import validate_mock_callable
 
-                tool = tools_by_name[tool_name]
-                mock_fn = registry.get_mock_fn(tool_name)
-                if mock_fn:
-                    is_valid, error_msg = validate_mock_signature(tool, mock_fn, scenario_metadata, config)
-                    if not is_valid:
-                        from stuntdouble.exceptions import SignatureMismatchError
-
-                        logger.error(f"Mock signature mismatch for '{tool_name}': {error_msg}")
-                        raise SignatureMismatchError(
-                            tool_name=tool_name,
-                            expected=f"tool '{tool_name}' parameters",
-                            actual=error_msg or "unknown mismatch",
-                        )
+                is_valid, error_msg = validate_mock_callable(tools_by_name[tool_name], mock_callable)
+                if not is_valid:
+                    logger.error(f"Mock signature mismatch for '{tool_name}': {error_msg}")
+                    raise SignatureMismatchError(
+                        tool_name=tool_name,
+                        expected=f"tool '{tool_name}' parameters",
+                        actual=error_msg or "unknown mismatch",
+                    )
 
             logger.info(f"Using mock for tool '{tool_name}' (scenario: {scenario_id})")
 
