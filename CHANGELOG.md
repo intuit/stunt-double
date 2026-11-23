@@ -19,6 +19,9 @@ file records notable unreleased changes and the initial release.
 
 ### Fixed
 
+- **Oversized list indices in placeholders**: a numeric path segment longer than
+  Python's integer-string conversion limit now falls back to `| default(...)` or the
+  `<a.b.c>` marker instead of raising `ValueError`.
 - **Multiple placeholders in one string** now interpolate independently, so
   values such as `{{input.a}}-{{input.b}}` resolve correctly instead of being
   treated as one unknown placeholder expression.
