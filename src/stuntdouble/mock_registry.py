@@ -313,6 +313,23 @@ class MockToolsRegistry:
             self._registrations.clear()
         logger.info(f"Cleared {count} mock registrations")
 
+    def reset_run_state(self, config: dict[str, Any] | None = None) -> None:
+        """
+        Forget seeded random streams for one run, or for all runs if config is None.
+
+        The next call in a reset run replays its streams from the start. Applies
+        to data-driven mocks; hand-written factories own their state.
+
+        Args:
+            config: The RunnableConfig identifying the run.
+        """
+        with self._lock:
+            registrations = list(self._registrations.values())
+        for registration in registrations:
+            reset = getattr(registration["mock_fn"], "reset_run_state", None)
+            if reset is not None:
+                reset(config)
+
     def __len__(self) -> int:
         """Return number of registered mocks."""
         return len(self._registrations)

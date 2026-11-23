@@ -16,6 +16,11 @@ file records notable unreleased changes and the initial release.
 - **Nested placeholder paths**: `{{input.a.b.c}}` and `{{config.a.b.c}}` read nested
   values, with integer segments indexing lists (`{{input.items.0.sku}}`). A missing
   segment falls back to `| default(...)` or the `<a.b.c>` marker, like a missing field.
+- **Reproducible outputs**: `scenario_metadata["stuntdouble"]` accepts a `base_time` to
+  freeze timestamp placeholders and a `seed` for `{{uuid}}` and the `random_*`
+  placeholders. Seeded streams are private per tool and run (`thread_id`, optionally
+  narrowed by `invocation_id`), and `reset_run_state()` replays them. Also adds
+  `{{now_utc}}`, and `base_time=` and `rng=` on `resolve_output`.
 
 ### Fixed
 
