@@ -13,6 +13,12 @@ file records notable unreleased changes and the initial release.
 
 ### Added
 
+- **Mocks that raise**: a data-driven case can set `"error"` instead of `"output"`, either a
+  message (raised as the new `MockToolError`) or `{"type", "message"}` naming a supported
+  built-in exception. `MockBuilder.raises()` is the fluent equivalent. The wrapper returns
+  these as `ToolMessage(status="error")` with the plain message (no `Mock error: ` prefix),
+  or re-raises them with `strict_mock_errors=True`. Errors from bugs in mock code keep the
+  prefix. A case with both `output` and `error` is rejected.
 - **Nested placeholder paths**: `{{input.a.b.c}}` and `{{config.a.b.c}}` read nested
   values, with integer segments indexing lists (`{{input.items.0.sku}}`). A missing
   segment falls back to `| default(...)` or the `<a.b.c>` marker, like a missing field.

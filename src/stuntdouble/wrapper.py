@@ -25,7 +25,13 @@ from langgraph.prebuilt.tool_node import (
 from langgraph.types import Command
 
 from stuntdouble.config import get_scenario_metadata
-from stuntdouble.exceptions import InputNotMatchedError, MissingMockError, MockFactoryError, SignatureMismatchError
+from stuntdouble.exceptions import (
+    InputNotMatchedError,
+    MissingMockError,
+    MockFactoryError,
+    SignatureMismatchError,
+    is_configured_error,
+)
 from stuntdouble.mock_registry import MockToolsRegistry
 
 if TYPE_CHECKING:
@@ -69,6 +75,9 @@ def create_mockable_tool_wrapper(
             (a failing factory, as MockFactoryError) and from mock execution
             instead of catching them and returning ToolMessage(status="error").
             Useful in unit tests where you want fast failure on broken mocks.
+            An error the mock is configured to raise (a data-driven "error" case or
+            MockBuilder.raises()) is re-raised too; when caught, its ToolMessage
+            content is the error message without the "Mock error: " prefix.
             If False (default), both are caught and returned as error
             ToolMessages, which is suitable for evaluation batch runs.
         tools: Optional list of BaseTool instances. If provided with
@@ -277,8 +286,17 @@ def create_mockable_tool_wrapper(
                 if strict_mock_errors:
                     _record_call(error=e, was_mocked=True, start_time=start_time)
                     raise
-                logger.exception(f"Error in mock for tool '{tool_name}' (scenario: {scenario_id}): {e}")
                 _record_call(error=e, was_mocked=True, start_time=start_time)
+                if is_configured_error(e):
+                    # The mock simulates the tool failing: show the agent the tool's message.
+                    logger.info(f"Mock for tool '{tool_name}' raised its configured {type(e).__name__}: {e}")
+                    return ToolMessage(
+                        content=str(e),
+                        name=tool_name,
+                        tool_call_id=tool_call_id,
+                        status="error",
+                    )
+                logger.exception(f"Error in mock for tool '{tool_name}' (scenario: {scenario_id}): {e}")
                 return ToolMessage(
                     content=f"Mock error: {str(e)}",
                     name=tool_name,

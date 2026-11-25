@@ -33,7 +33,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from stuntdouble.exceptions import InputNotMatchedError
+from stuntdouble.exceptions import (
+    CONFIGURED_ERROR_TYPES,
+    InputNotMatchedError,
+    MockToolError,
+    mark_configured_error,
+)
 from stuntdouble.matching import InputMatcher
 from stuntdouble.resolving import ResolverContext, ValueResolver
 
@@ -96,6 +101,36 @@ def _parse_base_time(value: Any) -> datetime | None:
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=UTC)
     return parsed.astimezone(UTC)
+
+
+def _parse_error(tool_name: str, index: int, spec: Any) -> tuple[type[Exception], Any]:
+    """Return the exception type and message template of a case's "error" value.
+
+    A string raises MockToolError. A {"type", "message"} dict picks a type from
+    CONFIGURED_ERROR_TYPES; any other name, including BaseException-only types such
+    as SystemExit, falls back to MockToolError.
+    """
+    where = f"Mock case {index} for tool '{tool_name}'"
+    if isinstance(spec, str):
+        return MockToolError, spec
+    if not isinstance(spec, dict):
+        raise ValueError(f"{where}: 'error' must be a message string or a {{type, message}} dict, got {spec!r}")
+    unknown_keys = set(spec) - {"type", "message"}
+    if unknown_keys:
+        raise ValueError(f"{where}: unknown 'error' keys {sorted(unknown_keys)}; expected 'type' and 'message'")
+    if "message" not in spec:
+        raise ValueError(f"{where}: 'error' dict needs a 'message'")
+    type_name = spec.get("type", MockToolError.__name__)
+    if not isinstance(type_name, str):
+        raise ValueError(f"{where}: 'error.type' must be a string, got {type_name!r}")
+    exc_type = CONFIGURED_ERROR_TYPES.get(type_name)
+    if exc_type is None:
+        logger.warning(
+            f"{where}: error type {type_name!r} is not supported, raising MockToolError instead. "
+            f"Supported types: {', '.join(sorted(CONFIGURED_ERROR_TYPES))}"
+        )
+        exc_type = MockToolError
+    return exc_type, spec["message"]
 
 
 def _extract_config_data(config: dict[str, Any] | None) -> dict[str, Any]:
@@ -258,6 +293,17 @@ class DataDrivenMockFactory:
             else:
                 cases = [{"output": cases}]
 
+        # Checked when the mock resolves, so a bad case fails before any tool call.
+        errors: dict[int, tuple[type[Exception], Any]] = {}
+        for index, case in enumerate(cases):
+            if isinstance(case, dict) and "error" in case:
+                if "output" in case:
+                    raise ValueError(
+                        f"Mock case {index} for tool '{self.tool_name}' has both 'output' and 'error'. "
+                        f"A case either returns its output or raises its error."
+                    )
+                errors[index] = _parse_error(self.tool_name, index, case["error"])
+
         matcher = self._matcher
         resolver = self._resolver
         fallback = self.fallback
@@ -280,14 +326,14 @@ class DataDrivenMockFactory:
                 rng=rng,
             )
 
-            for case in cases:
+            for index, case in enumerate(cases):
                 case_input = case.get("input")
-                if case_input is None:
-                    # Catch-all case
-                    output = case.get("output", case)
-                    return resolver.resolve_dynamic_values(copy.deepcopy(output), context)
-
-                if matcher.matches(case_input, kwargs):
+                # A case without "input" is a catch-all
+                if case_input is None or matcher.matches(case_input, kwargs):
+                    if index in errors:
+                        exc_type, message = errors[index]
+                        resolved = resolver.resolve_dynamic_values(copy.deepcopy(message), context)
+                        raise mark_configured_error(exc_type(str(resolved)))
                     output = case.get("output", case)
                     return resolver.resolve_dynamic_values(copy.deepcopy(output), context)
 

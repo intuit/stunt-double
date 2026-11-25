@@ -14,6 +14,7 @@ from stuntdouble.exceptions import (
     MissingMockError,
     MockAssertionError,
     MockFactoryError,
+    MockToolError,
     SignatureMismatchError,
 )
 from stuntdouble.matching import InputMatcher
@@ -47,6 +48,7 @@ __all__ = [
     "MockBuilder",
     "MockFactoryError",
     "MockFn",
+    "MockToolError",
     "MockRegistration",
     "MockToolsRegistry",
     "ScenarioMetadata",
