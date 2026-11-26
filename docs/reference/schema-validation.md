@@ -6,11 +6,12 @@ Reference for validating `scenario_metadata["mocks"]` and mock/tool compatibilit
 
 ## Overview
 
-StuntDouble exposes three related validation helpers:
+StuntDouble exposes these validation helpers:
 
 | Function | What it validates |
 |----------|-------------------|
 | `validate_mock_signature(tool, mock_fn, scenario_metadata, config)` | Whether a mock factory returns a callable compatible with the real tool signature |
+| `validate_mock_callable(tool, mock_callable)` | Whether a resolved mock (such as an awaited async factory's) is compatible with the real tool signature |
 | `validate_mock_parameters(tool, mock_cases)` | Whether data-driven mock `input` cases reference valid tool parameters |
 | `validate_registry_mocks(tools, scenario_metadata)` | Validate all runtime mock cases in `scenario_metadata["mocks"]` against a list of tools |
 

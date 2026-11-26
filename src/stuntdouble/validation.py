@@ -77,9 +77,35 @@ def validate_mock_signature(
         >>> is_valid, error = validate_mock_signature(get_weather, bad_mock)
         >>> print(is_valid)  # False
         >>> print(error)  # "Missing parameters: units"
+
+    An async factory's mock only exists once the factory is awaited, so it can't be
+    checked here: the result is (False, error_message) saying so. Registering it with
+    ``tool=``, or passing ``tools=`` to ``create_mockable_tool_wrapper``, checks it
+    when the mock is resolved.
+    """
+    result = _validate_factory(tool, mock_fn, scenario_metadata, config)
+    if result is None:
+        return False, (
+            "mock_fn is async, so its mock can only be checked once it is awaited. "
+            "Register it with tool= or pass tools= to create_mockable_tool_wrapper "
+            "to check it when the mock is resolved."
+        )
+    return result
+
+
+def _validate_factory(
+    tool: BaseTool,
+    mock_fn: MockFn,
+    scenario_metadata: dict[str, Any] | None = None,
+    config: dict[str, Any] | None = None,
+) -> tuple[bool, str | None] | None:
+    """Call mock_fn and validate the mock it returns.
+
+    Returns None when mock_fn returns an awaitable (an async factory), which can't be
+    checked without awaiting it. A returned coroutine is closed, so it isn't reported
+    as never awaited.
     """
     try:
-        # Get the actual mock callable by calling mock_fn
         test_metadata = scenario_metadata if scenario_metadata is not None else {}
 
         # Use sig.bind() to detect factory signature (same approach as resolve())
@@ -95,24 +121,42 @@ def validate_mock_signature(
             mock_callable = mock_fn(test_metadata, config)  # type: ignore[call-arg]  # New signature
         else:
             mock_callable = mock_fn(test_metadata)  # type: ignore[call-arg]  # Old signature
+    except Exception as e:
+        return False, f"Error during signature validation: {e}"
 
-        if not callable(mock_callable):
-            return (
-                False,
-                f"mock_fn did not return a callable, got {type(mock_callable)}",
-            )
+    if inspect.isawaitable(mock_callable):
+        if inspect.iscoroutine(mock_callable):
+            mock_callable.close()
+        return None
 
-        # Get tool's expected parameters
+    return validate_mock_callable(tool, mock_callable)
+
+
+def validate_mock_callable(tool: BaseTool, mock_callable: Any) -> tuple[bool, str | None]:
+    """
+    Validate that a resolved mock accepts the same parameters as the tool.
+
+    Use this for the mock an async factory returns, once it is awaited.
+
+    Args:
+        tool: The BaseTool instance to validate against
+        mock_callable: The mock function a factory returned
+
+    Returns:
+        Tuple of (is_valid, error_message), as from validate_mock_signature().
+    """
+    if not callable(mock_callable):
+        return (
+            False,
+            f"mock_fn did not return a callable, got {type(mock_callable)}",
+        )
+
+    try:
         tool_params = _get_tool_parameter_info(tool)
-
-        # Get mock's actual parameters using inspect
         mock_params = _get_callable_parameter_info(mock_callable)
-
-        # Compare parameters
         return _compare_signatures(
             tool.name, tool_params, mock_params, mock_accepts_kwargs=_accepts_var_keyword(mock_callable)
         )
-
     except Exception as e:
         return False, f"Error during signature validation: {e}"
 
@@ -446,6 +490,7 @@ def _get_required_parameters(tool: BaseTool) -> set[str]:
 
 
 __all__ = [
+    "validate_mock_callable",
     "validate_mock_parameters",
     "validate_mock_signature",
     "validate_registry_mocks",

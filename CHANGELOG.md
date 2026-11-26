@@ -24,6 +24,11 @@ file records notable unreleased changes and the initial release.
 
 ### Fixed
 
+- **Signature validation of async mock factories**: `register(..., tool=)` and
+  `create_mockable_tool_wrapper(tools=...)` no longer reject a valid async factory or
+  leave its coroutine unawaited. The wrapper checks the mock it resolved instead of
+  calling the factory again, and an async factory registered with `tool=` is checked
+  when `resolve()` is awaited. `validate_mock_callable()` checks an awaited mock directly.
 - **Oversized list indices in placeholders**: a numeric path segment longer than
   Python's integer-string conversion limit now falls back to `| default(...)` or the
   `<a.b.c>` marker instead of raising `ValueError`.

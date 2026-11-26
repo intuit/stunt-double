@@ -23,6 +23,7 @@ from stuntdouble.resolving import ValueResolver, resolve_output
 from stuntdouble.scenario_mocking import DataDrivenMockFactory, register_data_driven
 from stuntdouble.types import MockFn, MockRegistration, ScenarioMetadata, WhenPredicate
 from stuntdouble.validation import (
+    validate_mock_callable,
     validate_mock_parameters,
     validate_mock_signature,
     validate_registry_mocks,
@@ -61,6 +62,7 @@ __all__ = [
     "mockable_tool_wrapper",
     "register_data_driven",
     "resolve_output",
+    "validate_mock_callable",
     "validate_mock_parameters",
     "validate_mock_signature",
     "validate_registry_mocks",

@@ -31,7 +31,7 @@ import threading
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
-from stuntdouble.exceptions import MockFactoryError
+from stuntdouble.exceptions import MockFactoryError, SignatureMismatchError
 from stuntdouble.types import MockFn, MockRegistration, WhenPredicate
 
 if TYPE_CHECKING:
@@ -87,6 +87,8 @@ class MockToolsRegistry:
     def __init__(self) -> None:
         """Initialize empty mock registry."""
         self._registrations: dict[str, MockRegistration] = {}
+        # Tools to check async factories' mocks against once they're awaited (see register()).
+        self._validate_on_resolve: dict[str, BaseTool] = {}
         self._lock = threading.Lock()
         logger.debug("MockToolsRegistry initialized")
 
@@ -111,7 +113,8 @@ class MockToolsRegistry:
                   scenario. If None, mocking always applies when resolved.
             tool: Optional BaseTool instance. If provided, validates that mock_fn's
                   signature matches the tool's expected parameters. Raises
-                  SignatureMismatchError if validation fails.
+                  SignatureMismatchError if validation fails. An async factory's
+                  mock is checked when resolve() is awaited instead.
 
         Example:
             >>> # Simple static mocked tool
@@ -145,19 +148,23 @@ class MockToolsRegistry:
         if when is not None and not callable(when):
             raise ValueError(f"when must be callable or None, got {type(when)}")
 
-        # Validate signature if tool is provided
+        # Validate signature if tool is provided. An async factory's mock only exists once
+        # it is awaited, so keep the tool and check the mock in resolve().
+        validate_on_resolve = None
         if tool is not None:
-            from stuntdouble.exceptions import SignatureMismatchError
-            from stuntdouble.validation import validate_mock_signature
+            from stuntdouble.validation import _validate_factory
 
-            is_valid, error_msg = validate_mock_signature(tool, mock_fn)
-            if not is_valid:
-                # Parse expected/actual from error message or generate them
-                raise SignatureMismatchError(
-                    tool_name=tool_name,
-                    expected=f"(tool '{tool.name}' parameters)",
-                    actual=error_msg or "unknown",
-                )
+            result = _validate_factory(tool, mock_fn)
+            if result is None:
+                validate_on_resolve = tool
+            else:
+                is_valid, error_msg = result
+                if not is_valid:
+                    raise SignatureMismatchError(
+                        tool_name=tool_name,
+                        expected=f"(tool '{tool.name}' parameters)",
+                        actual=error_msg or "unknown",
+                    )
 
         registration: MockRegistration = {
             "mock_fn": mock_fn,
@@ -166,6 +173,10 @@ class MockToolsRegistry:
 
         with self._lock:
             self._registrations[tool_name] = registration
+            if validate_on_resolve is not None:
+                self._validate_on_resolve[tool_name] = validate_on_resolve
+            else:
+                self._validate_on_resolve.pop(tool_name, None)
 
         logger.debug(f"Registered mock for '{tool_name}' (conditional={'yes' if when else 'no'})")
 
@@ -182,6 +193,7 @@ class MockToolsRegistry:
         with self._lock:
             if tool_name in self._registrations:
                 del self._registrations[tool_name]
+                self._validate_on_resolve.pop(tool_name, None)
                 logger.debug(f"Unregistered mock for '{tool_name}'")
                 return True
         return False
@@ -217,6 +229,8 @@ class MockToolsRegistry:
         Raises:
             MockFactoryError: The mock factory raised. The original exception
                 is chained, so a broken mock isn't reported as a missing one.
+            SignatureMismatchError: When awaited, if the mock of an async factory
+                registered with ``tool=`` doesn't match the tool's parameters.
 
         Example:
             >>> mock_fn = mock_registry.resolve("get_weather", {"mode": "mock"})
@@ -264,10 +278,14 @@ class MockToolsRegistry:
             else:
                 mock_callable = mock_fn(scenario_metadata)  # type: ignore[call-arg]
 
-            logger.debug(f"Resolved mock for '{tool_name}'")
-            return mock_callable
         except Exception as e:
             raise MockFactoryError(tool_name, e) from e
+
+        logger.debug(f"Resolved mock for '{tool_name}'")
+        tool = self._validate_on_resolve.get(tool_name)
+        if tool is not None and inspect.isawaitable(mock_callable):
+            return _await_and_validate(tool_name, tool, mock_callable)
+        return mock_callable
 
     def get_mock_fn(self, tool_name: str) -> MockFn | None:
         """
@@ -311,6 +329,7 @@ class MockToolsRegistry:
         with self._lock:
             count = len(self._registrations)
             self._registrations.clear()
+            self._validate_on_resolve.clear()
         logger.info(f"Cleared {count} mock registrations")
 
     def reset_run_state(self, config: dict[str, Any] | None = None) -> None:
@@ -391,6 +410,25 @@ class MockToolsRegistry:
     def __repr__(self) -> str:
         """String representation."""
         return f"MockToolsRegistry(count={len(self._registrations)})"
+
+
+async def _await_and_validate(
+    tool_name: str, tool: BaseTool, awaitable: Awaitable[Callable[..., Any] | None]
+) -> Callable[..., Any] | None:
+    """Await an async factory's mock and check it against the tool it was registered with."""
+    from stuntdouble.validation import validate_mock_callable
+
+    mock_callable = await awaitable
+    if mock_callable is None:
+        return None
+    is_valid, error_msg = validate_mock_callable(tool, mock_callable)
+    if not is_valid:
+        raise SignatureMismatchError(
+            tool_name=tool_name,
+            expected=f"(tool '{tool.name}' parameters)",
+            actual=error_msg or "unknown",
+        )
+    return mock_callable
 
 
 __all__ = ["MockToolsRegistry"]
