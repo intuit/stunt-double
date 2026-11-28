@@ -113,7 +113,73 @@ class MockAssertionError(MockingError):
         super().__init__(message)
 
 
+class MockToolError(Exception):
+    """
+    Raised by a mock that is configured to fail, standing in for the real tool's error.
+
+    Data-driven cases raise it for ``"error": "<message>"`` and ``MockBuilder.raises("<message>")``
+    raises it for a message. It is not a ``MockingError``: it is the simulated tool failure,
+    not a problem with the mock setup.
+
+    Attributes:
+        message: The error message the agent sees
+    """
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
+
+
+# Built-in exception types a data-driven case may name in "error": {"type": ...}. Every
+# one is built from a single message. Names are looked up here only, never imported.
+CONFIGURED_ERROR_TYPES: dict[str, type[Exception]] = {
+    t.__name__: t
+    for t in (
+        MockToolError,
+        ValueError,
+        TypeError,
+        KeyError,
+        IndexError,
+        LookupError,
+        AttributeError,
+        RuntimeError,
+        NotImplementedError,
+        ArithmeticError,
+        ZeroDivisionError,
+        OverflowError,
+        OSError,
+        FileNotFoundError,
+        FileExistsError,
+        PermissionError,
+        TimeoutError,
+        ConnectionError,
+        ConnectionRefusedError,
+        ConnectionResetError,
+        ConnectionAbortedError,
+        BrokenPipeError,
+    )
+}
+
+_CONFIGURED_ERROR_ATTR = "_stuntdouble_configured_error"
+
+
+def mark_configured_error[E: Exception](exc: E) -> E:
+    """Mark ``exc`` as an error the mock was configured to raise and return it."""
+    setattr(exc, _CONFIGURED_ERROR_ATTR, True)
+    return exc
+
+
+def is_configured_error(exc: BaseException) -> bool:
+    """Return True if ``exc`` is a deliberate mock error rather than a failure in mock code.
+
+    That is a ``MockToolError``, or an exception a data-driven case or ``MockBuilder.raises()``
+    raised. A built-in exception raised by a bug in a mock or factory is not marked.
+    """
+    return isinstance(exc, MockToolError) or getattr(exc, _CONFIGURED_ERROR_ATTR, False) is True
+
+
 __all__ = [
+    "MockToolError",
     "MockingError",
     "MockNotFoundError",
     "MockRegistryError",

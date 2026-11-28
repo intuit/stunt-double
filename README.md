@@ -578,6 +578,7 @@ from stuntdouble import (
     resolve_output,                 # Resolve placeholders in output
     MissingMockError,               # No mock found in strict mode
     SignatureMismatchError,         # Mock signature doesn't match tool
+    MockToolError,                  # Error a mock is configured to raise
     ScenarioMetadata,               # TypedDict for scenario data
     MockFn,                         # Type alias for mock factories
 )

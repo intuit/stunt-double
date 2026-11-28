@@ -33,7 +33,41 @@ Complete reference for StuntDouble's data-driven mock format, including input ma
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `input` | `object` | No | Pattern to match. `null` or omitted = catch-all |
-| `output` | `any` | **Yes** | Value to return (supports placeholders) |
+| `output` | `any` | One of `output` / `error` | Value to return (supports placeholders) |
+| `error` | `string` or `object` | One of `output` / `error` | Error the tool call raises instead of returning. See [Error Cases](#error-cases) |
+
+---
+
+## Error Cases
+
+A case with `error` makes the tool call raise, the way the real tool does when it fails. Use it to test how the agent recovers from a failing tool:
+
+```json
+{
+  "charge_card": [
+    {"input": {"amount": {"$gt": 10000}}, "error": {"type": "ValueError", "message": "Amount exceeds limit"}},
+    {"input": {"card": "4000-0000-0000-0002"}, "error": "Card declined"},
+    {"output": {"ok": true, "txn_id": "{{uuid}}"}}
+  ]
+}
+```
+
+- `"error": "<message>"` raises `MockToolError(message)`.
+- `"error": {"type": "...", "message": "..."}` raises that built-in exception type. `type` defaults to `MockToolError`, and `message` is required.
+- The message supports placeholders, e.g. `"Card {{input.card}} declined"`.
+- A tool whose mock is one bare object needs `input` or the list form: `{"tool": {"error": "..."}}` is returned as output, as before.
+- Error cases match like any other case: in order, first match wins, and a case without `input` is a catch-all.
+
+Supported `type` values: `MockToolError`, `ValueError`, `TypeError`, `KeyError`, `IndexError`, `LookupError`, `AttributeError`, `RuntimeError`, `NotImplementedError`, `ArithmeticError`, `ZeroDivisionError`, `OverflowError`, `OSError`, `FileNotFoundError`, `FileExistsError`, `PermissionError`, `TimeoutError`, `ConnectionError`, `ConnectionRefusedError`, `ConnectionResetError`, `ConnectionAbortedError` and `BrokenPipeError`. Any other name, including `SystemExit`, `KeyboardInterrupt` and `GeneratorExit`, raises `MockToolError` and logs a warning. Names are never imported or evaluated.
+
+How the wrapper handles the error:
+
+| `strict_mock_errors` | Result |
+|----------------------|--------|
+| `False` (default) | `ToolMessage(status="error")` whose content is the error message, without the `Mock error: ` prefix |
+| `True` | The exception is re-raised |
+
+An exception from a bug in mock or factory code is not a configured error. It keeps the `Mock error: ` prefix, and the real tool never runs in either case.
 
 ---
 
@@ -449,7 +483,7 @@ When no case matches and no catch-all is present, the behavior depends on how th
 
 ### Required Fields
 
-- `output` is always required
+- Each case needs `output` or `error`, not both. A case with both fails when the mock resolves.
 - `input` is optional (omit for catch-all)
 
 ### Type Coercion

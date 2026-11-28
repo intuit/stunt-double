@@ -7,6 +7,7 @@ Provides a chainable API as an alternative to raw registry.register() calls:
     registry.mock("send_email").when(mode="test").returns({"sent": True})
     registry.mock("update").echoes_input("customer_id").returns({"updated": True})
     registry.mock("calc").returns_fn(lambda items: {"total": sum(items)})
+    registry.mock("charge_card").when(amount={"$gt": 10000}).raises(ValueError("Amount exceeds limit"))
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import copy
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from stuntdouble.exceptions import InputNotMatchedError
+from stuntdouble.exceptions import InputNotMatchedError, MockToolError, mark_configured_error
 from stuntdouble.matching import InputMatcher
 
 if TYPE_CHECKING:
@@ -164,6 +165,83 @@ class MockBuilder:
                         if field in kwargs:
                             result[field] = kwargs[field]
                 return result
+
+            return mock_callable
+
+        self._registry.register(
+            self._tool_name,
+            mock_fn=mock_fn,
+            when=self._when_predicate,
+        )
+
+    def raises(self, error: str | BaseException | type[BaseException]) -> None:
+        """
+        Register a mock whose tool call raises, as the real tool would on failure.
+
+        This is the terminal method -- it registers the mock on the registry.
+        ``error`` is a message (raised as ``MockToolError``), an exception instance
+        (raised as given on each call), or an exception class (raised with no
+        arguments). Input conditions set via ``.when(**conditions)`` are checked
+        first, as in ``.returns()``.
+
+        The wrapper treats the error as the tool's own failure: by default the agent
+        gets ``ToolMessage(status="error")`` with the error message and no
+        ``"Mock error: "`` prefix, and ``strict_mock_errors=True`` re-raises it.
+
+        Example:
+            >>> registry.mock("charge_card").raises("Card declined")
+            >>> registry.mock("fetch").when(url={"$contains": "slow"}).raises(TimeoutError("Read timed out"))
+
+        Raises:
+            TypeError: ``error`` is not a message or an ``Exception`` (``SystemExit`` and
+                ``KeyboardInterrupt`` are not), is a class that needs arguments, or is
+                ``InputNotMatchedError``.
+        """
+        make_error: Callable[[], Exception]
+        if isinstance(error, str):
+            message = error
+
+            def make_error() -> Exception:
+                return MockToolError(message)
+
+        elif isinstance(error, Exception):
+            instance = error
+
+            def make_error() -> Exception:
+                # Not a copy: copying re-runs __init__ with args, which garbles the message
+                # of classes that format it. Dropping the traceback stops it growing per call.
+                return instance.with_traceback(None)
+
+        elif isinstance(error, type) and issubclass(error, Exception):
+            exc_class = error
+
+            def make_error() -> Exception:
+                return exc_class()
+
+        else:
+            raise TypeError(f"raises() takes a message, an Exception instance or an Exception subclass, got {error!r}")
+
+        # Building it here also makes a class that needs arguments fail now, not in the tool call.
+        if isinstance(make_error(), InputNotMatchedError):
+            # The wrapper reads this as "no case matched", which can run the real tool.
+            raise TypeError("raises() cannot raise InputNotMatchedError; use when() to limit which calls match")
+
+        input_conditions = self._input_conditions
+        matcher = InputMatcher() if input_conditions else None
+        tool_name = self._tool_name
+
+        def mock_fn(scenario_metadata: dict[str, Any]) -> Callable[..., Any]:
+            def mock_callable(**kwargs: Any) -> Any:
+                if matcher and input_conditions:
+                    if not matcher.matches(input_conditions, kwargs):
+                        raise InputNotMatchedError(
+                            tool_name,
+                            message=(
+                                f"Mock input conditions not met for tool '{tool_name}': "
+                                f"expected {input_conditions}, got {kwargs}"
+                            ),
+                        )
+                raise mark_configured_error(make_error())
 
             return mock_callable
 

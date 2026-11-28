@@ -88,6 +88,7 @@ default_registry.mock(tool_name: str) -> MockBuilder
 | `.returns_fn(fn)` | Register mock that uses a callable | `reg.mock("tool").returns_fn(lambda **kw: {...})` |
 | `.when(predicate=None, **conditions)` | Add a scenario predicate, input conditions, or both | `reg.mock("tool").when(status="active")` |
 | `.echoes_input(*fields)` | Echo input fields in response | `reg.mock("tool").echoes_input("id", "name")` |
+| `.raises(error)` | Register mock whose call raises | `reg.mock("tool").raises("Card declined")` |
 
 ---
 
@@ -190,7 +191,7 @@ The scenario predicate controls whether the mock is resolved at all. Input condi
 
 ## Notes and Limits
 
-- `.returns()` and `.returns_fn()` are terminal methods. They register the mock immediately.
+- `.returns()`, `.returns_fn()` and `.raises()` are terminal methods. They register the mock immediately.
 - `MockBuilder` registers one mock per tool name. Calling `registry.mock("tool")` again overwrites the previous registration.
 - Placeholder resolution such as `{{now}}` and `{{input.customer_id}}` belongs to the data-driven mock flow, not `MockBuilder`.
 
@@ -295,7 +296,24 @@ The callable receives the same keyword arguments the real tool would. Use this w
 
 ### Error Simulation
 
-Mock tools that return errors to verify your agent handles failures gracefully:
+Use `.raises()` when the real tool fails by raising. The agent then goes through the same recovery path as with a real failure:
+
+```python
+from stuntdouble import MockToolError
+
+# A message raises MockToolError
+registry.mock("charge_card").raises("Card declined")
+
+# An exception instance is raised as given
+registry.mock("charge_card").when(amount={"$gt": 10000}).raises(ValueError("Amount exceeds limit"))
+
+# An exception class is raised with no arguments
+registry.mock("fetch_report").raises(TimeoutError)
+```
+
+By default the wrapper turns the error into `ToolMessage(status="error")` whose content is the error message, with no `Mock error: ` prefix. With `strict_mock_errors=True` it re-raises the exception. Input conditions from `.when()` are checked first, as with `.returns()`. `SystemExit`, `KeyboardInterrupt` and other non-`Exception` types are rejected with `TypeError`, and so is `InputNotMatchedError`.
+
+Some agents read failures from the tool's output instead. Return an error-shaped value for those:
 
 ```python
 # Simulate a service outage
